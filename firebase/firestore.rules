@@ -1,0 +1,9 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /dogs/{dogId} {
+      allow read: if true; // Change this as needed
+      allow write: if request.auth != null; // Only authenticated users
+    }
+  }
+}
