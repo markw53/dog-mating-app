@@ -1,5 +1,7 @@
-const { setDog, getDogs } = require('./firestoreHelpers');
-const { uploadDogPhoto } = require('./storageHelpers');
+import { setDog, getDogs } from '../firebase/firestoreHelpers.mjs';
+import { uploadDogPhoto } from '../firebase/storageHelpers.js';
+import fs from 'fs';
+import path from 'path';
 
 // Example dog data
 const dogData = {
@@ -13,7 +15,7 @@ const dogData = {
     elbow_score: { left: 2, right: 2, total: 4 },
     inbreeding_coefficient: 0.02,
     estimated_breeding_value: 1.0,
-    photo_url: '', // Set after uploading a photo
+    photo_url: '', // Will be set after uploading the photo
     location: 'Manchester',
     owner_id: 'user456',
 };
@@ -21,16 +23,24 @@ const dogData = {
 // Add a dog
 const addTestDog = async () => {
     try {
-        // Upload photo first
-        const photoURL = await uploadDogPhoto(file);
+        // Read the photo file from the filesystem
+        const photoPath = path.join(__dirname, 'test-photo.jpg'); // Replace with your image path
+        const fileBuffer = fs.readFileSync(photoPath);
+
+        // Mock a file object
+        const mockFile = new File([fileBuffer], 'test-photo.jpg', { type: 'image/jpeg' });
+
+        // Upload photo
+        const photoURL = await uploadDogPhoto(mockFile);
         dogData.photo_url = photoURL;
 
         // Add dog to Firestore
         await setDog(dogData);
-        console.log('Dog added with photo:', photoURL);
+        console.log('Dog added successfully with photo URL:', photoURL);
     } catch (err) {
-        console.error(err);
+        console.error('Error:', err);
     }
 };
 
+// Run the test
 addTestDog();
