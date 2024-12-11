@@ -1,6 +1,6 @@
 // firestoreHelpers.js
-const { db } = require('./firebaseConfig');
-const { collection, addDoc, getDocs, query, where } = require('firebase/firestore');
+import { db } from './firebaseConfig.js';
+import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
 
 const addDog = async (dogData) => {
     const dogsRef = collection(db, 'dogs');
@@ -13,4 +13,4 @@ const getDogs = async () => {
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 };
 
-module.exports = { addDog, getDogs };
+export { addDog, getDogs };

@@ -1,20 +1,20 @@
 // firebaseConfig.js
-const { initializeApp } = require('firebase/app');
-const { getFirestore } = require('firebase/firestore');
-const { getStorage } = require('firebase/storage');
+import { initializeApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-    apiKey: "AIzaSyDK-zsIdQxhyINpuA4Ib60zSnlyVQOQl0s",
-    authDomain: "dog-mating-app-33e2d.firebaseapp.com",
-    projectId: "dog-mating-app-33e2d",
-    storageBucket: "dog-mating-app-33e2d.firebasestorage.app",
-    messagingSenderId: "28611880357",
-    appId: "1:28611880357:web:1a4889f3a759d7e0d1744c",
-    measurementId: "G-2SBHDFLE44"
-  };
+  apiKey: "AIzaSyDK-zsIdQxhyINpuA4Ib60zSnlyVQOQl0s",
+  authDomain: "dog-mating-app-33e2d.firebaseapp.com",
+  projectId: "dog-mating-app-33e2d",
+  storageBucket: "dog-mating-app-33e2d.firebasestorage.app",
+  messagingSenderId: "28611880357",
+  appId: "1:28611880357:web:1a4889f3a759d7e0d1744c",
+  measurementId: "G-2SBHDFLE44"
+};
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-module.exports = { db, storage };
+export { db, storage };

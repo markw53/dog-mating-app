@@ -1,7 +1,7 @@
 // DogForm.js
 import React, { useState } from 'react';
 import { View, TextInput, Button, StyleSheet } from 'react-native';
-import { db } from '../firebaseConfig';
+import { db } from '../firebaseConfig.js';  // Ensure this is the correct path
 import { collection, addDoc } from 'firebase/firestore';
 
 const DogForm = () => {
@@ -19,9 +19,14 @@ const DogForm = () => {
     });
 
     const handleSubmit = async () => {
-        const dogsRef = collection(db, 'dogs');
-        await addDoc(dogsRef, dog);
-        alert('Dog added successfully!');
+        try {
+            const dogsRef = collection(db, 'dogs');
+            await addDoc(dogsRef, dog);
+            alert('Dog added successfully!');
+        } catch (error) {
+            console.error('Error adding dog: ', error);
+            alert('Error adding dog');
+        }
     };
 
     return (
@@ -31,7 +36,7 @@ const DogForm = () => {
                 value={dog.name}
                 onChangeText={(text) => setDog({ ...dog, name: text })}
             />
-            {/* Other input fields */}
+            {/* Add other input fields for breed, colour, etc. */}
             <Button title="Submit" onPress={handleSubmit} />
         </View>
     );
