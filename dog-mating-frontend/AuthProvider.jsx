@@ -1,26 +1,28 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { auth } from "./firebase";  // Firebase configuration
+import { auth } from "./firebase"; // Firebase configuration
 import { onAuthStateChanged } from "firebase/auth";
 import axios from "axios";
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);  // To hold the current user info
-  const [loading, setLoading] = useState(true);  // To handle loading state
+  const [user, setUser] = useState(null); // To hold the current user info
+  const [loading, setLoading] = useState(true); // To handle loading state
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         // Assuming you have an endpoint to fetch user data by email
         axios
-          .get(`https://[project-id].firebaseio.com/api/users/email/${currentUser.email}`)
+          .get(
+            `https://[project-id].firebaseio.com/api/users/email/${currentUser.email}`
+          )
           .then((response) => {
-            const userId = response.data.userId;  // Adjust as needed
+            const userId = response.data.userId; // Adjust as needed
             setUser({
               email: currentUser.email,
               uid: currentUser.uid,
-              userId,  // Store user ID for later use
+              userId // Store user ID for later use
             });
           })
           .catch((error) => {
@@ -28,7 +30,7 @@ export function AuthProvider({ children }) {
             setUser({
               email: currentUser.email,
               uid: currentUser.uid,
-              userId: null,  // Default userId if not found
+              userId: null // Default userId if not found
             });
           })
           .finally(() => {
@@ -41,7 +43,7 @@ export function AuthProvider({ children }) {
       }
     });
 
-    return () => unsubscribe();  // Clean up the listener on component unmount
+    return () => unsubscribe(); // Clean up the listener on component unmount
   }, []);
 
   return (
@@ -52,5 +54,5 @@ export function AuthProvider({ children }) {
 }
 
 export function useAuth() {
-  return useContext(AuthContext);  // Custom hook to access authentication context
+  return useContext(AuthContext); // Custom hook to access authentication context
 }
