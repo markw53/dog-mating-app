@@ -1,6 +1,15 @@
 {
   "type": "module",
   "dependencies": {
-    "firebase": "^11.0.2"
+    "@react-native-async-storage/async-storage": "^1.24.0",
+    "@react-navigation/native": "^7.0.13",
+    "@react-navigation/stack": "^7.0.18",
+    "firebase": "^11.0.2",
+    "react-native-gesture-handler": "^2.21.2",
+    "react-native-get-random-values": "^1.11.0",
+    "react-native-reanimated": "^3.16.5",
+    "react-native-safe-area-context": "^5.0.0",
+    "react-native-screens": "^4.3.0",
+    "react-native-vector-icons": "^10.2.0"
   }
 }

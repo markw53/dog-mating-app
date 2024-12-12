@@ -1,8 +1,11 @@
+import "react-native-gesture-handler";
 import "react-native-get-random-values";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator } from "react-native";
-import { AuthProvider } from "./AuthContext";
+import { AuthProvider } from "./AuthProvider";
 import MainApp from "./MainApp";
+import "react-native-get-random-values";
+import 'react-native-reanimated';
 import * as Font from "expo-font";
 
 export default function App() {

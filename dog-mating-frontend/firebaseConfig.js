@@ -4,6 +4,11 @@ import AsyncStorage from "react-native-async-storage/async-storage";
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
+if (!AsyncStorage) {
+  console.warn("AsyncStorage is not available in this environment. Using fallback.");
+  AsyncStorage = require("redux-persist").createWebStorage("local");
+}
+
 const firebaseConfig = {
   apiKey: "AIzaSyDK-zsIdQxhyINpuA4Ib60zSnlyVQOQl0s",
   authDomain: "dog-mating-app-33e2d.firebaseapp.com",
