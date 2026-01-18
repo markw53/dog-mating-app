@@ -1,30 +1,25 @@
 import { Request, Response } from 'express';
-import jwt, { SignOptions } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import User from '../models/User';
 import { AuthRequest } from '../middleware/auth';
 
 const generateToken = (id: string): string => {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error('JWT_SECRET is not defined');
-  }
-  const options: SignOptions = {
-    expiresIn: process.env.JWT_EXPIRE || '7d'
-  };
-  return jwt.sign({ id }, secret, options);
+  return jwt.sign(
+    { id }, 
+    process.env.JWT_SECRET!, 
+    { expiresIn: '7d' }
+  );
 };
 
 export const register = async (req: Request, res: Response) => {
   try {
     const { email, password, firstName, lastName, phone, location } = req.body;
 
-    // Check if user exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    // Create user
     const user = await User.create({
       email,
       password,
@@ -56,18 +51,15 @@ export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
-    // Validate input
     if (!email || !password) {
       return res.status(400).json({ message: 'Please provide email and password' });
     }
 
-    // Find user and include password
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Check password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials' });
