@@ -1,15 +1,26 @@
-import { ReactNode } from 'react';
-import Navbar from '@/components/layout/Navbar';
-import Footer from '@/components/layout/Footer';
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import './globals.css';
+import { Toaster } from 'react-hot-toast';
 
-export default function MainLayout({ children }: { children: ReactNode }) {
+const inter = Inter({ subsets: ['latin'] });
+
+export const metadata: Metadata = {
+  title: 'Dog Mating - Find the Perfect Match',
+  description: 'Connect with verified dog breeders for responsible breeding',
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-1">
+    <html lang="en">
+      <body className={inter.className}>
         {children}
-      </main>
-      <Footer />
-    </div>
+        <Toaster position="top-right" />
+      </body>
+    </html>
   );
 }
