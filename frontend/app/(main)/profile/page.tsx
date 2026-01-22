@@ -7,8 +7,9 @@ import { authApi } from '@/lib/api/auth';
 import { User, MapPin, Mail, Phone, Camera, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
-export default function ProfilePage() {
+function ProfilePageContent() {
   const router = useRouter();
   const { user, isAuthenticated, setUser } = useAuthStore();
   const [loading, setLoading] = useState(false);
@@ -339,5 +340,13 @@ export default function ProfilePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <ProtectedRoute>
+      <ProfilePageContent />
+    </ProtectedRoute>
   );
 }

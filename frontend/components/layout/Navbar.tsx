@@ -2,19 +2,34 @@
 
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/store/authStore';
-import { useRouter } from 'next/navigation';
-import { Dog, LogOut, MessageSquare, User, PlusCircle, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { Dog, LogOut, MessageSquare, User, PlusCircle, Menu, X, ChevronDown } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
 
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuthStore();
   const router = useRouter();
+  const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = () => {
     logout();
     router.push('/login');
   };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
@@ -31,7 +46,11 @@ export default function Navbar() {
           <div className="hidden md:flex items-center space-x-4">
             <Link
               href="/browse"
-              className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
+              className={`px-3 py-2 rounded-md text-sm font-medium ${
+                pathname === '/browse'
+                  ? 'text-primary-600 bg-primary-50'
+                  : 'text-gray-700 hover:text-primary-600'
+              }`}
             >
               Browse Dogs
             </Link>
@@ -40,13 +59,21 @@ export default function Navbar() {
               <>
                 <Link
                   href="/dashboard"
-                  className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${
+                    pathname === '/dashboard'
+                      ? 'text-primary-600 bg-primary-50'
+                      : 'text-gray-700 hover:text-primary-600'
+                  }`}
                 >
                   My Dogs
                 </Link>
                 <Link
                   href="/messages"
-                  className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-1"
+                  className={`px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-1 ${
+                    pathname === '/messages'
+                      ? 'text-primary-600 bg-primary-50'
+                      : 'text-gray-700 hover:text-primary-600'
+                  }`}
                 >
                   <MessageSquare className="h-4 w-4" />
                   <span>Messages</span>
@@ -58,36 +85,50 @@ export default function Navbar() {
                   <PlusCircle className="h-4 w-4" />
                   <span>Add Dog</span>
                 </Link>
-                <div className="relative group">
-                  <button className="flex items-center space-x-2 text-gray-700 hover:text-primary-600">
+                
+                {/* User Dropdown */}
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    className="flex items-center space-x-2 text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md"
+                  >
                     <User className="h-5 w-5" />
                     <span className="text-sm font-medium">
-                      {user?.firstName}
+                      {user?.firstName || 'User'}
                     </span>
+                    <ChevronDown className="h-4 w-4" />
                   </button>
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden group-hover:block">
-                    <Link
-                      href="/profile"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      Profile
-                    </Link>
-                    {user?.role === 'admin' && (
+                  
+                  {dropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 border border-gray-200">
                       <Link
-                        href="/admin"
+                        href="/profile"
+                        onClick={() => setDropdownOpen(false)}
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       >
-                        Admin Panel
+                        Profile
                       </Link>
-                    )}
-                    <button
-                      onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center space-x-2"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      <span>Logout</span>
-                    </button>
-                  </div>
+                      {user?.role === 'admin' && (
+                        <Link
+                          href="/admin"
+                          onClick={() => setDropdownOpen(false)}
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          Admin Panel
+                        </Link>
+                      )}
+                      <button
+                        onClick={() => {
+                          setDropdownOpen(false);
+                          handleLogout();
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center space-x-2"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        <span>Logout</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               </>
             ) : (
@@ -124,6 +165,7 @@ export default function Navbar() {
           <div className="px-2 pt-2 pb-3 space-y-1">
             <Link
               href="/browse"
+              onClick={() => setMobileMenuOpen(false)}
               className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-50"
             >
               Browse Dogs
@@ -132,18 +174,21 @@ export default function Navbar() {
               <>
                 <Link
                   href="/dashboard"
+                  onClick={() => setMobileMenuOpen(false)}
                   className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-50"
                 >
                   My Dogs
                 </Link>
                 <Link
                   href="/messages"
+                  onClick={() => setMobileMenuOpen(false)}
                   className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-50"
                 >
                   Messages
                 </Link>
                 <Link
                   href="/profile"
+                  onClick={() => setMobileMenuOpen(false)}
                   className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-50"
                 >
                   Profile
@@ -151,13 +196,17 @@ export default function Navbar() {
                 {user?.role === 'admin' && (
                   <Link
                     href="/admin"
+                    onClick={() => setMobileMenuOpen(false)}
                     className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-50"
                   >
                     Admin Panel
                   </Link>
                 )}
                 <button
-                  onClick={handleLogout}
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    handleLogout();
+                  }}
                   className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-gray-50"
                 >
                   Logout
@@ -167,12 +216,14 @@ export default function Navbar() {
               <>
                 <Link
                   href="/login"
+                  onClick={() => setMobileMenuOpen(false)}
                   className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-50"
                 >
                   Login
                 </Link>
                 <Link
                   href="/register"
+                  onClick={() => setMobileMenuOpen(false)}
                   className="block px-3 py-2 rounded-md text-base font-medium text-primary-600 hover:bg-gray-50"
                 >
                   Sign Up

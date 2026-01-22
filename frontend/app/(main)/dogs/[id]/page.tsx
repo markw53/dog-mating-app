@@ -12,10 +12,11 @@ import {
   MapPin, MessageCircle, Share2, 
   CheckCircle, XCircle, Star, Loader2, User
 } from 'lucide-react';
-import { formatAge, formatCurrency, formatDate } from '@/lib/utils/formatters';
+import { formatAge, formatCurrency, formatDate, formatWeight } from '@/lib/utils/formatters';
 import toast from 'react-hot-toast';
 import ReviewCard from '@/components/dog/ReviewCard';
 import ReviewForm from '@/components/dog/ReviewForm';
+import DogImagePlaceholder from '@/components/ui/DogImagePlaceholder';
 
 export default function DogDetailPage() {
   const params = useParams();
@@ -27,6 +28,7 @@ export default function DogDetailPage() {
   const [reviewStats, setReviewStats] = useState({ total: 0, avgRating: 0 });
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string>('');
+  const [imageError, setImageError] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
 
   const fetchDog = useCallback(async () => {
@@ -35,7 +37,8 @@ export default function DogDetailPage() {
     try {
       const response = await dogsApi.getById(params.id as string);
       setDog(response.dog);
-      setSelectedImage(response.dog.mainImage || response.dog.images[0]);
+      const mainImg = response.dog.mainImage || response.dog.images?.[0] || '';
+      setSelectedImage(mainImg);
     } catch {
       toast.error('Failed to load dog details');
       router.push('/browse');
@@ -124,34 +127,45 @@ export default function DogDetailPage() {
           <div className="lg:col-span-2 space-y-6">
             {/* Main Image */}
             <div className="card">
-              <div className="aspect-w-16 aspect-h-12 bg-gray-200 rounded-lg overflow-hidden mb-4">
-                <Image
-                  src={selectedImage || '/placeholder-dog.jpg'}
-                  alt={dog.name}
-                  width={800}
-                  height={600}
-                  className="object-cover w-full h-96"
-                  onError={() => setSelectedImage('/placeholder-dog.jpg')}
-                />
+              <div className="bg-gray-200 rounded-lg overflow-hidden mb-4 relative h-96">
+                {selectedImage && !imageError ? (
+                  <Image
+                    src={selectedImage}
+                    alt={dog.name}
+                    fill
+                    className="object-cover"
+                    onError={() => setImageError(true)}
+                    priority
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 50vw"
+                  />
+                ) : (
+                  <DogImagePlaceholder className="w-full h-full" />
+                )}
               </div>
 
               {/* Image Thumbnails */}
-              {dog.images.length > 1 && (
+              {dog.images && dog.images.length > 1 && (
                 <div className="grid grid-cols-4 gap-2">
                   {dog.images.map((image, index) => (
                     <button
                       key={index}
-                      onClick={() => setSelectedImage(image)}
-                      className={`aspect-square rounded-lg overflow-hidden border-2 ${
+                      onClick={() => {
+                        setSelectedImage(image);
+                        setImageError(false);
+                      }}
+                      className={`aspect-square rounded-lg overflow-hidden border-2 relative ${
                         selectedImage === image ? 'border-primary-600' : 'border-gray-200'
                       }`}
                     >
                       <Image
-                        src={image || '/placeholder-dog.jpg'}
+                        src={image}
                         alt={`${dog.name} ${index + 1}`}
-                        width={200}
-                        height={200}
-                        className="object-cover w-full h-full"
+                        fill
+                        className="object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = '';
+                        }}
+                        sizes="(max-width: 768px) 25vw, 200px"
                       />
                     </button>
                   ))}
@@ -169,7 +183,7 @@ export default function DogDetailPage() {
                 <InfoItem label="Gender" value={dog.gender} />
                 <InfoItem label="Age" value={formatAge(dog.dateOfBirth)} />
                 <InfoItem label="Weight" value={`${dog.weight} lbs`} />
-                <InfoItem label="Color" value={dog.color} />
+                <InfoItem label="Colour" value={dog.color} />
                 <InfoItem label="Views" value={dog.views.toString()} />
               </div>
             </div>

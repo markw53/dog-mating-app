@@ -1,25 +1,37 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { Dog } from '@/types';
 import { MapPin } from 'lucide-react';
-import { formatAge } from '@/lib/utils/formatters';
+import { formatAge, formatWeight } from '@/lib/utils/formatters';
+import { useState } from 'react';
+import DogImagePlaceholder from '@/components/ui/DogImagePlaceholder';
 
 interface DogCardProps {
   dog: Dog;
 }
 
 export default function DogCard({ dog }: DogCardProps) {
+  const [imageError, setImageError] = useState(false);
+  const imageUrl = dog.mainImage || dog.images?.[0];
+
   return (
     <Link href={`/dogs/${dog._id}`}>
       <div className="card hover:shadow-lg transition-shadow cursor-pointer h-full">
-        <div className="aspect-w-16 aspect-h-12 bg-gray-200 rounded-lg overflow-hidden mb-4">
-          <Image
-            src={dog.mainImage || dog.images[0] || '/placeholder-dog.jpg'}
-            alt={dog.name}
-            width={400}
-            height={300}
-            className="object-cover w-full h-48"
-          />
+        <div className="aspect-w-16 aspect-h-12 bg-gray-200 rounded-lg overflow-hidden mb-4 relative h-48">
+          {imageUrl && !imageError ? (
+            <Image
+              src={imageUrl}
+              alt={dog.name}
+              fill
+              className="object-cover"
+              onError={() => setImageError(true)}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
+          ) : (
+            <DogImagePlaceholder className="w-full h-full" />
+          )}
         </div>
 
         <div className="space-y-2">
@@ -44,7 +56,7 @@ export default function DogCard({ dog }: DogCardProps) {
 
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600">{formatAge(dog.dateOfBirth)}</span>
-            <span className="text-gray-600">{dog.weight} lbs</span>
+            <span className="text-gray-600">{formatWeight(dog.weight)}</span>
           </div>
 
           {dog.breeding.available && (
