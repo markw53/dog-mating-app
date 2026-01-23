@@ -12,7 +12,7 @@ import {
   MapPin, MessageCircle, Share2, 
   CheckCircle, XCircle, Star, Loader2, User
 } from 'lucide-react';
-import { formatAge, formatCurrency, formatDate, formatWeight } from '@/lib/utils/formatters';
+import { formatAge, formatCurrency, formatDate } from '@/lib/utils/formatters';
 import toast from 'react-hot-toast';
 import ReviewCard from '@/components/dog/ReviewCard';
 import ReviewForm from '@/components/dog/ReviewForm';
