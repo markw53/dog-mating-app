@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import User, { IUser } from '../models/User';
+import prisma from '../config/database';
 
 export interface AuthRequest extends Request {
-  user?: IUser;
+  user?: any;
 }
 
 export const protect = async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -20,13 +20,14 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
 
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: string };
-      const user = await User.findById(decoded.id);
+      req.user = await prisma.user.findUnique({
+        where: { id: decoded.id },
+      });
       
-      if (!user) {
+      if (!req.user) {
         return res.status(401).json({ message: 'User not found' });
       }
       
-      req.user = user;
       next();
     } catch (error) {
       return res.status(401).json({ message: 'Invalid token' });

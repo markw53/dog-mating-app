@@ -1,0 +1,162 @@
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  role      Role     @default(USER)
+  phone     String?
+  avatar    String?
+  verified  Boolean  @default(false)
+  
+  address   String?
+  city      String?
+  county    String?
+  postcode  String?
+  country   String   @default("UK")
+  
+  dogs      Dog[]
+  sentMessages      Message[] @relation("SentMessages")
+  receivedMessages  Message[] @relation("ReceivedMessages")
+  reviews   Review[]
+  conversations Conversation[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Dog {
+  id          String   @id @default(cuid())
+  name        String
+  breed       String
+  gender      Gender
+  dateOfBirth DateTime
+  age         Int
+  weight      Float
+  color       String
+  description String   @db.Text
+  images      String[]
+  mainImage   String?
+  
+  // Health Info
+  vaccinated      Boolean  @default(false)
+  neutered        Boolean  @default(false)
+  vetName         String?
+  vetContact      String?
+  medicalHistory  String?  @db.Text
+  
+  // Pedigree
+  registered          Boolean  @default(false)
+  registrationNumber  String?
+  registry            String?
+  sire                String?
+  dam                 String?
+  
+  // Breeding
+  available           Boolean  @default(true)
+  studFee             Float?
+  studFeeNegotiable   Boolean  @default(false)
+  previousLitters     Int      @default(0)
+  temperament         String[]
+  
+  // Location
+  address   String?
+  city      String
+  county    String
+  postcode  String?
+  country   String   @default("UK")
+  
+  status    Status   @default(PENDING)
+  views     Int      @default(0)
+  favorites Int      @default(0)
+  
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId   String
+  
+  reviews   Review[]
+  conversations Conversation[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("dogs")
+}
+
+model Conversation {
+  id            String    @id @default(cuid())
+  participants  User[]
+  dog           Dog?      @relation(fields: [dogId], references: [id])
+  dogId         String?
+  lastMessage   String?
+  lastMessageAt DateTime  @default(now())
+  messages      Message[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("conversations")
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  content        String       @db.Text
+  read           Boolean      @default(false)
+  
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  conversationId String
+  
+  sender         User         @relation("SentMessages", fields: [senderId], references: [id])
+  senderId       String
+  
+  receiver       User         @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  receiverId     String
+  
+  createdAt      DateTime     @default(now())
+
+  @@map("messages")
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int
+  comment   String   @db.Text
+  
+  dog       Dog      @relation(fields: [dogId], references: [id], onDelete: Cascade)
+  dogId     String
+  
+  reviewer  User     @relation(fields: [reviewerId], references: [id])
+  reviewerId String
+  
+  createdAt DateTime @default(now())
+
+  @@unique([dogId, reviewerId])
+  @@map("reviews")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
