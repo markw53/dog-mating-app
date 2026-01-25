@@ -9,16 +9,8 @@ const nextConfig: NextConfig = {
         port: '5000',
         pathname: '/uploads/**',
       },
-      {
-        protocol: 'https',
-        hostname: 'res.cloudinary.com',
-        pathname: '/**',
-      },
-      // Add any other image domains you'll use
     ],
-    dangerouslyAllowSVG: true,
-    contentDispositionType: 'attachment',
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    unoptimized: true, // Add this for development
   },
 };
 

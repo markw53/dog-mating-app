@@ -65,16 +65,26 @@ export const createDog = async (req: AuthRequest, res: Response) => {
     } = req.body;
 
     console.log('Creating dog with data:', req.body);
+    console.log('Files received:', req.files);
 
     // Calculate age
     const birthDate = new Date(dateOfBirth);
     const age = new Date().getFullYear() - birthDate.getFullYear();
 
     // Handle image uploads
-    const images = req.files as Express.Multer.File[];
-    const imageUrls = images?.map(file => `/uploads/${file.filename}`) || [];
+    const files = req.files as Express.Multer.File[];
+    console.log('Processing files:', files);
+    
+    // Create image URLs - use full URL with backend domain
+    const imageUrls = files?.map(file => {
+      const filename = file.filename;
+      console.log('Image filename:', filename);
+      return `/uploads/${filename}`;
+    }) || [];
 
-    // Parse temperament if it's a string
+    console.log('Image URLs:', imageUrls);
+
+    // Parse temperament
     let temperamentArray: string[] = [];
     if (Array.isArray(temperament)) {
       temperamentArray = temperament;
@@ -82,7 +92,7 @@ export const createDog = async (req: AuthRequest, res: Response) => {
       try {
         temperamentArray = JSON.parse(temperament);
       } catch {
-        temperamentArray = temperament.split(',').map(t => t.trim());
+        temperamentArray = temperament.split(',').map(t => t.trim()).filter(Boolean);
       }
     }
 
@@ -149,6 +159,7 @@ export const createDog = async (req: AuthRequest, res: Response) => {
     });
 
     console.log('Dog created successfully:', dog.id);
+    console.log('Dog images saved:', dog.images);
 
     res.status(201).json({ success: true, dog: transformDogForFrontend(dog) });
   } catch (error: any) {

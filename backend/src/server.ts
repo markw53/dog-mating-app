@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { Server } from 'socket.io';
 import http from 'http';
+import path from 'path';
 import { connectDB } from './config/database';
 import { errorHandler } from './middleware/errorHandler';
 
@@ -24,9 +25,6 @@ const io = new Server(server, {
   }
 });
 
-// Connect to database
-connectDB();
-
 // Middleware
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
@@ -34,9 +32,16 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use('/uploads', express.static('uploads'));
 
-// Routes
+// Serve static files - IMPORTANT: This must be before routes
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+// Test route
+app.get('/', (req, res) => {
+  res.json({ message: 'Backend is running!' });
+});
+
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/dogs', dogRoutes);
 app.use('/api/messages', messageRoutes);
@@ -46,7 +51,7 @@ app.use('/api/admin', adminRoutes);
 // Error handler
 app.use(errorHandler);
 
-// Socket.io for real-time messaging
+// Socket.io
 const userSockets = new Map<string, string>();
 
 io.on('connection', (socket) => {
@@ -54,7 +59,6 @@ io.on('connection', (socket) => {
 
   socket.on('join', (userId: string) => {
     userSockets.set(userId, socket.id);
-    console.log(`User ${userId} joined with socket ${socket.id}`);
   });
 
   socket.on('sendMessage', (data) => {
@@ -71,7 +75,6 @@ io.on('connection', (socket) => {
         break;
       }
     }
-    console.log('User disconnected:', socket.id);
   });
 });
 
@@ -80,5 +83,7 @@ const PORT = process.env.PORT || 5000;
 server.listen(PORT, async () => {
   await connectDB();
   console.log(`Server running on port ${PORT}`);
+  console.log(`Uploads directory: ${path.join(__dirname, '../uploads')}`);
 });
 
+export { io };

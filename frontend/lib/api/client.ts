@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000';
 
 export const apiClient = axios.create({
   baseURL: API_URL,
@@ -35,3 +36,10 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Helper to get full image URL
+export const getImageUrl = (path: string): string => {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  return `${BASE_URL}${path}`;
+};
