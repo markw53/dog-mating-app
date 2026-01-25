@@ -1,19 +1,41 @@
 import { Response } from 'express';
-import Conversation from '../models/Conversation';
-import Message from '../models/Message';
+import prisma from '../config/database';
 import { AuthRequest } from '../middleware/auth';
 
 export const getConversations = async (req: AuthRequest, res: Response) => {
   try {
-    const conversations = await Conversation.find({
-      participants: req.user!._id
-    })
-      .populate('participants', 'firstName lastName avatar')
-      .populate('dogReference', 'name breed mainImage')
-      .sort('-lastMessageAt');
+    const conversations = await prisma.conversation.findMany({
+      where: {
+        participants: {
+          some: {
+            id: req.user!.id,
+          },
+        },
+      },
+      include: {
+        participants: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatar: true,
+          },
+        },
+        dog: {
+          select: {
+            id: true,
+            name: true,
+            breed: true,
+            mainImage: true,
+          },
+        },
+      },
+      orderBy: { lastMessageAt: 'desc' },
+    });
 
     res.json({ success: true, conversations });
   } catch (error: any) {
+    console.error('Get conversations error:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -22,46 +44,88 @@ export const getOrCreateConversation = async (req: AuthRequest, res: Response) =
   try {
     const { recipientId, dogId } = req.body;
 
-    // Check if conversation exists
-    let conversation = await Conversation.findOne({
-      participants: { $all: [req.user!._id, recipientId] }
-    }).populate('participants', 'firstName lastName avatar');
+    // Check if conversation already exists
+    let conversation = await prisma.conversation.findFirst({
+      where: {
+        AND: [
+          { participants: { some: { id: req.user!.id } } },
+          { participants: { some: { id: recipientId } } },
+        ],
+      },
+      include: {
+        participants: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatar: true,
+          },
+        },
+      },
+    });
 
     if (!conversation) {
-      conversation = await Conversation.create({
-        participants: [req.user!._id, recipientId],
-        dogReference: dogId || undefined
+      conversation = await prisma.conversation.create({
+        data: {
+          participants: {
+            connect: [{ id: req.user!.id }, { id: recipientId }],
+          },
+          dogId: dogId || null,
+        },
+        include: {
+          participants: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              avatar: true,
+            },
+          },
+        },
       });
-      
-      await conversation.populate('participants', 'firstName lastName avatar');
     }
 
     res.json({ success: true, conversation });
   } catch (error: any) {
+    console.error('Get or create conversation error:', error);
     res.status(500).json({ message: error.message });
   }
 };
 
 export const getMessages = async (req: AuthRequest, res: Response) => {
   try {
-    const { conversationId } = req.params;
+    const conversationId = Array.isArray(req.params.conversationId) 
+      ? req.params.conversationId[0] 
+      : req.params.conversationId;
 
-    const messages = await Message.find({ conversation: conversationId })
-      .populate('sender', 'firstName lastName avatar')
-      .sort('createdAt');
+    const messages = await prisma.message.findMany({
+      where: { conversationId },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatar: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
 
     // Mark messages as read
-    await Message.updateMany(
-      {
-        conversation: conversationId,
-        receiver: req.user!._id,
-        read: false
+    await prisma.message.updateMany({
+      where: {
+        conversationId,
+        receiverId: req.user!.id,
+        read: false,
       },
-      { read: true }
-    );
+      data: { read: true },
+    });
 
     res.json({ success: true, messages });
   } catch (error: any) {
+    console.error('Get messages error:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -70,36 +134,53 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
   try {
     const { conversationId, content, receiverId } = req.body;
 
-    const message = await Message.create({
-      conversation: conversationId,
-      sender: req.user!._id,
-      receiver: receiverId,
-      content
+    const message = await prisma.message.create({
+      data: {
+        conversationId,
+        senderId: req.user!.id,
+        receiverId,
+        content,
+      },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatar: true,
+          },
+        },
+      },
     });
 
     // Update conversation
-    await Conversation.findByIdAndUpdate(conversationId, {
-      lastMessage: content,
-      lastMessageAt: new Date()
+    await prisma.conversation.update({
+      where: { id: conversationId },
+      data: {
+        lastMessage: content,
+        lastMessageAt: new Date(),
+      },
     });
-
-    await message.populate('sender', 'firstName lastName avatar');
 
     res.status(201).json({ success: true, message });
   } catch (error: any) {
+    console.error('Send message error:', error);
     res.status(500).json({ message: error.message });
   }
 };
 
 export const getUnreadCount = async (req: AuthRequest, res: Response) => {
   try {
-    const count = await Message.countDocuments({
-      receiver: req.user!._id,
-      read: false
+    const count = await prisma.message.count({
+      where: {
+        receiverId: req.user!.id,
+        read: false,
+      },
     });
 
     res.json({ success: true, count });
   } catch (error: any) {
+    console.error('Get unread count error:', error);
     res.status(500).json({ message: error.message });
   }
 };

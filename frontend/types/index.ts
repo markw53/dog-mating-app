@@ -1,21 +1,17 @@
 export interface User {
-  _id: string;
   id: string;
+  _id?: string; // For backwards compatibility
   email: string;
   firstName: string;
   lastName: string;
   role: 'user' | 'admin';
   phone?: string;
   location?: {
-    address: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    country: string;
-    coordinates?: {
-      lat: number;
-      lng: number;
-    };
+    address?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+    country?: string;
   };
   avatar?: string;
   verified: boolean;
@@ -23,7 +19,8 @@ export interface User {
 }
 
 export interface Dog {
-  _id: string;
+  id: string;
+  _id?: string; // For backwards compatibility
   owner: User;
   name: string;
   breed: string;
@@ -34,12 +31,12 @@ export interface Dog {
   color: string;
   description: string;
   images: string[];
-  mainImage: string;
+  mainImage: string | null;
   
-  healthInfo: {
+  healthInfo?: {
     vaccinated: boolean;
     neutered: boolean;
-    healthCertificates: string[];
+    healthCertificates?: string[];
     veterinarian?: {
       name: string;
       contact: string;
@@ -47,7 +44,14 @@ export interface Dog {
     medicalHistory?: string;
   };
   
-  pedigree: {
+  // Flatten health info for Prisma
+  vaccinated: boolean;
+  neutered: boolean;
+  vetName?: string;
+  vetContact?: string;
+  medicalHistory?: string;
+  
+  pedigree?: {
     registered: boolean;
     registrationNumber?: string;
     registry?: string;
@@ -56,7 +60,14 @@ export interface Dog {
     pedigreeDocument?: string;
   };
   
-  breeding: {
+  // Flatten pedigree for Prisma
+  registered: boolean;
+  registrationNumber?: string;
+  registry?: string;
+  sire?: string;
+  dam?: string;
+  
+  breeding?: {
     available: boolean;
     studFee?: number;
     studFeeNegotiable: boolean;
@@ -64,17 +75,27 @@ export interface Dog {
     temperament: string[];
   };
   
-  location: {
-    address: string;
+  // Flatten breeding for Prisma
+  available: boolean;
+  studFee?: number;
+  studFeeNegotiable: boolean;
+  previousLitters: number;
+  temperament: string[];
+  
+  location?: {
+    address?: string;
     city: string;
     state: string;
-    zipCode: string;
+    zipCode?: string;
     country: string;
-    coordinates?: {
-      lat: number;
-      lng: number;
-    };
   };
+  
+  // Flatten location for Prisma
+  address?: string;
+  city: string;
+  county: string;
+  postcode?: string;
+  country: string;
   
   status: 'active' | 'inactive' | 'pending';
   views: number;
@@ -84,8 +105,10 @@ export interface Dog {
 }
 
 export interface Message {
-  _id: string;
+  id: string;
+  _id?: string;
   conversation: string;
+  conversationId?: string;
   sender: User;
   receiver: User;
   content: string;
@@ -94,17 +117,21 @@ export interface Message {
 }
 
 export interface Conversation {
-  _id: string;
+  id: string;
+  _id?: string;
   participants: User[];
   dogReference?: Dog;
+  dog?: Dog;
   lastMessage?: string;
   lastMessageAt: string;
   createdAt: string;
 }
 
 export interface Review {
-  _id: string;
-  dog: string;
+  id: string;
+  _id?: string;
+  dog?: string;
+  dogId?: string;
   reviewer: User;
   rating: number;
   comment: string;
