@@ -6,6 +6,7 @@ import http from 'http';
 import path from 'path';
 import { connectDB } from './config/database';
 import { errorHandler } from './middleware/errorHandler';
+import testRoutes from './routes/testRoutes';
 
 // Routes
 import authRoutes from './routes/authRoutes';
@@ -33,12 +34,34 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files - IMPORTANT: This must be before routes
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Serve static files with logging
+const uploadsPath = path.join(__dirname, '../uploads');
+console.log('Uploads directory path:', uploadsPath);
+
+app.use('/uploads', (req, res, next) => {
+  console.log('Serving static file:', req.url);
+  next();
+}, express.static(uploadsPath, {
+  setHeaders: (res, filePath) => {
+    console.log('Serving file:', filePath);
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
+}));
 
 // Test route
 app.get('/', (req, res) => {
   res.json({ message: 'Backend is running!' });
+});
+
+// Test uploads directory
+app.get('/test-uploads', (req, res) => {
+  const fs = require('fs');
+  const files = fs.readdirSync(uploadsPath);
+  res.json({ 
+    uploadsPath,
+    files,
+    count: files.length 
+  });
 });
 
 // API Routes
@@ -50,6 +73,9 @@ app.use('/api/admin', adminRoutes);
 
 // Error handler
 app.use(errorHandler);
+
+// Test Routes
+app.use('/api/test', testRoutes);
 
 // Socket.io
 const userSockets = new Map<string, string>();
@@ -82,8 +108,9 @@ const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, async () => {
   await connectDB();
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Uploads directory: ${path.join(__dirname, '../uploads')}`);
+  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`📁 Uploads directory: ${uploadsPath}`);
+  console.log(`🌐 CORS enabled for: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`);
 });
 
 export { io };

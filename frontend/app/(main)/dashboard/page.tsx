@@ -81,7 +81,7 @@ export default function DashboardPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {dogs.map((dog) => (
-              <div key={dog._id} className="card hover:shadow-lg transition-shadow">
+              <div key={dog._id || dog.id} className="card hover:shadow-lg transition-shadow">
                 <div className="aspect-w-16 aspect-h-12 bg-gray-200 rounded-lg overflow-hidden mb-4">
                   <Image
                     src={dog.mainImage || dog.images[0] || '/placeholder-dog.jpg'}
@@ -116,20 +116,20 @@ export default function DashboardPage() {
 
                   <div className="flex space-x-2 pt-3 border-t">
                     <Link
-                      href={`/dogs/${dog._id}`}
+                      href={`/dogs/${dog._id || dog.id}`}
                       className="flex-1 btn-secondary text-center text-sm py-2"
                     >
                       View
                     </Link>
                     <Link
-                      href={`/dashboard/edit-dog/${dog._id}`}
+                      href={`/dashboard/edit-dog/${dog._id || dog.id}`}
                       className="flex-1 btn-primary text-center text-sm py-2 flex items-center justify-center"
                     >
                       <Edit className="h-4 w-4 mr-1" />
                       Edit
                     </Link>
                     <button
-                      onClick={() => handleDelete(dog._id)}
+                      onClick={() => handleDelete(dog._id || dog.id)}
                       className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                     >
                       <Trash2 className="h-4 w-4" />

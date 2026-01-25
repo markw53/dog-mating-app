@@ -1,50 +1,73 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useRef } from 'react';
 import { useAuthStore } from '@/lib/store/authStore';
 import { authApi } from '@/lib/api/auth';
+import { apiClient, getImageUrl } from '@/lib/api/client';
 import { User, MapPin, Mail, Phone, Camera, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 function ProfilePageContent() {
-  const router = useRouter();
-  const { user, isAuthenticated, setUser } = useAuthStore();
+  const { user, setUser } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    address: '',
-    city: '',
-    county: '',
-    postcode: '',
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    address: user?.location?.address || '',
+    city: user?.location?.city || '',
+    county: user?.location?.state || '',
+    postcode: user?.location?.zipCode || '',
   });
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login');
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
       return;
     }
 
-    if (user) {
-      setFormData({
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        email: user.email || '',
-        phone: user.phone || '',
-        address: user.location?.address || '',
-        city: user.location?.city || '',
-        county: user.location?.state || '',
-        postcode: user.location?.zipCode || '',
-      });
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be less than 5MB');
+      return;
     }
-  }, [isAuthenticated, router, user]);
+
+    setUploadingAvatar(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const response = await apiClient.post('/auth/upload-avatar', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      setUser(response.data.user);
+      toast.success('Profile picture updated!');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload avatar';
+      toast.error(errorMessage);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -71,9 +94,7 @@ function ProfilePageContent() {
         },
       });
 
-      if (response.user) {
-        setUser(response.user);
-      }
+      setUser(response.user);
       toast.success('Profile updated successfully!');
       setEditing(false);
     } catch (error: unknown) {
@@ -84,13 +105,9 @@ function ProfilePageContent() {
     }
   };
 
-  if (!user) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Loader2 className="h-12 w-12 animate-spin text-primary-600" />
-      </div>
-    );
-  }
+  if (!user) return null;
+
+  const avatarUrl = user.avatar ? getImageUrl(user.avatar) : null;
 
   return (
     <div className="bg-gray-50 min-h-screen py-8">
@@ -105,22 +122,40 @@ function ProfilePageContent() {
           <div className="lg:col-span-1">
             <div className="card text-center">
               <div className="relative inline-block mb-4">
-                {user.avatar ? (
-                  <Image
-                    src={user.avatar}
-                    alt={user.firstName}
-                    width={120}
-                    height={120}
-                    className="rounded-full mx-auto"
-                  />
+                {avatarUrl ? (
+                  <div className="w-30 h-30 rounded-full overflow-hidden mx-auto relative">
+                    <Image
+                      src={avatarUrl}
+                      alt={user.firstName}
+                      width={120}
+                      height={120}
+                      className="rounded-full object-cover"
+                      unoptimized
+                    />
+                  </div>
                 ) : (
                   <div className="w-30 h-30 bg-gray-200 rounded-full flex items-center justify-center mx-auto">
                     <User className="h-16 w-16 text-gray-400" />
                   </div>
                 )}
-                <button className="absolute bottom-0 right-0 bg-primary-600 text-white p-2 rounded-full hover:bg-primary-700">
-                  <Camera className="h-4 w-4" />
+                <button
+                  onClick={handleAvatarClick}
+                  disabled={uploadingAvatar}
+                  className="absolute bottom-0 right-0 bg-primary-600 text-white p-2 rounded-full hover:bg-primary-700 disabled:opacity-50"
+                >
+                  {uploadingAvatar ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Camera className="h-4 w-4" />
+                  )}
                 </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                />
               </div>
 
               <h2 className="text-xl font-bold text-gray-900">

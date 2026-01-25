@@ -77,28 +77,28 @@ export default function EditDogPage() {
         color: dogData.color,
         description: dogData.description,
         
-        vaccinated: dogData.healthInfo.vaccinated,
-        neutered: dogData.healthInfo.neutered,
-        vetName: dogData.healthInfo.veterinarian?.name || '',
-        vetContact: dogData.healthInfo.veterinarian?.contact || '',
-        medicalHistory: dogData.healthInfo.medicalHistory || '',
+        vaccinated: dogData.healthInfo?.vaccinated ?? false,
+        neutered: dogData.healthInfo?.neutered ?? false,
+        vetName: dogData.healthInfo?.veterinarian?.name ?? '',
+        vetContact: dogData.healthInfo?.veterinarian?.contact ?? '',
+        medicalHistory: dogData.healthInfo?.medicalHistory ?? '',
         
-        registered: dogData.pedigree.registered,
-        registrationNumber: dogData.pedigree.registrationNumber || '',
-        registry: dogData.pedigree.registry || '',
-        sire: dogData.pedigree.sire || '',
-        dam: dogData.pedigree.dam || '',
+        registered: dogData.pedigree?.registered ?? false,
+        registrationNumber: dogData.pedigree?.registrationNumber ?? '',
+        registry: dogData.pedigree?.registry ?? '',
+        sire: dogData.pedigree?.sire ?? '',
+        dam: dogData.pedigree?.dam ?? '',
         
-        available: dogData.breeding.available,
-        studFee: dogData.breeding.studFee?.toString() || '',
-        studFeeNegotiable: dogData.breeding.studFeeNegotiable,
-        previousLitters: dogData.breeding.previousLitters.toString(),
-        temperament: dogData.breeding.temperament || [],
+        available: dogData.breeding?.available ?? true,
+        studFee: dogData.breeding?.studFee?.toString() ?? '',
+        studFeeNegotiable: dogData.breeding?.studFeeNegotiable ?? false,
+        previousLitters: dogData.breeding?.previousLitters.toString() ?? '0',
+        temperament: dogData.breeding?.temperament ?? [],
         
-        address: dogData.location.address || '',
-        city: dogData.location.city,
-        county: dogData.location.state, // Using state field for county
-        postcode: dogData.location.zipCode || '',
+        address: dogData.location?.address ?? '',
+        city: dogData.location?.city ?? '',
+        county: dogData.location?.state ?? '', // Using state field for county
+        postcode: dogData.location?.zipCode ?? '',
       });
     } catch {
       toast.error('Failed to load dog details');

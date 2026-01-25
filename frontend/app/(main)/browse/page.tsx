@@ -35,7 +35,7 @@ export default function DogDetailPage() {
     try {
       const response = await dogsApi.getById(params.id as string);
       setDog(response.dog);
-      setSelectedImage(response.dog.mainImage || response.dog.images[0]);
+      setSelectedImage(response.dog.mainImage || response.dog.images[0] || '/placeholder-dog.jpg');
     } catch {
       toast.error('Failed to load dog details');
       router.push('/browse');
@@ -71,9 +71,9 @@ export default function DogDetailPage() {
     try {
       const response = await messagesApi.getOrCreateConversation(
         dog!.owner._id || dog!.owner.id,
-        dog!._id
+        dog!._id || dog!.id
       );
-      router.push(`/messages?conversation=${response.conversation._id}`);
+      router.push(`/messages?conversation=${response.conversation._id || response.conversation.id}`);
     } catch {
       toast.error('Failed to start conversation');
     }
@@ -136,7 +136,7 @@ export default function DogDetailPage() {
               </div>
 
               {/* Image Thumbnails */}
-              {dog.images.length > 1 && (
+              {dog.images && dog.images.length > 1 && (
                 <div className="grid grid-cols-4 gap-2">
                   {dog.images.map((image, index) => (
                     <button
@@ -175,35 +175,37 @@ export default function DogDetailPage() {
             </div>
 
             {/* Health Information */}
-            <div className="card">
-              <h2 className="text-2xl font-bold mb-4">Health Information</h2>
-              <div className="space-y-3">
-                <HealthItem
-                  label="Vaccinated"
-                  value={dog.healthInfo.vaccinated}
-                />
-                <HealthItem
-                  label="Neutered/Spayed"
-                  value={dog.healthInfo.neutered}
-                />
-                {dog.healthInfo.veterinarian && (
-                  <div>
-                    <p className="font-semibold">Veterinarian</p>
-                    <p className="text-gray-700">{dog.healthInfo.veterinarian.name}</p>
-                    <p className="text-gray-600 text-sm">{dog.healthInfo.veterinarian.contact}</p>
-                  </div>
-                )}
-                {dog.healthInfo.medicalHistory && (
-                  <div>
-                    <p className="font-semibold">Medical History</p>
-                    <p className="text-gray-700">{dog.healthInfo.medicalHistory}</p>
-                  </div>
-                )}
+            {dog.healthInfo && (
+              <div className="card">
+                <h2 className="text-2xl font-bold mb-4">Health Information</h2>
+                <div className="space-y-3">
+                  <HealthItem
+                    label="Vaccinated"
+                    value={dog.healthInfo.vaccinated}
+                  />
+                  <HealthItem
+                    label="Neutered/Spayed"
+                    value={dog.healthInfo.neutered}
+                  />
+                  {dog.healthInfo.veterinarian && (
+                    <div>
+                      <p className="font-semibold">Veterinarian</p>
+                      <p className="text-gray-700">{dog.healthInfo.veterinarian.name}</p>
+                      <p className="text-gray-600 text-sm">{dog.healthInfo.veterinarian.contact}</p>
+                    </div>
+                  )}
+                  {dog.healthInfo.medicalHistory && (
+                    <div>
+                      <p className="font-semibold">Medical History</p>
+                      <p className="text-gray-700">{dog.healthInfo.medicalHistory}</p>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Pedigree */}
-            {dog.pedigree.registered && (
+            {dog.pedigree?.registered && (
               <div className="card">
                 <h2 className="text-2xl font-bold mb-4">Pedigree Information</h2>
                 <div className="space-y-3">
@@ -216,42 +218,44 @@ export default function DogDetailPage() {
             )}
 
             {/* Breeding Info */}
-            <div className="card">
-              <h2 className="text-2xl font-bold mb-4">Breeding Information</h2>
-              <div className="space-y-3">
-                <HealthItem
-                  label="Available for Breeding"
-                  value={dog.breeding.available}
-                />
-                {dog.breeding.studFee && (
-                  <InfoItem
-                    label="Stud Fee"
-                    value={`${formatCurrency(dog.breeding.studFee)}${
-                      dog.breeding.studFeeNegotiable ? ' (Negotiable)' : ''
-                    }`}
+            {dog.breeding && (
+              <div className="card">
+                <h2 className="text-2xl font-bold mb-4">Breeding Information</h2>
+                <div className="space-y-3">
+                  <HealthItem
+                    label="Available for Breeding"
+                    value={dog.breeding.available}
                   />
-                )}
-                <InfoItem
-                  label="Previous Litters"
-                  value={dog.breeding.previousLitters.toString()}
-                />
-                {dog.breeding.temperament.length > 0 && (
-                  <div>
-                    <p className="font-semibold mb-2">Temperament</p>
-                    <div className="flex flex-wrap gap-2">
-                      {dog.breeding.temperament.map((trait, index) => (
-                        <span
-                          key={index}
-                          className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm"
-                        >
-                          {trait}
-                        </span>
-                      ))}
+                  {dog.breeding.studFee && (
+                    <InfoItem
+                      label="Stud Fee"
+                      value={`${formatCurrency(dog.breeding.studFee)}${
+                        dog.breeding.studFeeNegotiable ? ' (Negotiable)' : ''
+                      }`}
+                    />
+                  )}
+                  <InfoItem
+                    label="Previous Litters"
+                    value={dog.breeding.previousLitters.toString()}
+                  />
+                  {dog.breeding.temperament && dog.breeding.temperament.length > 0 && (
+                    <div>
+                      <p className="font-semibold mb-2">Temperament</p>
+                      <div className="flex flex-wrap gap-2">
+                        {dog.breeding.temperament.map((trait, index) => (
+                          <span
+                            key={index}
+                            className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm"
+                          >
+                            {trait}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Reviews */}
             <div className="card">
@@ -281,7 +285,7 @@ export default function DogDetailPage() {
 
               {showReviewForm && (
                 <ReviewForm
-                  dogId={dog._id}
+                  dogId={dog._id || dog.id}
                   onSuccess={() => {
                     setShowReviewForm(false);
                     fetchReviews();
@@ -292,7 +296,7 @@ export default function DogDetailPage() {
 
               <div className="space-y-4 mt-6">
                 {reviews.map((review) => (
-                  <ReviewCard key={review._id} review={review} />
+                  <ReviewCard key={review._id || review.id} review={review} />
                 ))}
                 {reviews.length === 0 && (
                   <p className="text-gray-500 text-center py-8">
@@ -311,13 +315,15 @@ export default function DogDetailPage() {
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">{dog.name}</h1>
                 <p className="text-xl text-gray-600 mb-4">{dog.breed}</p>
                 
-                <div className="flex items-center text-gray-600 mb-4">
-                  <MapPin className="h-5 w-5 mr-2" />
-                  <span>{dog.location.city}, {dog.location.state}</span>
-                </div>
+                {dog.location && (
+                  <div className="flex items-center text-gray-600 mb-4">
+                    <MapPin className="h-5 w-5 mr-2" />
+                    <span>{dog.location.city}, {dog.location.state}</span>
+                  </div>
+                )}
 
                 <div className="flex items-center space-x-2 mb-4">
-                  {dog.breeding.available ? (
+                  {dog.breeding?.available ? (
                     <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
                       Available for Breeding
                     </span>
@@ -349,7 +355,7 @@ export default function DogDetailPage() {
 
                 {isOwner && (
                   <button
-                    onClick={() => router.push(`/dashboard/edit-dog/${dog._id}`)}
+                    onClick={() => router.push(`/dashboard/edit-dog/${dog._id || dog.id}`)}
                     className="btn-primary w-full"
                   >
                     Edit Listing

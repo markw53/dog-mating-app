@@ -36,7 +36,7 @@ export default function MessagesPage() {
       // Auto-select conversation from URL or first one
       const conversationId = searchParams.get('conversation');
       if (conversationId) {
-        const conv = response.conversations.find(c => c._id === conversationId);
+        const conv = response.conversations.find(c => (c._id || c.id) === conversationId);
         if (conv) {
           setSelectedConversation(conv);
         }
@@ -86,7 +86,7 @@ export default function MessagesPage() {
 
   useEffect(() => {
     if (selectedConversation) {
-      fetchMessages(selectedConversation._id);
+      fetchMessages(selectedConversation._id || selectedConversation.id);
     }
   }, [selectedConversation, fetchMessages]);
 
@@ -103,7 +103,7 @@ export default function MessagesPage() {
       );
 
       const response = await messagesApi.sendMessage(
-        selectedConversation._id,
+        selectedConversation._id || selectedConversation.id,
         messageText,
         otherParticipant!._id || otherParticipant!.id
       );
@@ -163,10 +163,10 @@ export default function MessagesPage() {
 
                   return (
                     <button
-                      key={conversation._id}
+                      key={conversation._id || conversation.id}
                       onClick={() => setSelectedConversation(conversation)}
                       className={`w-full text-left p-3 rounded-lg transition-colors ${
-                        selectedConversation?._id === conversation._id
+                        (selectedConversation?._id || selectedConversation?.id) === (conversation._id || conversation.id)
                           ? 'bg-primary-50 border border-primary-300'
                           : 'hover:bg-gray-50 border border-transparent'
                       }`}
@@ -237,9 +237,11 @@ export default function MessagesPage() {
                           <h3 className="font-semibold text-lg">
                             {otherUser.firstName} {otherUser.lastName}
                           </h3>
-                          <p className="text-sm text-gray-500">
-                            {otherUser.location?.city}, {otherUser.location?.state}
-                          </p>
+                          {otherUser.location && (
+                            <p className="text-sm text-gray-500">
+                              {otherUser.location.city}, {otherUser.location.state}
+                            </p>
+                          )}
                         </div>
                       </div>
                     );
@@ -253,7 +255,7 @@ export default function MessagesPage() {
 
                     return (
                       <div
-                        key={message._id}
+                        key={message._id || message.id}
                         className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
                       >
                         <div

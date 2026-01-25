@@ -140,6 +140,41 @@ export const getMe = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const uploadAvatar = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    const avatarUrl = `/uploads/${req.file.filename}`;
+    
+    const user = await prisma.user.update({
+      where: { id: req.user!.id },
+      data: { avatar: avatarUrl },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        avatar: true,
+        verified: true,
+        city: true,
+        county: true,
+        postcode: true,
+        address: true,
+        country: true,
+        createdAt: true,
+      },
+    });
+
+    res.json({ success: true, avatar: avatarUrl, user });
+  } catch (error: any) {
+    console.error('Upload avatar error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const updateProfile = async (req: AuthRequest, res: Response) => {
   try {
     const { firstName, lastName, phone, location, avatar } = req.body;
