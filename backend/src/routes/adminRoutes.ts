@@ -10,8 +10,8 @@ import { protect, authorize } from '../middleware/auth';
 
 const router = express.Router();
 
-// All routes require admin authorization
-router.use(protect, authorize('admin'));
+// All routes require admin authorization (DB stores role as ADMIN/USER)
+router.use(protect, authorize('ADMIN'));
 
 router.get('/dogs/pending', getPendingDogs);
 router.put('/dogs/:id/approve', approveDog);

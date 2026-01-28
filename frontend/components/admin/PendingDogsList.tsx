@@ -28,7 +28,7 @@ export default function PendingDogsList({
   return (
     <div className="space-y-4">
       {dogs.map((dog) => (
-        <div key={dog._id} className="card">
+        <div key={dog._id || dog.id} className="card">
           <div className="flex flex-col md:flex-row gap-6">
             <div className="w-full md:w-48 h-48 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
               <Image
@@ -78,21 +78,21 @@ export default function PendingDogsList({
 
               <div className="flex flex-wrap gap-3">
                 <button
-                  onClick={() => onApprove(dog.id)}
+                  onClick={() => onApprove(dog._id || dog.id)}
                   className="btn-primary flex items-center"
                 >
                   <CheckCircle className="h-4 w-4 mr-2" />
                   Approve
                 </button>
                 <button
-                  onClick={() => onReject(dog.id)}
+                  onClick={() => onReject(dog._id || dog.id)}
                   className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center"
                 >
                   <XCircle className="h-4 w-4 mr-2" />
                   Reject
                 </button>
                 <Link
-                  href={`/dogs/${dog.id}`}
+                  href={`/dogs/${dog._id || dog.id}`}
                   className="btn-secondary flex items-center"
                 >
                   <Eye className="h-4 w-4 mr-2" />

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/store/authStore';
 import { useRouter, usePathname } from 'next/navigation';
-import { Dog, LogOut, MessageSquare, User, PlusCircle, Menu, X, ChevronDown } from 'lucide-react';
+import { Dog, LogOut, MessageSquare, User, PlusCircle, Menu, X, ChevronDown, ShieldCheck } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
 export default function Navbar() {
@@ -78,6 +78,19 @@ export default function Navbar() {
                   <MessageSquare className="h-4 w-4" />
                   <span>Messages</span>
                 </Link>
+                {user?.role === 'admin' && (
+                  <Link
+                    href="/admin"
+                    className={`px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-1 ${
+                      pathname === '/admin'
+                        ? 'text-primary-600 bg-primary-50'
+                        : 'text-gray-700 hover:text-primary-600'
+                    }`}
+                  >
+                    <ShieldCheck className="h-4 w-4" />
+                    <span>Admin</span>
+                  </Link>
+                )}
                 <Link
                   href="/dashboard/add-dog"
                   className="btn-primary flex items-center space-x-1"
