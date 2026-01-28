@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/authStore';
 import { messagesApi } from '@/lib/api/messages';
+import { getImageUrl } from '@/lib/api/client';
 import { Conversation, Message } from '@/types';
 import { Send, User, Loader2, MessageSquare } from 'lucide-react';
 import { formatRelativeTime } from '@/lib/utils/formatters';
@@ -174,11 +175,12 @@ export default function MessagesPage() {
                       <div className="flex items-center space-x-3">
                         {otherUser.avatar ? (
                           <Image
-                            src={otherUser.avatar}
+                            src={getImageUrl(otherUser.avatar)}
                             alt={otherUser.firstName}
                             width={40}
                             height={40}
                             className="rounded-full"
+                            unoptimized
                           />
                         ) : (
                           <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
@@ -222,11 +224,12 @@ export default function MessagesPage() {
                       <div className="flex items-center space-x-3">
                         {otherUser.avatar ? (
                           <Image
-                            src={otherUser.avatar}
+                            src={getImageUrl(otherUser.avatar)}
                             alt={otherUser.firstName}
                             width={48}
                             height={48}
                             className="rounded-full"
+                            unoptimized
                           />
                         ) : (
                           <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">

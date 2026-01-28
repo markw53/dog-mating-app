@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useAuthStore } from '@/lib/store/authStore';
 import { dogsApi } from '@/lib/api/dogs';
+import { getImageUrl } from '@/lib/api/client';
 import { Upload, X, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -281,11 +282,12 @@ export default function EditDogPage() {
               {existingImages.map((image, index) => (
                 <div key={`existing-${index}`} className="relative">
                   <Image
-                    src={image}
+                    src={getImageUrl(image)}
                     alt={`Existing ${index + 1}`}
                     width={128}
                     height={128}
                     className="w-full h-32 object-cover rounded-lg"
+                    unoptimized
                   />
                   <button
                     type="button"

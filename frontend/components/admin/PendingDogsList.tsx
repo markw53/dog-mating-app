@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { CheckCircle, XCircle, Eye } from 'lucide-react';
+import { getImageUrl } from '@/lib/api/client';
 import type { Dog } from '@/types';
 
 interface PendingDogsListProps {
@@ -31,11 +32,12 @@ export default function PendingDogsList({
           <div className="flex flex-col md:flex-row gap-6">
             <div className="w-full md:w-48 h-48 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
               <Image
-                src={dog.mainImage || dog.images[0] || '/placeholder-dog.jpg'}
+                src={getImageUrl(dog.mainImage || dog.images?.[0] || '') || '/placeholder-dog.jpg'}
                 alt={dog.name}
                 width={200}
                 height={200}
                 className="w-full h-full object-cover"
+                unoptimized
               />
             </div>
 
@@ -70,7 +72,7 @@ export default function PendingDogsList({
                 </div>
                 <div>
                   <span className="text-gray-600">Location:</span>
-                  <span className="font-semibold ml-2">{dog.location.city}</span>
+                  <span className="font-semibold ml-2">{dog.location?.city ?? '—'}</span>
                 </div>
               </div>
 

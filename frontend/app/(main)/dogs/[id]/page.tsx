@@ -2,96 +2,239 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { dogsApi } from '@/lib/api/dogs';
-import { reviewsApi } from '@/lib/api/reviews';
-import { messagesApi } from '@/lib/api/messages';
-import { useAuthStore } from '@/lib/store/authStore';
-import { Dog, Review } from '@/types';
 import Image from 'next/image';
-import { 
-  MapPin, MessageCircle, Share2, 
-  CheckCircle, XCircle, Star, Loader2, User
-} from 'lucide-react';
-import { formatAge, formatCurrency, formatDate } from '@/lib/utils/formatters';
+import { useAuthStore } from '@/lib/store/authStore';
+import { dogsApi } from '@/lib/api/dogs';
+import { getImageUrl } from '@/lib/api/client';
+import { Upload, X, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import ReviewCard from '@/components/dog/ReviewCard';
-import ReviewForm from '@/components/dog/ReviewForm';
-import DogImagePlaceholder from '@/components/ui/DogImagePlaceholder';
 
-export default function DogDetailPage() {
+const POPULAR_BREEDS = [
+  'Labrador Retriever', 'German Shepherd', 'Golden Retriever', 'French Bulldog',
+  'Bulldog', 'Poodle', 'Beagle', 'Rottweiler', 'Yorkshire Terrier', 'Cocker Spaniel',
+  'Border Collie', 'Staffordshire Bull Terrier', 'Other'
+];
+
+const TEMPERAMENT_OPTIONS = [
+  'Friendly', 'Gentle', 'Energetic', 'Calm', 'Loyal', 'Intelligent',
+  'Protective', 'Playful', 'Independent', 'Affectionate'
+];
+
+export default function EditDogPage() {
   const params = useParams();
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
-  
-  const [dog, setDog] = useState<Dog | null>(null);
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [reviewStats, setReviewStats] = useState({ total: 0, avgRating: 0 });
+  const { isAuthenticated } = useAuthStore();
   const [loading, setLoading] = useState(true);
-  const [selectedImage, setSelectedImage] = useState<string>('');
-  const [imageError, setImageError] = useState(false);
-  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [images, setImages] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
+
+  const [formData, setFormData] = useState({
+    name: '',
+    breed: '',
+    gender: 'male' as 'male' | 'female',
+    dateOfBirth: '',
+    weight: '',
+    color: '',
+    description: '',
+    
+    vaccinated: false,
+    neutered: false,
+    vetName: '',
+    vetContact: '',
+    medicalHistory: '',
+    
+    registered: false,
+    registrationNumber: '',
+    registry: '',
+    sire: '',
+    dam: '',
+    
+    available: true,
+    studFee: '',
+    studFeeNegotiable: false,
+    previousLitters: '0',
+    temperament: [] as string[],
+    
+    address: '',
+    city: '',
+    county: '',
+    postcode: '',
+  });
 
   const fetchDog = useCallback(async () => {
-    if (!params.id) return;
-    
     try {
       const response = await dogsApi.getById(params.id as string);
-      setDog(response.dog);
-      const mainImg = response.dog.mainImage || response.dog.images?.[0] || '';
-      setSelectedImage(mainImg);
+      const dogData = response.dog;
+      setExistingImages(dogData.images || []);
+
+      setFormData({
+        name: dogData.name,
+        breed: dogData.breed,
+        gender: dogData.gender,
+        dateOfBirth: dogData.dateOfBirth.split('T')[0],
+        weight: dogData.weight.toString(),
+        color: dogData.color,
+        description: dogData.description,
+        
+        vaccinated: dogData.healthInfo?.vaccinated ?? false,
+        neutered: dogData.healthInfo?.neutered ?? false,
+        vetName: dogData.healthInfo?.veterinarian?.name ?? '',
+        vetContact: dogData.healthInfo?.veterinarian?.contact ?? '',
+        medicalHistory: dogData.healthInfo?.medicalHistory ?? '',
+        
+        registered: dogData.pedigree?.registered ?? false,
+        registrationNumber: dogData.pedigree?.registrationNumber ?? '',
+        registry: dogData.pedigree?.registry ?? '',
+        sire: dogData.pedigree?.sire ?? '',
+        dam: dogData.pedigree?.dam ?? '',
+        
+        available: dogData.breeding?.available ?? true,
+        studFee: dogData.breeding?.studFee?.toString() ?? '',
+        studFeeNegotiable: dogData.breeding?.studFeeNegotiable ?? false,
+        previousLitters: dogData.breeding?.previousLitters.toString() ?? '0',
+        temperament: dogData.breeding?.temperament ?? [],
+        
+        address: dogData.location?.address ?? '',
+        city: dogData.location?.city ?? '',
+        county: dogData.location?.state ?? '', // Using state field for county
+        postcode: dogData.location?.zipCode ?? '',
+      });
     } catch {
       toast.error('Failed to load dog details');
-      router.push('/browse');
+      router.push('/dashboard');
     } finally {
       setLoading(false);
     }
   }, [params.id, router]);
 
-  const fetchReviews = useCallback(async () => {
-    if (!params.id) return;
-    
-    try {
-      const response = await reviewsApi.getDogReviews(params.id as string);
-      setReviews(response.reviews);
-      setReviewStats(response.stats);
-    } catch {
-      console.error('Failed to load reviews');
-    }
-  }, [params.id]);
-
   useEffect(() => {
-    fetchDog();
-    fetchReviews();
-  }, [fetchDog, fetchReviews]);
-
-  const handleContactOwner = async () => {
     if (!isAuthenticated) {
-      toast.error('Please login to contact the owner');
       router.push('/login');
       return;
     }
+    fetchDog();
+  }, [isAuthenticated, router, fetchDog]);
 
-    try {
-      const response = await messagesApi.getOrCreateConversation(
-        dog!.owner._id || dog!.owner.id,
-        dog!._id
-      );
-      router.push(`/messages?conversation=${response.conversation._id}`);
-    } catch {
-      toast.error('Failed to start conversation');
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    
+    if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
+      setFormData({ ...formData, [name]: checked });
+    } else {
+      setFormData({ ...formData, [name]: value });
     }
   };
 
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: `${dog?.name} - ${dog?.breed}`,
-        text: `Check out ${dog?.name} on DogMate!`,
-        url: window.location.href,
+  const handleTemperamentToggle = (trait: string) => {
+    setFormData({
+      ...formData,
+      temperament: formData.temperament.includes(trait)
+        ? formData.temperament.filter(t => t !== trait)
+        : [...formData.temperament, trait]
+    });
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length + images.length + existingImages.length > 10) {
+      toast.error('Maximum 10 images allowed');
+      return;
+    }
+
+    setImages([...images, ...files]);
+
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviews(prev => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeNewImage = (index: number) => {
+    setImages(images.filter((_, i) => i !== index));
+    setPreviews(previews.filter((_, i) => i !== index));
+  };
+
+  const removeExistingImage = (index: number) => {
+    setExistingImages(existingImages.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (existingImages.length === 0 && images.length === 0) {
+      toast.error('Please add at least one image');
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const data = new FormData();
+
+      data.append('name', formData.name);
+      data.append('breed', formData.breed);
+      data.append('gender', formData.gender);
+      data.append('dateOfBirth', formData.dateOfBirth);
+      data.append('weight', formData.weight);
+      data.append('color', formData.color);
+      data.append('description', formData.description);
+
+      const birthDate = new Date(formData.dateOfBirth);
+      const age = new Date().getFullYear() - birthDate.getFullYear();
+      data.append('age', age.toString());
+
+      data.append('healthInfo[vaccinated]', formData.vaccinated.toString());
+      data.append('healthInfo[neutered]', formData.neutered.toString());
+      if (formData.vetName) data.append('healthInfo[veterinarian][name]', formData.vetName);
+      if (formData.vetContact) data.append('healthInfo[veterinarian][contact]', formData.vetContact);
+      if (formData.medicalHistory) data.append('healthInfo[medicalHistory]', formData.medicalHistory);
+
+      data.append('pedigree[registered]', formData.registered.toString());
+      if (formData.registrationNumber) data.append('pedigree[registrationNumber]', formData.registrationNumber);
+      if (formData.registry) data.append('pedigree[registry]', formData.registry);
+      if (formData.sire) data.append('pedigree[sire]', formData.sire);
+      if (formData.dam) data.append('pedigree[dam]', formData.dam);
+
+      data.append('breeding[available]', formData.available.toString());
+      if (formData.studFee) data.append('breeding[studFee]', formData.studFee);
+      data.append('breeding[studFeeNegotiable]', formData.studFeeNegotiable.toString());
+      data.append('breeding[previousLitters]', formData.previousLitters);
+      formData.temperament.forEach((trait, index) => {
+        data.append(`breeding[temperament][${index}]`, trait);
       });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      toast.success('Link copied to clipboard!');
+
+      data.append('location[address]', formData.address);
+      data.append('location[city]', formData.city);
+      data.append('location[state]', formData.county);
+      data.append('location[zipCode]', formData.postcode);
+      data.append('location[country]', 'UK');
+
+      // Keep existing images
+      existingImages.forEach((img, index) => {
+        data.append(`existingImages[${index}]`, img);
+      });
+
+      // Add new images
+      images.forEach(image => {
+        data.append('images', image);
+      });
+
+      await dogsApi.update(params.id as string, data);
+      toast.success('Dog updated successfully!');
+      router.push('/dashboard');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Failed to update dog';
+      toast.error(errorMessage);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -103,376 +246,527 @@ export default function DogDetailPage() {
     );
   }
 
-  if (!dog) {
-    return null;
-  }
-
-  const isOwner = user?._id === dog.owner._id || user?.id === dog.owner.id;
-
   return (
     <div className="bg-gray-50 min-h-screen py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-6">
-          <button
-            onClick={() => router.back()}
-            className="text-primary-600 hover:text-primary-700 mb-4"
-          >
-            ← Back to browse
-          </button>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Edit Dog</h1>
+          <p className="text-gray-600 mt-1">Update your dog&apos;s information</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Images and Details */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Main Image */}
-            <div className="card">
-              <div className="bg-gray-200 rounded-lg overflow-hidden mb-4 relative h-96">
-                {selectedImage && !imageError ? (
-                  <Image
-                    src={selectedImage}
-                    alt={dog.name}
-                    fill
-                    className="object-cover"
-                    onError={() => setImageError(true)}
-                    priority
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 50vw"
-                  />
-                ) : (
-                  <DogImagePlaceholder className="w-full h-full" />
-                )}
-              </div>
-
-              {/* Image Thumbnails */}
-              {dog.images && dog.images.length > 1 && (
-                <div className="grid grid-cols-4 gap-2">
-                  {dog.images.map((image, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        setSelectedImage(image);
-                        setImageError(false);
-                      }}
-                      className={`aspect-square rounded-lg overflow-hidden border-2 relative ${
-                        selectedImage === image ? 'border-primary-600' : 'border-gray-200'
-                      }`}
-                    >
-                      <Image
-                        src={image}
-                        alt={`${dog.name} ${index + 1}`}
-                        fill
-                        className="object-cover"
-                        onError={(e) => {
-                          e.currentTarget.src = '';
-                        }}
-                        sizes="(max-width: 768px) 25vw, 200px"
-                      />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* About */}
-            <div className="card">
-              <h2 className="text-2xl font-bold mb-4">About {dog.name}</h2>
-              <p className="text-gray-700 whitespace-pre-line">{dog.description}</p>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-                <InfoItem label="Breed" value={dog.breed} />
-                <InfoItem label="Gender" value={dog.gender} />
-                <InfoItem label="Age" value={formatAge(dog.dateOfBirth)} />
-                <InfoItem label="Weight" value={`${dog.weight} lbs`} />
-                <InfoItem label="Colour" value={dog.color} />
-                <InfoItem label="Views" value={dog.views.toString()} />
-              </div>
-            </div>
-
-            {/* Health Information */}
-            {dog.healthInfo && (
-              <div className="card">
-                <h2 className="text-2xl font-bold mb-4">Health Information</h2>
-                <div className="space-y-3">
-                  <HealthItem
-                    label="Vaccinated"
-                    value={dog.healthInfo.vaccinated}
-                  />
-                  <HealthItem
-                    label="Neutered/Spayed"
-                    value={dog.healthInfo.neutered}
-                  />
-                  {dog.healthInfo.veterinarian && (
-                    <div>
-                      <p className="font-semibold">Veterinarian</p>
-                      <p className="text-gray-700">{dog.healthInfo.veterinarian.name}</p>
-                      <p className="text-gray-600 text-sm">{dog.healthInfo.veterinarian.contact}</p>
-                    </div>
-                  )}
-                  {dog.healthInfo.medicalHistory && (
-                    <div>
-                      <p className="font-semibold">Medical History</p>
-                      <p className="text-gray-700">{dog.healthInfo.medicalHistory}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Pedigree */}
-            {dog.pedigree?.registered && (
-              <div className="card">
-                <h2 className="text-2xl font-bold mb-4">Pedigree Information</h2>
-                <div className="space-y-3">
-                  <InfoItem label="Registry" value={dog.pedigree.registry || 'N/A'} />
-                  <InfoItem label="Registration Number" value={dog.pedigree.registrationNumber || 'N/A'} />
-                  {dog.pedigree.sire && <InfoItem label="Sire" value={dog.pedigree.sire} />}
-                  {dog.pedigree.dam && <InfoItem label="Dam" value={dog.pedigree.dam} />}
-                </div>
-              </div>
-            )}
-
-            {/* Breeding Info */}
-            {dog.breeding && (
-              <div className="card">
-                <h2 className="text-2xl font-bold mb-4">Breeding Information</h2>
-                <div className="space-y-3">
-                  <HealthItem
-                    label="Available for Breeding"
-                    value={dog.breeding.available}
-                  />
-                  {dog.breeding.studFee && (
-                    <InfoItem
-                      label="Stud Fee"
-                      value={`${formatCurrency(dog.breeding.studFee)}${
-                        dog.breeding.studFeeNegotiable ? ' (Negotiable)' : ''
-                      }`}
-                    />
-                  )}
-                  <InfoItem
-                    label="Previous Litters"
-                    value={dog.breeding.previousLitters.toString()}
-                  />
-                  {dog.breeding.temperament.length > 0 && (
-                    <div>
-                      <p className="font-semibold mb-2">Temperament</p>
-                      <div className="flex flex-wrap gap-2">
-                        {dog.breeding.temperament.map((trait, index) => (
-                          <span
-                            key={index}
-                            className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm"
-                          >
-                            {trait}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Reviews */}
-            <div className="card">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold">
-                  Reviews ({reviewStats.total})
-                </h2>
-                {isAuthenticated && !isOwner && (
-                  <button
-                    onClick={() => setShowReviewForm(!showReviewForm)}
-                    className="btn-primary"
-                  >
-                    Write a Review
-                  </button>
-                )}
-              </div>
-
-              {reviewStats.total > 0 && (
-                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <Star className="h-6 w-6 text-yellow-400 fill-current" />
-                    <span className="text-2xl font-bold">{reviewStats.avgRating.toFixed(1)}</span>
-                    <span className="text-gray-600">out of 5</span>
-                  </div>
-                </div>
-              )}
-
-              {showReviewForm && (
-                <ReviewForm
-                  dogId={dog._id || dog.id}
-                  onSuccess={() => {
-                    setShowReviewForm(false);
-                    fetchReviews();
-                  }}
-                  onCancel={() => setShowReviewForm(false)}
-                />
-              )}
-
-              <div className="space-y-4 mt-6">
-                {reviews.map((review) => (
-                  <ReviewCard key={review._id} review={review} />
-                ))}
-                {reviews.length === 0 && (
-                  <p className="text-gray-500 text-center py-8">
-                    No reviews yet. Be the first to review!
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Images */}
+          <div className="card">
+            <h2 className="text-xl font-semibold mb-4">Photos</h2>
+            
+            <div className="mb-4">
+              <label className="block w-full">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-primary-500 transition-colors">
+                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                  <p className="mt-2 text-sm text-gray-600">
+                    Click to upload images (max 10 total)
                   </p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column - Owner Info and Actions */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-4 space-y-4">
-              {/* Dog Title Card */}
-              <div className="card">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">{dog.name}</h1>
-                <p className="text-xl text-gray-600 mb-4">{dog.breed}</p>
-                
-                {dog.location && (
-                  <div className="flex items-center text-gray-600 mb-4">
-                    <MapPin className="h-5 w-5 mr-2" />
-                    <span>{dog.location.city}, {dog.location.state}</span>
-                  </div>
-                )}
-
-                <div className="flex items-center space-x-2 mb-4">
-                  {dog.breeding?.available ? (
-                    <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
-                      Available for Breeding
-                    </span>
-                  ) : (
-                    <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm font-semibold">
-                      Not Available
-                    </span>
-                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
                 </div>
+              </label>
+            </div>
 
-                {!isOwner && (
-                  <div className="space-y-2">
-                    <button
-                      onClick={handleContactOwner}
-                      className="btn-primary w-full flex items-center justify-center"
-                    >
-                      <MessageCircle className="h-5 w-5 mr-2" />
-                      Contact Owner
-                    </button>
-                    <button
-                      onClick={handleShare}
-                      className="btn-secondary w-full flex items-center justify-center"
-                    >
-                      <Share2 className="h-5 w-5 mr-2" />
-                      Share
-                    </button>
-                  </div>
-                )}
-
-                {isOwner && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {/* Existing Images */}
+              {existingImages.map((image, index) => (
+                <div key={`existing-${index}`} className="relative">
+                  <Image
+                    src={getImageUrl(image)}
+                    alt={`Existing ${index + 1}`}
+                    width={128}
+                    height={128}
+                    className="w-full h-32 object-cover rounded-lg"
+                    unoptimized
+                  />
                   <button
-                    onClick={() => router.push(`/dashboard/edit-dog/${dog._id}`)}
-                    className="btn-primary w-full"
+                    type="button"
+                    onClick={() => removeExistingImage(index)}
+                    className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full hover:bg-red-700"
                   >
-                    Edit Listing
+                    <X className="h-4 w-4" />
                   </button>
-                )}
-              </div>
-
-              {/* Owner Info */}
-              <div className="card">
-                <h3 className="text-lg font-semibold mb-4">Owner Information</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-3">
-                    {dog.owner.avatar ? (
-                      <Image
-                        src={dog.owner.avatar}
-                        alt={dog.owner.firstName}
-                        width={48}
-                        height={48}
-                        className="rounded-full"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-                        <User className="h-6 w-6 text-gray-400" />
-                      </div>
-                    )}
-                    <div>
-                      <p className="font-semibold">
-                        {dog.owner.firstName} {dog.owner.lastName}
-                      </p>
-                      {dog.owner.verified && (
-                        <p className="text-sm text-green-600 flex items-center">
-                          <CheckCircle className="h-4 w-4 mr-1" />
-                          Verified Owner
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {dog.owner.location && (
-                    <div className="flex items-start space-x-2">
-                      <MapPin className="h-5 w-5 text-gray-400 mt-0.5" />
-                      <div className="text-sm text-gray-600">
-                        <p>{dog.owner.location.city}, {dog.owner.location.state}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="pt-3 border-t">
-                    <p className="text-sm text-gray-500">
-                      Member since {formatDate(dog.owner.createdAt)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Stats */}
-              <div className="card">
-                <h3 className="text-lg font-semibold mb-4">Quick Stats</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Posted</span>
-                    <span className="font-semibold">{formatDate(dog.createdAt)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Views</span>
-                    <span className="font-semibold">{dog.views}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Status</span>
-                    <span className={`font-semibold ${
-                      dog.status === 'active' ? 'text-green-600' : 'text-gray-600'
-                    }`}>
-                      {dog.status}
+                  {index === 0 && (
+                    <span className="absolute bottom-2 left-2 bg-primary-600 text-white text-xs px-2 py-1 rounded">
+                      Main
                     </span>
-                  </div>
+                  )}
                 </div>
+              ))}
+
+              {/* New Images */}
+              {previews.map((preview, index) => (
+                <div key={`new-${index}`} className="relative">
+                  <Image
+                    src={preview}
+                    alt={`New ${index + 1}`}
+                    width={128}
+                    height={128}
+                    className="w-full h-32 object-cover rounded-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeNewImage(index)}
+                    className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full hover:bg-red-700"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                  <span className="absolute bottom-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded">
+                    New
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Basic Information */}
+          <div className="card">
+            <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Name *
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  required
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="input-field"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Breed *
+                </label>
+                <select
+                  name="breed"
+                  required
+                  value={formData.breed}
+                  onChange={handleChange}
+                  className="input-field"
+                >
+                  <option value="">Select breed</option>
+                  {POPULAR_BREEDS.map(breed => (
+                    <option key={breed} value={breed}>{breed}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Gender *
+                </label>
+                <select
+                  name="gender"
+                  required
+                  value={formData.gender}
+                  onChange={handleChange}
+                  className="input-field"
+                >
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Date of Birth *
+                </label>
+                <input
+                  type="date"
+                  name="dateOfBirth"
+                  required
+                  value={formData.dateOfBirth}
+                  onChange={handleChange}
+                  className="input-field"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Weight (lbs) *
+                </label>
+                <input
+                  type="number"
+                  name="weight"
+                  required
+                  value={formData.weight}
+                  onChange={handleChange}
+                  className="input-field"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Colour *
+                </label>
+                <input
+                  type="text"
+                  name="color"
+                  required
+                  value={formData.color}
+                  onChange={handleChange}
+                  className="input-field"
+                />
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Description *
+              </label>
+              <textarea
+                name="description"
+                required
+                value={formData.description}
+                onChange={handleChange}
+                rows={4}
+                className="input-field"
+              />
+            </div>
+          </div>
+
+          {/* Health Information */}
+          <div className="card">
+            <h2 className="text-xl font-semibold mb-4">Health Information</h2>
+            
+            <div className="space-y-4">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="vaccinated"
+                  id="vaccinated"
+                  checked={formData.vaccinated}
+                  onChange={handleChange}
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                />
+                <label htmlFor="vaccinated" className="ml-2 text-sm text-gray-700">
+                  Vaccinated
+                </label>
+              </div>
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="neutered"
+                  id="neutered"
+                  checked={formData.neutered}
+                  onChange={handleChange}
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                />
+                <label htmlFor="neutered" className="ml-2 text-sm text-gray-700">
+                  Neutered/Spayed
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Veterinarian Name
+                  </label>
+                  <input
+                    type="text"
+                    name="vetName"
+                    value={formData.vetName}
+                    onChange={handleChange}
+                    className="input-field"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Veterinarian Contact
+                  </label>
+                  <input
+                    type="text"
+                    name="vetContact"
+                    value={formData.vetContact}
+                    onChange={handleChange}
+                    className="input-field"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Medical History
+                </label>
+                <textarea
+                  name="medicalHistory"
+                  value={formData.medicalHistory}
+                  onChange={handleChange}
+                  rows={3}
+                  className="input-field"
+                />
               </div>
             </div>
           </div>
-        </div>
+
+          {/* Pedigree */}
+          <div className="card">
+            <h2 className="text-xl font-semibold mb-4">Pedigree Information</h2>
+            
+            <div className="space-y-4">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="registered"
+                  id="registered"
+                  checked={formData.registered}
+                  onChange={handleChange}
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                />
+                <label htmlFor="registered" className="ml-2 text-sm text-gray-700">
+                  Registered
+                </label>
+              </div>
+
+              {formData.registered && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Registry
+                    </label>
+                    <input
+                      type="text"
+                      name="registry"
+                      value={formData.registry}
+                      onChange={handleChange}
+                      className="input-field"
+                      placeholder="e.g., The Kennel Club"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Registration Number
+                    </label>
+                    <input
+                      type="text"
+                      name="registrationNumber"
+                      value={formData.registrationNumber}
+                      onChange={handleChange}
+                      className="input-field"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Sire (Father)
+                    </label>
+                    <input
+                      type="text"
+                      name="sire"
+                      value={formData.sire}
+                      onChange={handleChange}
+                      className="input-field"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Dam (Mother)
+                    </label>
+                    <input
+                      type="text"
+                      name="dam"
+                      value={formData.dam}
+                      onChange={handleChange}
+                      className="input-field"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Breeding */}
+          <div className="card">
+            <h2 className="text-xl font-semibold mb-4">Breeding Information</h2>
+            
+            <div className="space-y-4">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="available"
+                  id="available"
+                  checked={formData.available}
+                  onChange={handleChange}
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                />
+                <label htmlFor="available" className="ml-2 text-sm text-gray-700">
+                  Available for Breeding
+                </label>
+              </div>
+
+              {formData.available && (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Stud Fee (£)
+                      </label>
+                      <input
+                        type="number"
+                        name="studFee"
+                        value={formData.studFee}
+                        onChange={handleChange}
+                        className="input-field"
+                        placeholder="e.g., 500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Previous Litters
+                      </label>
+                      <input
+                        type="number"
+                        name="previousLitters"
+                        value={formData.previousLitters}
+                        onChange={handleChange}
+                        className="input-field"
+                        min="0"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      name="studFeeNegotiable"
+                      id="studFeeNegotiable"
+                      checked={formData.studFeeNegotiable}
+                      onChange={handleChange}
+                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="studFeeNegotiable" className="ml-2 text-sm text-gray-700">
+                      Stud Fee Negotiable
+                    </label>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Temperament
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {TEMPERAMENT_OPTIONS.map(trait => (
+                        <button
+                          key={trait}
+                          type="button"
+                          onClick={() => handleTemperamentToggle(trait)}
+                          className={`px-3 py-1 rounded-full text-sm ${
+                            formData.temperament.includes(trait)
+                              ? 'bg-primary-600 text-white'
+                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          }`}
+                        >
+                          {trait}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Location */}
+          <div className="card">
+            <h2 className="text-xl font-semibold mb-4">Location</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Address
+                </label>
+                <input
+                  type="text"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  className="input-field"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  City *
+                </label>
+                <input
+                  type="text"
+                  name="city"
+                  required
+                  value={formData.city}
+                  onChange={handleChange}
+                  className="input-field"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  County *
+                </label>
+                <input
+                  type="text"
+                  name="county"
+                  required
+                  value={formData.county}
+                  onChange={handleChange}
+                  className="input-field"
+                  placeholder="e.g., Greater London"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Postcode
+                </label>
+                <input
+                  type="text"
+                  name="postcode"
+                  value={formData.postcode}
+                  onChange={handleChange}
+                  className="input-field"
+                  placeholder="e.g., SW1A 1AA"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Submit Buttons */}
+          <div className="flex space-x-4">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="btn-primary flex-1"
+            >
+              {submitting ? 'Updating...' : 'Update Dog'}
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push('/dashboard')}
+              className="btn-secondary flex-1"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
       </div>
-    </div>
-  );
-}
-
-function InfoItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-sm text-gray-600">{label}</p>
-      <p className="font-semibold capitalize">{value}</p>
-    </div>
-  );
-}
-
-function HealthItem({ label, value }: { label: string; value: boolean }) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-gray-700">{label}</span>
-      {value ? (
-        <CheckCircle className="h-5 w-5 text-green-600" />
-      ) : (
-        <XCircle className="h-5 w-5 text-red-600" />
-      )}
     </div>
   );
 }

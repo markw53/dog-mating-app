@@ -1,6 +1,7 @@
 import { Review } from '@/types';
 import { Star, User } from 'lucide-react';
 import { formatRelativeTime } from '@/lib/utils/formatters';
+import { getImageUrl } from '@/lib/api/client';
 import Image from 'next/image';
 
 interface ReviewCardProps {
@@ -13,11 +14,12 @@ export default function ReviewCard({ review }: ReviewCardProps) {
       <div className="flex items-start space-x-3">
         {review.reviewer.avatar ? (
           <Image
-            src={review.reviewer.avatar}
+            src={getImageUrl(review.reviewer.avatar)}
             alt={review.reviewer.firstName}
             width={40}
             height={40}
             className="rounded-full"
+            unoptimized
           />
         ) : (
           <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">

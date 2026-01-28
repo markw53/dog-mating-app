@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { dogsApi } from '@/lib/api/dogs';
 import { reviewsApi } from '@/lib/api/reviews';
 import { messagesApi } from '@/lib/api/messages';
+import { getImageUrl } from '@/lib/api/client';
 import { useAuthStore } from '@/lib/store/authStore';
 import { Dog, Review } from '@/types';
 import Image from 'next/image';
@@ -35,7 +36,7 @@ export default function DogDetailPage() {
     try {
       const response = await dogsApi.getById(params.id as string);
       setDog(response.dog);
-      setSelectedImage(response.dog.mainImage || response.dog.images[0] || '/placeholder-dog.jpg');
+      setSelectedImage(response.dog.mainImage || response.dog.images?.[0] || '');
     } catch {
       toast.error('Failed to load dog details');
       router.push('/browse');
@@ -126,12 +127,13 @@ export default function DogDetailPage() {
             <div className="card">
               <div className="aspect-w-16 aspect-h-12 bg-gray-200 rounded-lg overflow-hidden mb-4">
                 <Image
-                  src={selectedImage || '/placeholder-dog.jpg'}
+                  src={selectedImage ? getImageUrl(selectedImage) : '/placeholder-dog.jpg'}
                   alt={dog.name}
                   width={800}
                   height={600}
                   className="object-cover w-full h-96"
-                  onError={() => setSelectedImage('/placeholder-dog.jpg')}
+                  onError={() => setSelectedImage('')}
+                  unoptimized
                 />
               </div>
 
@@ -147,11 +149,12 @@ export default function DogDetailPage() {
                       }`}
                     >
                       <Image
-                        src={image || '/placeholder-dog.jpg'}
+                        src={image ? getImageUrl(image) : '/placeholder-dog.jpg'}
                         alt={`${dog.name} ${index + 1}`}
                         width={200}
                         height={200}
                         className="object-cover w-full h-full"
+                        unoptimized
                       />
                     </button>
                   ))}
@@ -370,11 +373,12 @@ export default function DogDetailPage() {
                   <div className="flex items-center space-x-3">
                     {dog.owner.avatar ? (
                       <Image
-                        src={dog.owner.avatar}
+                        src={getImageUrl(dog.owner.avatar)}
                         alt={dog.owner.firstName}
                         width={48}
                         height={48}
                         className="rounded-full"
+                        unoptimized
                       />
                     ) : (
                       <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">

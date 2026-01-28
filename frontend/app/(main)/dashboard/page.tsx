@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/authStore';
 import { dogsApi } from '@/lib/api/dogs';
+import { getImageUrl } from '@/lib/api/client';
 import { Dog } from '@/types';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -84,11 +85,12 @@ export default function DashboardPage() {
               <div key={dog._id || dog.id} className="card hover:shadow-lg transition-shadow">
                 <div className="aspect-w-16 aspect-h-12 bg-gray-200 rounded-lg overflow-hidden mb-4">
                   <Image
-                    src={dog.mainImage || dog.images[0] || '/placeholder-dog.jpg'}
+                    src={getImageUrl(dog.mainImage || dog.images?.[0] || '') || '/placeholder-dog.jpg'}
                     alt={dog.name}
                     width={400}
                     height={300}
                     className="object-cover w-full h-48"
+                    unoptimized
                   />
                 </div>
 

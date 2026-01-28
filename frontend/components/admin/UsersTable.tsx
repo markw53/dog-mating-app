@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { Users } from 'lucide-react';
+import { getImageUrl } from '@/lib/api/client';
 import type { User } from '@/types';
 
 interface UsersTableProps {
@@ -38,11 +39,12 @@ export default function UsersTable({ users }: UsersTableProps) {
                 <div className="flex items-center">
                   {user.avatar ? (
                     <Image
-                      src={user.avatar}
+                      src={getImageUrl(user.avatar)}
                       alt={user.firstName}
                       width={40}
                       height={40}
                       className="rounded-full"
+                      unoptimized
                     />
                   ) : (
                     <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
