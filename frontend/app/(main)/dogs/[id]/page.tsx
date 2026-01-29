@@ -11,10 +11,12 @@ import { useAuthStore } from '@/lib/store/authStore';
 import { Dog, Review } from '@/types';
 import Image from 'next/image';
 import {
-  MapPin, MessageCircle, Share2,
-  CheckCircle, XCircle, Star, Loader2, User, ShieldCheck,
+  MapPin, MessageCircle, Share2, CheckCircle, XCircle, Star, 
+  Loader2, User, ShieldCheck, ArrowLeft, Heart, Eye, Calendar,
 } from 'lucide-react';
 import { formatAge, formatCurrency, formatDate } from '@/lib/utils/formatters';
+import { Card } from '@/components/ui/Card';
+// import { Section } from '@/components/ui/Section';
 import toast from 'react-hot-toast';
 import ReviewCard from '@/components/dog/ReviewCard';
 import ReviewForm from '@/components/dog/ReviewForm';
@@ -130,8 +132,11 @@ export default function DogDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Loader2 className="h-12 w-12 animate-spin text-primary-600" />
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="text-center">
+          <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">Loading dog details...</p>
+        </div>
       </div>
     );
   }
@@ -144,421 +149,520 @@ export default function DogDetailPage() {
   const isAdmin = user?.role === 'admin';
   const isPending = dog.status === 'pending';
 
-  const statusStyles =
-    dog.status === 'active'
-      ? 'bg-green-100 text-green-800'
-      : dog.status === 'pending'
-        ? 'bg-yellow-100 text-yellow-800'
-        : 'bg-gray-100 text-gray-800';
-
   return (
-    <div className="bg-gray-50 min-h-screen py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-6 flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => router.back()}
-            className="text-primary-600 hover:text-primary-700"
-          >
-            ← Back to browse
-          </button>
-          {isAdmin && (
-            <Link
-              href="/admin"
-              className="text-gray-600 hover:text-gray-900 text-sm"
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Hero Section with Breadcrumb */}
+      <div className="bg-gradient-to-r from-primary-600 to-primary-800 text-white py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <button
+              onClick={() => router.back()}
+              className="flex items-center text-primary-100 hover:text-white transition-colors group"
             >
-              Admin Panel
-            </Link>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Images and Details */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Main Image */}
-            <div className="card">
-              <div className="bg-gray-200 rounded-lg overflow-hidden mb-4 relative h-96">
-                {selectedImage && !imageError ? (
-                  <Image
-                    src={getImageUrl(selectedImage)}
-                    alt={dog.name}
-                    fill
-                    className="object-cover"
-                    onError={() => setImageError(true)}
-                    priority
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 50vw"
-                    unoptimized
-                  />
-                ) : (
-                  <DogImagePlaceholder className="w-full h-full" />
-                )}
-              </div>
-
-              {/* Image Thumbnails */}
-              {dog.images && dog.images.length > 1 && (
-                <div className="grid grid-cols-4 gap-2">
-                  {dog.images.map((image, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        setSelectedImage(image);
-                        setImageError(false);
-                      }}
-                      className={`aspect-square rounded-lg overflow-hidden border-2 relative ${
-                        selectedImage === image ? 'border-primary-600' : 'border-gray-200'
-                      }`}
-                    >
-                      <Image
-                        src={getImageUrl(image)}
-                        alt={`${dog.name} ${index + 1}`}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 25vw, 200px"
-                        unoptimized
-                      />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* About */}
-            <div className="card">
-              <h2 className="text-2xl font-bold mb-4">About {dog.name}</h2>
-              <p className="text-gray-700 whitespace-pre-line">{dog.description}</p>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-                <InfoItem label="Breed" value={dog.breed} />
-                <InfoItem label="Gender" value={dog.gender} />
-                <InfoItem label="Age" value={formatAge(dog.dateOfBirth)} />
-                <InfoItem label="Weight" value={`${dog.weight} lbs`} />
-                <InfoItem label="Color" value={dog.color} />
-                <InfoItem label="Views" value={String(dog.views ?? 0)} />
-              </div>
-            </div>
-
-            {/* Health Information */}
-            {dog.healthInfo && (
-              <div className="card">
-                <h2 className="text-2xl font-bold mb-4">Health Information</h2>
-                <div className="space-y-3">
-                  <HealthItem
-                    label="Vaccinated"
-                    value={dog.healthInfo.vaccinated}
-                  />
-                  <HealthItem
-                    label="Neutered/Spayed"
-                    value={dog.healthInfo.neutered}
-                  />
-                  {dog.healthInfo.veterinarian && (
-                    <div>
-                      <p className="font-semibold">Veterinarian</p>
-                      <p className="text-gray-700">{dog.healthInfo.veterinarian.name}</p>
-                      <p className="text-gray-600 text-sm">{dog.healthInfo.veterinarian.contact}</p>
-                    </div>
-                  )}
-                  {dog.healthInfo.medicalHistory && (
-                    <div>
-                      <p className="font-semibold">Medical History</p>
-                      <p className="text-gray-700">{dog.healthInfo.medicalHistory}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <ArrowLeft className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+              Back to Browse
+            </button>
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className="flex items-center text-primary-100 hover:text-white transition-colors"
+              >
+                <ShieldCheck className="h-5 w-5 mr-2" />
+                Admin Panel
+              </Link>
             )}
-
-            {/* Pedigree */}
-            {dog.pedigree?.registered && (
-              <div className="card">
-                <h2 className="text-2xl font-bold mb-4">Pedigree Information</h2>
-                <div className="space-y-3">
-                  <InfoItem label="Registry" value={dog.pedigree.registry || 'N/A'} />
-                  <InfoItem label="Registration Number" value={dog.pedigree.registrationNumber || 'N/A'} />
-                  {dog.pedigree.sire && <InfoItem label="Sire" value={dog.pedigree.sire} />}
-                  {dog.pedigree.dam && <InfoItem label="Dam" value={dog.pedigree.dam} />}
-                </div>
-              </div>
-            )}
-
-            {/* Breeding Info */}
-            {dog.breeding && (
-              <div className="card">
-                <h2 className="text-2xl font-bold mb-4">Breeding Information</h2>
-                <div className="space-y-3">
-                  <HealthItem
-                    label="Available for Breeding"
-                    value={dog.breeding.available}
-                  />
-                  {dog.breeding.studFee && (
-                    <InfoItem
-                      label="Stud Fee"
-                      value={`${formatCurrency(dog.breeding.studFee)}${
-                        dog.breeding.studFeeNegotiable ? ' (Negotiable)' : ''
-                      }`}
-                    />
-                  )}
-                  <InfoItem
-                    label="Previous Litters"
-                    value={dog.breeding.previousLitters.toString()}
-                  />
-                  {dog.breeding.temperament && dog.breeding.temperament.length > 0 && (
-                    <div>
-                      <p className="font-semibold mb-2">Temperament</p>
-                      <div className="flex flex-wrap gap-2">
-                        {dog.breeding.temperament.map((trait, index) => (
-                          <span
-                            key={index}
-                            className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm"
-                          >
-                            {trait}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Reviews */}
-            <div className="card">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold">
-                  Reviews ({reviewStats.total})
-                </h2>
-                {isAuthenticated && !isOwner && (
-                  <button
-                    onClick={() => setShowReviewForm(!showReviewForm)}
-                    className="btn-primary"
-                  >
-                    Write a Review
-                  </button>
-                )}
-              </div>
-
-              {reviewStats.total > 0 && (
-                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <Star className="h-6 w-6 text-yellow-400 fill-current" />
-                    <span className="text-2xl font-bold">{reviewStats.avgRating.toFixed(1)}</span>
-                    <span className="text-gray-600">out of 5</span>
-                  </div>
-                </div>
-              )}
-
-              {showReviewForm && (
-                <ReviewForm
-                  dogId={dog._id || dog.id}
-                  onSuccess={() => {
-                    setShowReviewForm(false);
-                    fetchReviews();
-                  }}
-                  onCancel={() => setShowReviewForm(false)}
-                />
-              )}
-
-              <div className="space-y-4 mt-6">
-                {reviews.map((review) => (
-                  <ReviewCard key={review._id || review.id} review={review} />
-                ))}
-                {reviews.length === 0 && (
-                  <p className="text-gray-500 text-center py-8">
-                    No reviews yet. Be the first to review!
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column - Owner Info and Actions */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-4 space-y-4">
-              {/* Dog Title Card */}
-              <div className="card">
-                <div className="flex flex-wrap items-center gap-2 mb-2">
-                  <h1 className="text-3xl font-bold text-gray-900">{dog.name}</h1>
-                  {isPending && (
-                    <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-semibold">
-                      Pending
-                    </span>
-                  )}
-                </div>
-                <p className="text-xl text-gray-600 mb-4">{dog.breed}</p>
-
-                {dog.location && (
-                  <div className="flex items-center text-gray-600 mb-4">
-                    <MapPin className="h-5 w-5 mr-2" />
-                    <span>{dog.location.city}, {dog.location.state}</span>
-                  </div>
-                )}
-
-                <div className="flex flex-wrap items-center gap-2 mb-4">
-                  {dog.breeding?.available ? (
-                    <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
-                      Available for Breeding
-                    </span>
-                  ) : (
-                    <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm font-semibold">
-                      Not Available
-                    </span>
-                  )}
-                </div>
-
-                {/* Admin actions when pending */}
-                {isAdmin && isPending && (
-                  <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                    <p className="text-sm font-semibold text-amber-900 mb-3 flex items-center gap-2">
-                      <ShieldCheck className="h-4 w-4" />
-                      Admin actions
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        onClick={handleApprove}
-                        disabled={adminActionLoading}
-                        className="btn-primary flex items-center text-sm"
-                      >
-                        {adminActionLoading ? (
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        ) : (
-                          <CheckCircle className="h-4 w-4 mr-2" />
-                        )}
-                        Approve
-                      </button>
-                      <button
-                        onClick={handleReject}
-                        disabled={adminActionLoading}
-                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center text-sm disabled:opacity-50"
-                      >
-                        <XCircle className="h-4 w-4 mr-2" />
-                        Reject
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {!isOwner && (
-                  <div className="space-y-2">
-                    <button
-                      onClick={handleContactOwner}
-                      className={isAdmin && isPending ? 'btn-secondary w-full flex items-center justify-center' : 'btn-primary w-full flex items-center justify-center'}
-                    >
-                      <MessageCircle className="h-5 w-5 mr-2" />
-                      Contact Owner
-                    </button>
-                    <button
-                      onClick={handleShare}
-                      className="btn-secondary w-full flex items-center justify-center"
-                    >
-                      <Share2 className="h-5 w-5 mr-2" />
-                      Share
-                    </button>
-                  </div>
-                )}
-
-                {isOwner && (
-                  <button
-                    onClick={() => router.push(`/dashboard/edit-dog/${dog._id || dog.id}`)}
-                    className="btn-primary w-full"
-                  >
-                    Edit Listing
-                  </button>
-                )}
-              </div>
-
-              {/* Owner Info */}
-              <div className="card">
-                <h3 className="text-lg font-semibold mb-4">Owner Information</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-3">
-                    {dog.owner.avatar ? (
-                      <Image
-                        src={getImageUrl(dog.owner.avatar)}
-                        alt={dog.owner.firstName}
-                        width={48}
-                        height={48}
-                        className="rounded-full"
-                        unoptimized
-                      />
-                    ) : (
-                      <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-                        <User className="h-6 w-6 text-gray-400" />
-                      </div>
-                    )}
-                    <div>
-                      <p className="font-semibold">
-                        {dog.owner.firstName} {dog.owner.lastName}
-                      </p>
-                      {dog.owner.verified && (
-                        <p className="text-sm text-green-600 flex items-center">
-                          <CheckCircle className="h-4 w-4 mr-1" />
-                          Verified Owner
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {dog.owner.location && (
-                    <div className="flex items-start space-x-2">
-                      <MapPin className="h-5 w-5 text-gray-400 mt-0.5" />
-                      <div className="text-sm text-gray-600">
-                        <p>{dog.owner.location.city}, {dog.owner.location.state}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="pt-3 border-t">
-                    <p className="text-sm text-gray-500">
-                      Member since {formatDate(dog.owner.createdAt)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Stats */}
-              <div className="card">
-                <h3 className="text-lg font-semibold mb-4">Quick Stats</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Posted</span>
-                    <span className="font-semibold">{formatDate(dog.createdAt)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Views</span>
-                    <span className="font-semibold">{dog.views ?? 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Status</span>
-                    <span className={`font-semibold px-2 py-0.5 rounded-full ${statusStyles}`}>
-                      {dog.status}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
+
+      {/* Main Content */}
+      <section className="py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left Column - Images and Details */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Image Gallery */}
+              <Card hover={false} className="overflow-hidden">
+                <div className="relative bg-gray-900 rounded-xl overflow-hidden mb-4 h-96 md:h-[500px]">
+                  {selectedImage && !imageError ? (
+                    <Image
+                      src={getImageUrl(selectedImage)}
+                      alt={dog.name}
+                      fill
+                      className="object-cover"
+                      onError={() => setImageError(true)}
+                      priority
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 50vw"
+                      unoptimized
+                    />
+                  ) : (
+                    <DogImagePlaceholder className="w-full h-full" />
+                  )}
+                  
+                  {/* Image overlay with quick info */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-6">
+                    <div className="flex items-center gap-4 text-white">
+                      <div className="flex items-center gap-2">
+                        <Eye className="h-5 w-5" />
+                        <span className="text-sm font-medium">{dog.views ?? 0} views</span>
+                      </div>
+                      {reviewStats.total > 0 && (
+                        <div className="flex items-center gap-2">
+                          <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                          <span className="text-sm font-medium">{reviewStats.avgRating.toFixed(1)} ({reviewStats.total})</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Image Thumbnails */}
+                {dog.images && dog.images.length > 1 && (
+                  <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
+                    {dog.images.map((image, index) => (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          setSelectedImage(image);
+                          setImageError(false);
+                        }}
+                        className={`group aspect-square rounded-lg overflow-hidden border-2 relative transition-all ${
+                          selectedImage === image 
+                            ? 'border-primary-600 ring-2 ring-primary-200' 
+                            : 'border-gray-200 hover:border-primary-300'
+                        }`}
+                      >
+                        <Image
+                          src={getImageUrl(image)}
+                          alt={`${dog.name} ${index + 1}`}
+                          fill
+                          className="object-cover group-hover:scale-110 transition-transform"
+                          sizes="(max-width: 768px) 25vw, 150px"
+                          unoptimized
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </Card>
+
+              {/* About Section */}
+              <Card>
+                <div className="flex items-center mb-4">
+                  <div className="bg-primary-100 p-2 rounded-lg mr-3">
+                    <User className="h-6 w-6 text-primary-600" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900">About {dog.name}</h2>
+                </div>
+                <p className="text-gray-700 leading-relaxed whitespace-pre-line mb-6">
+                  {dog.description}
+                </p>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  <StatBox icon="🐕" label="Breed" value={dog.breed} />
+                  <StatBox icon="⚤" label="Gender" value={dog.gender} />
+                  <StatBox icon="🎂" label="Age" value={formatAge(dog.dateOfBirth)} />
+                  <StatBox icon="⚖️" label="Weight" value={`${dog.weight} lbs`} />
+                  <StatBox icon="🎨" label="Color" value={dog.color} />
+                  <StatBox icon="👁️" label="Views" value={String(dog.views ?? 0)} />
+                </div>
+              </Card>
+
+              {/* Health Information */}
+              {dog.healthInfo && (
+                <Card>
+                  <div className="flex items-center mb-6">
+                    <div className="bg-green-100 p-2 rounded-lg mr-3">
+                      <CheckCircle className="h-6 w-6 text-green-600" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900">Health Information</h2>
+                  </div>
+                  <div className="grid gap-4">
+                    <HealthStatusCard
+                      label="Vaccinated"
+                      value={dog.healthInfo.vaccinated}
+                      description="Up to date with all vaccinations"
+                    />
+                    <HealthStatusCard
+                      label="Neutered/Spayed"
+                      value={dog.healthInfo.neutered}
+                      description="Surgical procedure completed"
+                    />
+                    {dog.healthInfo.veterinarian && (
+                      <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
+                        <p className="font-semibold text-blue-900 mb-2">Veterinarian</p>
+                        <p className="text-blue-800">{dog.healthInfo.veterinarian.name}</p>
+                        <p className="text-blue-600 text-sm">{dog.healthInfo.veterinarian.contact}</p>
+                      </div>
+                    )}
+                    {dog.healthInfo.medicalHistory && (
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <p className="font-semibold text-gray-900 mb-2">Medical History</p>
+                        <p className="text-gray-700">{dog.healthInfo.medicalHistory}</p>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              )}
+
+              {/* Pedigree */}
+              {dog.pedigree?.registered && (
+                <Card>
+                  <div className="flex items-center mb-6">
+                    <div className="bg-purple-100 p-2 rounded-lg mr-3">
+                      <ShieldCheck className="h-6 w-6 text-purple-600" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900">Pedigree Information</h2>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <InfoCard label="Registry" value={dog.pedigree.registry || 'N/A'} />
+                    <InfoCard label="Registration Number" value={dog.pedigree.registrationNumber || 'N/A'} />
+                    {dog.pedigree.sire && <InfoCard label="Sire (Father)" value={dog.pedigree.sire} />}
+                    {dog.pedigree.dam && <InfoCard label="Dam (Mother)" value={dog.pedigree.dam} />}
+                  </div>
+                </Card>
+              )}
+
+              {/* Breeding Info */}
+              {dog.breeding && (
+                <Card>
+                  <div className="flex items-center mb-6">
+                    <div className="bg-pink-100 p-2 rounded-lg mr-3">
+                      <Heart className="h-6 w-6 text-pink-600" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900">Breeding Information</h2>
+                  </div>
+                  <div className="space-y-4">
+                    <HealthStatusCard
+                      label="Available for Breeding"
+                      value={dog.breeding.available}
+                      description={dog.breeding.available ? "Currently accepting breeding requests" : "Not available at this time"}
+                    />
+                    {dog.breeding.studFee && (
+                      <div className="p-4 bg-green-50 rounded-lg border border-green-100">
+                        <p className="text-sm font-medium text-green-800 mb-1">Stud Fee</p>
+                        <p className="text-2xl font-bold text-green-900">
+                          {formatCurrency(dog.breeding.studFee)}
+                          {dog.breeding.studFeeNegotiable && (
+                            <span className="text-sm font-normal text-green-700 ml-2">(Negotiable)</span>
+                          )}
+                        </p>
+                      </div>
+                    )}
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <InfoCard label="Previous Litters" value={dog.breeding.previousLitters.toString()} />
+                    </div>
+                    {dog.breeding.temperament && dog.breeding.temperament.length > 0 && (
+                      <div>
+                        <p className="font-semibold text-gray-900 mb-3">Temperament Traits</p>
+                        <div className="flex flex-wrap gap-2">
+                          {dog.breeding.temperament.map((trait, index) => (
+                            <span
+                              key={index}
+                              className="px-4 py-2 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-full text-sm font-medium shadow-sm hover:shadow-md transition-shadow"
+                            >
+                              {trait}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              )}
+
+              {/* Reviews */}
+              <Card>
+                <div className="flex justify-between items-center mb-6">
+                  <div className="flex items-center">
+                    <div className="bg-yellow-100 p-2 rounded-lg mr-3">
+                      <Star className="h-6 w-6 text-yellow-600" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900">
+                      Reviews ({reviewStats.total})
+                    </h2>
+                  </div>
+                  {isAuthenticated && !isOwner && !isPending && (
+                    <button
+                      onClick={() => setShowReviewForm(!showReviewForm)}
+                      className="btn-primary text-sm"
+                    >
+                      Write Review
+                    </button>
+                  )}
+                </div>
+
+                {reviewStats.total > 0 && (
+                  <div className="mb-6 p-6 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border border-yellow-200">
+                    <div className="flex items-center justify-center space-x-3">
+                      <Star className="h-10 w-10 text-yellow-500 fill-current" />
+                      <div>
+                        <div className="text-4xl font-bold text-gray-900">{reviewStats.avgRating.toFixed(1)}</div>
+                        <div className="text-sm text-gray-600">out of 5</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {showReviewForm && (
+                  <div className="mb-6">
+                    <ReviewForm
+                      dogId={dog._id || dog.id}
+                      onSuccess={() => {
+                        setShowReviewForm(false);
+                        fetchReviews();
+                      }}
+                      onCancel={() => setShowReviewForm(false)}
+                    />
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  {reviews.map((review) => (
+                    <ReviewCard key={review._id || review.id} review={review} />
+                  ))}
+                  {reviews.length === 0 && (
+                    <div className="text-center py-12">
+                      <Star className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-500 text-lg font-medium mb-2">No reviews yet</p>
+                      <p className="text-gray-400">Be the first to share your experience!</p>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            </div>
+
+            {/* Right Column - Sticky Sidebar */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-4 space-y-4">
+                {/* Dog Info Card */}
+                <Card hover={false} className="bg-gradient-to-br from-white to-gray-50">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h1 className="text-3xl font-bold text-gray-900 mb-2">{dog.name}</h1>
+                      <p className="text-xl text-gray-600">{dog.breed}</p>
+                    </div>
+                    {isPending && (
+                      <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold">
+                        PENDING
+                      </span>
+                    )}
+                  </div>
+
+                  {dog.location && (
+                    <div className="flex items-center text-gray-600 mb-4 p-3 bg-gray-50 rounded-lg">
+                      <MapPin className="h-5 w-5 mr-2 text-primary-600" />
+                      <span className="font-medium">{dog.location.city}, {dog.location.state}</span>
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {dog.breeding?.available ? (
+                      <span className="flex-1 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg text-sm font-bold text-center shadow-sm">
+                        ✓ Available for Breeding
+                      </span>
+                    ) : (
+                      <span className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-bold text-center">
+                        Not Available
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Admin Actions */}
+                  {isAdmin && isPending && (
+                    <div className="mb-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl">
+                      <div className="flex items-center gap-2 mb-3">
+                        <ShieldCheck className="h-5 w-5 text-amber-600" />
+                        <p className="font-bold text-amber-900">Admin Review Required</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleApprove}
+                          disabled={adminActionLoading}
+                          className="flex-1 btn-primary flex items-center justify-center text-sm"
+                        >
+                          {adminActionLoading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <>
+                              <CheckCircle className="h-4 w-4 mr-2" />
+                              Approve
+                            </>
+                          )}
+                        </button>
+                        <button
+                          onClick={handleReject}
+                          disabled={adminActionLoading}
+                          className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold text-sm disabled:opacity-50 flex items-center justify-center"
+                        >
+                          <XCircle className="h-4 w-4 mr-2" />
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  {!isOwner && (
+                    <div className="space-y-2">
+                      <button
+                        onClick={handleContactOwner}
+                        className="w-full btn-primary flex items-center justify-center py-3"
+                      >
+                        <MessageCircle className="h-5 w-5 mr-2" />
+                        Contact Owner
+                      </button>
+                      <button
+                        onClick={handleShare}
+                        className="w-full btn-secondary flex items-center justify-center py-3"
+                      >
+                        <Share2 className="h-5 w-5 mr-2" />
+                        Share
+                      </button>
+                    </div>
+                  )}
+
+                  {isOwner && (
+                    <button
+                      onClick={() => router.push(`/dashboard/edit-dog/${dog._id || dog.id}`)}
+                      className="w-full btn-primary py-3"
+                    >
+                      Edit Listing
+                    </button>
+                  )}
+                </Card>
+
+                {/* Owner Info Card */}
+                <Card hover={false}>
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Owner Information</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-3">
+                      {dog.owner.avatar ? (
+                        <Image
+                          src={getImageUrl(dog.owner.avatar)}
+                          alt={dog.owner.firstName}
+                          width={56}
+                          height={56}
+                          className="rounded-full ring-2 ring-gray-200"
+                          unoptimized
+                        />
+                      ) : (
+                        <div className="w-14 h-14 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center ring-2 ring-gray-200">
+                          <User className="h-7 w-7 text-primary-600" />
+                        </div>
+                      )}
+                      <div>
+                        <p className="font-bold text-gray-900">
+                          {dog.owner.firstName} {dog.owner.lastName}
+                        </p>
+                        {dog.owner.verified && (
+                          <p className="text-sm text-green-600 flex items-center font-medium">
+                            <CheckCircle className="h-4 w-4 mr-1" />
+                            Verified Owner
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {dog.owner.location && (
+                      <div className="flex items-start space-x-2 p-3 bg-gray-50 rounded-lg">
+                        <MapPin className="h-5 w-5 text-gray-400 mt-0.5" />
+                        <div className="text-sm text-gray-700">
+                          <p className="font-medium">{dog.owner.location.city}, {dog.owner.location.state}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="pt-3 border-t flex items-center justify-between">
+                      <div className="flex items-center text-gray-500">
+                        <Calendar className="h-4 w-4 mr-2" />
+                        <span className="text-sm">Member since</span>
+                      </div>
+                      <span className="text-sm font-semibold text-gray-900">{formatDate(dog.owner.createdAt)}</span>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Quick Stats Card */}
+                <Card hover={false} className="bg-gradient-to-br from-primary-50 to-primary-100">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Stats</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center text-gray-700">
+                        <Calendar className="h-4 w-4 mr-2" />
+                        <span className="text-sm">Posted</span>
+                      </div>
+                      <span className="text-sm font-bold text-gray-900">{formatDate(dog.createdAt)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center text-gray-700">
+                        <Eye className="h-4 w-4 mr-2" />
+                        <span className="text-sm">Views</span>
+                      </div>
+                      <span className="text-sm font-bold text-gray-900">{dog.views ?? 0}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center text-gray-700">
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        <span className="text-sm">Status</span>
+                      </div>
+                      <span className={`text-sm font-bold px-3 py-1 rounded-full ${
+                        dog.status === 'active' 
+                          ? 'bg-green-500 text-white' 
+                          : dog.status === 'pending'
+                          ? 'bg-yellow-500 text-white'
+                          : 'bg-gray-500 text-white'
+                      }`}>
+                        {dog.status.toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
 
-function InfoItem({ label, value }: { label: string; value: string }) {
+// Helper Components
+function StatBox({ icon, label, value }: { icon: string; label: string; value: string }) {
   return (
-    <div>
-      <p className="text-sm text-gray-600">{label}</p>
-      <p className="font-semibold capitalize">{value}</p>
+    <div className="p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200 hover:border-primary-300 transition-colors">
+      <div className="text-2xl mb-1">{icon}</div>
+      <p className="text-xs text-gray-600 mb-1">{label}</p>
+      <p className="font-bold text-gray-900 capitalize truncate">{value}</p>
     </div>
   );
 }
 
-function HealthItem({ label, value }: { label: string; value: boolean }) {
+function InfoCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-gray-700">{label}</span>
-      {value ? (
-        <CheckCircle className="h-5 w-5 text-green-600" />
-      ) : (
-        <XCircle className="h-5 w-5 text-red-600" />
-      )}
+    <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+      <p className="text-sm text-gray-600 mb-1">{label}</p>
+      <p className="font-bold text-gray-900">{value}</p>
+    </div>
+  );
+}
+
+function HealthStatusCard({ label, value, description }: { label: string; value: boolean; description: string }) {
+  return (
+    <div className={`p-4 rounded-lg border-2 ${
+      value 
+        ? 'bg-green-50 border-green-200' 
+        : 'bg-red-50 border-red-200'
+    }`}>
+      <div className="flex items-center justify-between mb-2">
+        <span className={`font-bold ${value ? 'text-green-900' : 'text-red-900'}`}>{label}</span>
+        {value ? (
+          <CheckCircle className="h-6 w-6 text-green-600" />
+        ) : (
+          <XCircle className="h-6 w-6 text-red-600" />
+        )}
+      </div>
+      <p className={`text-sm ${value ? 'text-green-700' : 'text-red-700'}`}>{description}</p>
     </div>
   );
 }
