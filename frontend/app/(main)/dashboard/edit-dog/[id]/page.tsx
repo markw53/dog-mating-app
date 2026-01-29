@@ -448,7 +448,7 @@ export default function EditDogPage() {
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Weight (lbs) <span className="text-red-500">*</span>
+                    Weight (kg) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
