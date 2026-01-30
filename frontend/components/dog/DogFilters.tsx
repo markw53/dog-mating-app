@@ -9,7 +9,7 @@ interface FiltersProps {
     minAge: string;
     maxAge: string;
     city: string;
-    state: string;
+    county: string;
     available: boolean;
   };
   onFilterChange: (filters: {
@@ -18,7 +18,7 @@ interface FiltersProps {
     minAge: string;
     maxAge: string;
     city: string;
-    state: string;
+    county: string;
     available: boolean;
   }) => void;
 }
@@ -58,7 +58,7 @@ export default function DogFilters({ filters, onFilterChange }: FiltersProps) {
       minAge: '',
       maxAge: '',
       city: '',
-      state: '',
+      county: '',
       available: true,
     };
     setLocalFilters(resetFilters);
@@ -150,9 +150,9 @@ export default function DogFilters({ filters, onFilterChange }: FiltersProps) {
           </label>
           <input
             type="text"
-            placeholder="Enter state"
-            value={localFilters.state}
-            onChange={(e) => handleChange('state', e.target.value)}
+            placeholder="Enter County"
+            value={localFilters.county}
+            onChange={(e) => handleChange('county', e.target.value)}
             className="input-field"
           />
         </div>

@@ -146,7 +146,7 @@ export default function DogDetailPage() {
   }
 
   const isOwner = user?._id === dog.owner._id || user?.id === dog.owner.id;
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.role === 'ADMIN';
   const isPending = dog.status === 'pending';
 
   return (
@@ -568,7 +568,7 @@ export default function DogDetailPage() {
                       <div className="flex items-start space-x-2 p-3 bg-gray-50 rounded-lg">
                         <MapPin className="h-5 w-5 text-gray-400 mt-0.5" />
                         <div className="text-sm text-gray-700">
-                          <p className="font-medium">{dog.owner.location.city}, {dog.owner.location.state}</p>
+                          <p className="font-medium">{dog.owner.location.city}, {dog.owner.location.county}</p>
                         </div>
                       </div>
                     )}

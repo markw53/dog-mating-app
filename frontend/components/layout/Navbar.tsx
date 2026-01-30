@@ -78,7 +78,7 @@ export default function Navbar() {
                   <MessageSquare className="h-4 w-4" />
                   <span>Messages</span>
                 </Link>
-                {user?.role === 'admin' && (
+                {user?.role === 'ADMIN' && (
                   <Link
                     href="/admin"
                     className={`px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-1 ${
@@ -121,7 +121,7 @@ export default function Navbar() {
                       >
                         Profile
                       </Link>
-                      {user?.role === 'admin' && (
+                      {user?.role === 'ADMIN' && (
                         <Link
                           href="/admin"
                           onClick={() => setDropdownOpen(false)}
@@ -206,7 +206,7 @@ export default function Navbar() {
                 >
                   Profile
                 </Link>
-                {user?.role === 'admin' && (
+                {user?.role === 'ADMIN' && (
                   <Link
                     href="/admin"
                     onClick={() => setMobileMenuOpen(false)}

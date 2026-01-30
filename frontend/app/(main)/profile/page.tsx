@@ -29,8 +29,8 @@ function ProfilePageContent() {
     phone: user?.phone || '',
     address: user?.location?.address || '',
     city: user?.location?.city || '',
-    county: user?.location?.state || '',
-    postcode: user?.location?.zipCode || '',
+    county: user?.location?.county || '',
+    postcode: user?.location?.postcode || '',
   });
 
   const handleAvatarClick = () => {
@@ -92,8 +92,8 @@ function ProfilePageContent() {
         location: {
           address: formData.address,
           city: formData.city,
-          state: formData.county,
-          zipCode: formData.postcode,
+          county: formData.county,
+          postcode: formData.postcode,
           country: 'UK',
         },
       });
@@ -208,7 +208,7 @@ function ProfilePageContent() {
                         <MapPin className="h-5 w-5 text-green-600" />
                       </div>
                       <span className="text-sm font-medium">
-                        {user.location.city}, {user.location.state}
+                        {user.location.city}, {user.location.county}
                       </span>
                     </div>
                   )}
@@ -366,8 +366,8 @@ function ProfilePageContent() {
                               phone: user.phone || '',
                               address: user.location?.address || '',
                               city: user.location?.city || '',
-                              county: user.location?.state || '',
-                              postcode: user.location?.zipCode || '',
+                              county: user.location?.county || '',
+                              postcode: user.location?.postcode || '',
                             });
                           }
                         }}

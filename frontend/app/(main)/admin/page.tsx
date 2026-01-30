@@ -11,6 +11,21 @@ import AdminStatsCards from '@/components/admin/AdminStatsCard';
 import AdminTabs from '@/components/admin/AdminTabs';
 import PendingDogsList from '@/components/admin/PendingDogsList';
 import UsersTable from '@/components/admin/UsersTable';
+import { AxiosError } from 'axios';
+
+const getErrorMessage = (error: unknown): string => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  
+  // Handle Axios errors
+  if (typeof error === 'object' && error !== null && 'response' in error) {
+    const axiosError = error as AxiosError<{ message?: string }>;
+    return axiosError.response?.data?.message || 'An error occurred';
+  }
+  
+  return 'An unknown error occurred';
+};
 
 export default function AdminPage() {
   const router = useRouter();
@@ -29,71 +44,106 @@ export default function AdminPage() {
 
   const fetchPendingDogs = useCallback(async () => {
     try {
+      console.log('Fetching pending dogs...');
       const response = await adminApi.getPendingDogs();
-      setPendingDogs(response.dogs);
-    } catch {
+      console.log('Pending dogs response:', response);
+      setPendingDogs(response.dogs || []);
+    } catch (error) {
+      console.error('Failed to fetch pending dogs:', error);
       toast.error('Failed to load pending dogs');
     }
   }, []);
 
   const fetchUsers = useCallback(async () => {
     try {
+      console.log('Fetching users...');
       const response = await adminApi.getAllUsers();
-      setUsers(response.users);
-    } catch {
+      console.log('Users response:', response);
+      setUsers(response.users || []);
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
       toast.error('Failed to load users');
     }
   }, []);
 
   const fetchStats = useCallback(async () => {
     try {
+      console.log('Fetching stats...');
       const response = await adminApi.getStats();
-      setStats(response.stats);
-    } catch {
+      console.log('Stats response:', response);
+      setStats(response.stats || {
+        totalUsers: 0,
+        totalDogs: 0,
+        activeDogs: 0,
+        pendingDogs: 0,
+      });
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
       toast.error('Failed to load stats');
     }
   }, []);
 
   useEffect(() => {
-    if (!isAuthenticated || user?.role !== 'admin') {
+    console.log('Admin page mounted', { isAuthenticated, user });
+    
+    if (!isAuthenticated) {
+      console.log('Not authenticated, redirecting to login');
+      router.push('/login');
+      return;
+    }
+    
+    if (user?.role !== 'ADMIN') {
+      console.log('Not admin, redirecting to home', { role: user?.role });
+      toast.error('You do not have admin access');
       router.push('/');
       return;
     }
 
     const loadData = async () => {
+      console.log('Loading admin data...');
       await Promise.all([fetchPendingDogs(), fetchUsers(), fetchStats()]);
       setLoading(false);
+      console.log('Admin data loaded');
     };
 
     loadData();
   }, [isAuthenticated, user, router, fetchPendingDogs, fetchUsers, fetchStats]);
 
-  const handleApproveDog = async (id: string) => {
+    const handleApproveDog = async (id: string) => {
     try {
-      await adminApi.approveDog(id);
+      console.log('Approving dog:', id);
+      const response = await adminApi.approveDog(id);
+      console.log('Approve response:', response);
       toast.success('Dog approved successfully');
-      fetchPendingDogs();
-      fetchStats();
-    } catch {
-      toast.error('Failed to approve dog');
+      await fetchPendingDogs();
+      await fetchStats();
+    } catch (error) {
+      console.error('Failed to approve dog:', error);
+      toast.error(getErrorMessage(error));
     }
   };
 
   const handleRejectDog = async (id: string) => {
     try {
-      await adminApi.rejectDog(id);
+      console.log('Rejecting dog:', id);
+      const response = await adminApi.rejectDog(id);
+      console.log('Reject response:', response);
       toast.success('Dog rejected');
-      fetchPendingDogs();
-      fetchStats();
-    } catch {
-      toast.error('Failed to reject dog');
+      await fetchPendingDogs();
+      await fetchStats();
+    } catch (error) {
+      console.error('Failed to reject dog:', error);
+      toast.error(getErrorMessage(error));
     }
   };
 
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <Loader2 className="h-12 w-12 animate-spin text-primary-600" />
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading admin dashboard...</p>
+        </div>
       </div>
     );
   }
@@ -104,6 +154,9 @@ export default function AdminPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
           <p className="text-gray-600 mt-1">Manage users and dog listings</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Logged in as: {user?.email} (Role: {user?.role})
+          </p>
         </div>
 
         <AdminStatsCards stats={stats} />

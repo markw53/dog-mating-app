@@ -24,12 +24,12 @@ export default function ProtectedRoute({ children, requireAdmin = false }: Prote
       return;
     }
 
-    if (requireAdmin && user?.role !== 'admin') {
+    if (requireAdmin && user?.role !== 'ADMIN') {
       router.push('/');
     }
   }, [isAuthenticated, user, requireAdmin, router]);
 
-  if (!isAuthenticated || (requireAdmin && user?.role !== 'admin')) {
+  if (!isAuthenticated || (requireAdmin && user?.role !== 'ADMIN')) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <Loader2 className="h-12 w-12 animate-spin text-primary-600" />

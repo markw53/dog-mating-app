@@ -321,7 +321,7 @@ export default function MessagesPage() {
                                 </div>
                                 {otherUser.location && (
                                   <p className="text-sm text-gray-500">
-                                    {otherUser.location.city}, {otherUser.location.state}
+                                    {otherUser.location.city}, {otherUser.location.county}
                                   </p>
                                 )}
                               </div>

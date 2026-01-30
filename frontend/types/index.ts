@@ -4,13 +4,13 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
-  role: 'user' | 'admin';
+  role: 'USER' | 'ADMIN';
   phone?: string;
   location?: {
     address?: string;
     city?: string;
-    state?: string;
-    zipCode?: string;
+    county?: string;
+    postcode?: string;
     country?: string;
   };
   avatar?: string;
