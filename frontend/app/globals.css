@@ -33,3 +33,33 @@
     @apply text-lg md:text-xl text-gray-600 max-w-2xl mx-auto;
   }
 }
+
+/* Map popup styles */
+.leaflet-popup-content-wrapper {
+  padding: 0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.leaflet-popup-content {
+  margin: 0;
+  width: 100% !important;
+}
+
+.leaflet-popup-tip {
+  background: white;
+}
+
+/* Custom marker animation */
+.custom-dog-marker {
+  animation: markerBounce 0.5s ease-in-out;
+}
+
+@keyframes markerBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}

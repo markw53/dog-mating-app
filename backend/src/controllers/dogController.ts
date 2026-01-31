@@ -1,6 +1,26 @@
 import { Response } from 'express';
 import prisma from '../config/database';
 import { AuthRequest } from '../middleware/auth';
+import axios from 'axios';
+
+// Function to geocode address
+async function geocodeAddress(city: string, country: string = 'UK') {
+  try {
+    const response = await axios.get(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)},${encodeURIComponent(country)}`
+    );
+    
+    if (response.data && response.data.length > 0) {
+      return {
+        lat: parseFloat(response.data[0].lat),
+        lng: parseFloat(response.data[0].lon)
+      };
+    }
+  } catch (error) {
+    console.error('Geocoding error:', error);
+  }
+  return null;
+}
 
 // Helper function to transform dog data for frontend
 const transformDogForFrontend = (dog: any) => {

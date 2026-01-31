@@ -20,90 +20,44 @@ export interface User {
 
 export interface Dog {
   id: string;
-  _id?: string; // For backwards compatibility
-  owner: User;
+  _id?: string;
   name: string;
   breed: string;
-  gender: 'male' | 'female';
-  dateOfBirth: string;
   age: number;
-  weight: number;
-  color: string;
-  description: string;
-  images: string[];
-  mainImage: string | null;
-  
-  healthInfo?: {
-    vaccinated: boolean;
-    neutered: boolean;
-    healthCertificates?: string[];
-    veterinarian?: {
-      name: string;
-      contact: string;
+  gender: 'male' | 'female';
+  description?: string;
+  mainImage?: string;
+  images?: string[];
+  status: 'pending' | 'active' | 'rejected';
+  views?: number;
+  owner: string | {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  location?: {
+    city?: string;
+    county?: string;
+    country?: string;
+    coordinates?: {
+      lat: number;
+      lng: number;
     };
-    medicalHistory?: string;
   };
-  
-  // Flatten health info for Prisma
-  vaccinated: boolean;
-  neutered: boolean;
-  vetName?: string;
-  vetContact?: string;
-  medicalHistory?: string;
-  
-  pedigree?: {
-    registered: boolean;
-    registrationNumber?: string;
-    registry?: string;
-    sire?: string;
-    dam?: string;
-    pedigreeDocument?: string;
-  };
-  
-  // Flatten pedigree for Prisma
-  registered: boolean;
-  registrationNumber?: string;
-  registry?: string;
-  sire?: string;
-  dam?: string;
-  
   breeding?: {
     available: boolean;
-    studFee?: number;
-    studFeeNegotiable: boolean;
-    previousLitters: number;
-    temperament: string[];
+    fee?: number;
+    experience?: string;
   };
-  
-  // Flatten breeding for Prisma
-  available: boolean;
-  studFee?: number;
-  studFeeNegotiable: boolean;
-  previousLitters: number;
-  temperament: string[];
-  
-  location?: {
-    address?: string;
-    city: string;
-    state: string;
-    zipCode?: string;
-    country: string;
+  health?: {
+    vaccinated: boolean;
+    neutered: boolean;
+    healthIssues?: string;
   };
-  
-  // Flatten location for Prisma
-  address?: string;
-  city: string;
-  county: string;
-  postcode?: string;
-  country: string;
-  
-  status: 'active' | 'inactive' | 'pending';
-  views: number;
-  favorites: number;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
-
 export interface Message {
   id: string;
   _id?: string;
@@ -115,7 +69,6 @@ export interface Message {
   read: boolean;
   createdAt: string;
 }
-
 export interface Conversation {
   id: string;
   _id?: string;
