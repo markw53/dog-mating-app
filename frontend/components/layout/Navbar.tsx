@@ -31,6 +31,11 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Debug log to see user role
+  useEffect(() => {
+    console.log('Navbar - User role:', user?.role);
+  }, [user?.role]);
+
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -78,6 +83,7 @@ export default function Navbar() {
                   <MessageSquare className="h-4 w-4" />
                   <span>Messages</span>
                 </Link>
+                {/* Admin link - check for ADMIN role */}
                 {user?.role === 'ADMIN' && (
                   <Link
                     href="/admin"
@@ -121,6 +127,7 @@ export default function Navbar() {
                       >
                         Profile
                       </Link>
+                      {/* Admin link in dropdown - check for ADMIN role */}
                       {user?.role === 'ADMIN' && (
                         <Link
                           href="/admin"
@@ -206,6 +213,7 @@ export default function Navbar() {
                 >
                   Profile
                 </Link>
+                {/* Admin link in mobile menu - check for ADMIN role */}
                 {user?.role === 'ADMIN' && (
                   <Link
                     href="/admin"

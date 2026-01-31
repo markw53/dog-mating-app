@@ -49,7 +49,7 @@ export const register = async (req: Request, res: Response) => {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        role: user.role.toLowerCase(),
+        role: user.role, // REMOVED .toLowerCase()
       },
     });
   } catch (error: any) {
@@ -86,7 +86,7 @@ export const login = async (req: Request, res: Response) => {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        role: user.role.toLowerCase(),
+        role: user.role, // REMOVED .toLowerCase()
         avatar: user.avatar,
       },
     });
@@ -125,7 +125,7 @@ export const getMe = async (req: AuthRequest, res: Response) => {
       success: true,
       user: {
         ...user,
-        role: user.role.toLowerCase(),
+        role: user.role, // REMOVED .toLowerCase()
         location: {
           city: user.city,
           state: user.county,
