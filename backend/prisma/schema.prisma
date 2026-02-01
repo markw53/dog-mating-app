@@ -77,6 +77,10 @@ model Dog {
   county    String
   postcode  String?
   country   String   @default("UK")
+
+   // Add coordinates
+  latitude    Float?
+  longitude   Float?
   
   status    Status   @default(PENDING)
   views     Int      @default(0)

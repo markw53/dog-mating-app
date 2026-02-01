@@ -3,30 +3,54 @@ import prisma from '../config/database';
 import { AuthRequest } from '../middleware/auth';
 import axios from 'axios';
 
-// Function to geocode address
-async function geocodeAddress(city: string, country: string = 'UK') {
+// Geocoding function using OpenStreetMap Nominatim
+async function geocodeAddress(
+  city?: string, 
+  postcode?: string, 
+  country: string = 'UK'
+): Promise<{ lat: number; lng: number } | null> {
   try {
+    if (!city && !postcode) return null;
+    
+    const query = [postcode, city, country].filter(Boolean).join(', ');
+    
+    console.log(`Geocoding: ${query}`);
+    
     const response = await axios.get(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)},${encodeURIComponent(country)}`
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`,
+      {
+        headers: {
+          'User-Agent': 'DogMate-App/1.0'
+        }
+      }
     );
     
     if (response.data && response.data.length > 0) {
+      console.log(`✅ Geocoded successfully: ${response.data[0].lat}, ${response.data[0].lon}`);
       return {
         lat: parseFloat(response.data[0].lat),
         lng: parseFloat(response.data[0].lon)
       };
     }
+    
+    console.log(`❌ No geocoding results for: ${query}`);
   } catch (error) {
     console.error('Geocoding error:', error);
   }
+  
   return null;
+}
+
+// Helper function to convert degrees to radians
+function toRad(degrees: number): number {
+  return degrees * (Math.PI / 180);
 }
 
 // Helper function to transform dog data for frontend
 const transformDogForFrontend = (dog: any) => {
   return {
     ...dog,
-    _id: dog.id, // For backwards compatibility
+    _id: dog.id,
     healthInfo: {
       vaccinated: dog.vaccinated,
       neutered: dog.neutered,
@@ -56,6 +80,10 @@ const transformDogForFrontend = (dog: any) => {
       state: dog.county,
       zipCode: dog.postcode,
       country: dog.country,
+      coordinates: dog.latitude && dog.longitude ? {
+        lat: dog.latitude,
+        lng: dog.longitude
+      } : undefined
     },
     gender: dog.gender.toLowerCase(),
     status: dog.status.toLowerCase(),
@@ -81,30 +109,19 @@ export const createDog = async (req: AuthRequest, res: Response) => {
       vaccinated, neutered, vetName, vetContact, medicalHistory,
       registered, registrationNumber, registry, sire, dam,
       available, studFee, studFeeNegotiable, previousLitters, temperament,
-      address, city, county, postcode, country
+      address, city, county, postcode, country,
+      latitude, longitude
     } = req.body;
 
     console.log('Creating dog with data:', req.body);
     console.log('Files received:', req.files);
 
-    // Calculate age
     const birthDate = new Date(dateOfBirth);
     const age = new Date().getFullYear() - birthDate.getFullYear();
 
-    // Handle image uploads
     const files = req.files as Express.Multer.File[];
-    console.log('Processing files:', files);
-    
-    // Create image URLs - use full URL with backend domain
-    const imageUrls = files?.map(file => {
-      const filename = file.filename;
-      console.log('Image filename:', filename);
-      return `/uploads/${filename}`;
-    }) || [];
+    const imageUrls = files?.map(file => `/uploads/${file.filename}`) || [];
 
-    console.log('Image URLs:', imageUrls);
-
-    // Parse temperament
     let temperamentArray: string[] = [];
     if (Array.isArray(temperament)) {
       temperamentArray = temperament;
@@ -114,6 +131,14 @@ export const createDog = async (req: AuthRequest, res: Response) => {
       } catch {
         temperamentArray = temperament.split(',').map(t => t.trim()).filter(Boolean);
       }
+    }
+
+    // Geocode address if coordinates not provided
+    let coords = null;
+    if (latitude && longitude) {
+      coords = { lat: parseFloat(latitude), lng: parseFloat(longitude) };
+    } else {
+      coords = await geocodeAddress(city, postcode, country || 'UK');
     }
 
     const dog = await prisma.dog.create({
@@ -129,35 +154,34 @@ export const createDog = async (req: AuthRequest, res: Response) => {
         images: imageUrls,
         mainImage: imageUrls[0] || null,
 
-        // Health info
         vaccinated: vaccinated === 'true' || vaccinated === true,
         neutered: neutered === 'true' || neutered === true,
         vetName: vetName || null,
         vetContact: vetContact || null,
         medicalHistory: medicalHistory || null,
 
-        // Pedigree
         registered: registered === 'true' || registered === true,
         registrationNumber: registrationNumber || null,
         registry: registry || null,
         sire: sire || null,
         dam: dam || null,
 
-        // Breeding
         available: available === 'true' || available === true,
         studFee: studFee ? parseFloat(studFee) : null,
         studFeeNegotiable: studFeeNegotiable === 'true' || studFeeNegotiable === true,
         previousLitters: previousLitters ? parseInt(previousLitters) : 0,
         temperament: temperamentArray,
 
-        // Location
         address: address || null,
         city: city || '',
         county: county || '',
         postcode: postcode || null,
         country: country || 'UK',
+        
+        // Add coordinates
+        latitude: coords?.lat,
+        longitude: coords?.lng,
 
-        // Owner
         ownerId: req.user!.id,
       },
       include: {
@@ -179,7 +203,7 @@ export const createDog = async (req: AuthRequest, res: Response) => {
     });
 
     console.log('Dog created successfully:', dog.id);
-    console.log('Dog images saved:', dog.images);
+    console.log('Coordinates:', coords);
 
     res.status(201).json({ success: true, dog: transformDogForFrontend(dog) });
   } catch (error: any) {
@@ -207,7 +231,6 @@ export const getAllDogs = async (req: AuthRequest, res: Response) => {
     const limitNum = parseInt(limit as string);
     const skip = (pageNum - 1) * limitNum;
 
-    // Build where clause
     const where: any = { status: 'ACTIVE' };
 
     if (breed) where.breed = { contains: breed as string, mode: 'insensitive' };
@@ -222,10 +245,8 @@ export const getAllDogs = async (req: AuthRequest, res: Response) => {
       if (maxAge) where.age.lte = parseInt(maxAge as string);
     }
 
-    // Get total count
     const total = await prisma.dog.count({ where });
 
-    // Get dogs
     const dogs = await prisma.dog.findMany({
       where,
       include: {
@@ -295,7 +316,6 @@ export const getDogById = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: 'Dog not found' });
     }
 
-    // Increment views
     await prisma.dog.update({
       where: { id: req.params.id as string },
       data: { views: { increment: 1 } },
@@ -310,7 +330,6 @@ export const getDogById = async (req: AuthRequest, res: Response) => {
 
 export const updateDog = async (req: AuthRequest, res: Response) => {
   try {
-    // Check if dog exists and user owns it
     const existingDog = await prisma.dog.findUnique({
       where: { id: req.params.id as string },
     });
@@ -328,20 +347,16 @@ export const updateDog = async (req: AuthRequest, res: Response) => {
       vaccinated, neutered, vetName, vetContact, medicalHistory,
       registered, registrationNumber, registry, sire, dam,
       available, studFee, studFeeNegotiable, previousLitters, temperament,
-      address, city, county, postcode, existingImages
+      address, city, county, postcode, existingImages,
+      latitude, longitude
     } = req.body;
 
-    console.log('Updating dog with data:', req.body);
-
-    // Calculate age
     const birthDate = new Date(dateOfBirth);
     const age = new Date().getFullYear() - birthDate.getFullYear();
 
-    // Handle new image uploads
     const newImages = req.files as Express.Multer.File[];
     const newImageUrls = newImages?.map(file => `/uploads/${file.filename}`) || [];
 
-    // Parse existing images
     let existingImagesArray: string[] = [];
     if (Array.isArray(existingImages)) {
       existingImagesArray = existingImages;
@@ -353,10 +368,8 @@ export const updateDog = async (req: AuthRequest, res: Response) => {
       }
     }
 
-    // Combine existing and new images
     const allImages = [...existingImagesArray, ...newImageUrls];
 
-    // Parse temperament if it's a string
     let temperamentArray: string[] = [];
     if (Array.isArray(temperament)) {
       temperamentArray = temperament;
@@ -365,6 +378,29 @@ export const updateDog = async (req: AuthRequest, res: Response) => {
         temperamentArray = JSON.parse(temperament);
       } catch {
         temperamentArray = temperament.split(',').map(t => t.trim());
+      }
+    }
+
+    // Update coordinates if location changed
+    let coords = {
+      lat: existingDog.latitude,
+      lng: existingDog.longitude
+    };
+
+    if (latitude && longitude) {
+      coords = { lat: parseFloat(latitude), lng: parseFloat(longitude) };
+    } else if (
+      city !== existingDog.city || 
+      postcode !== existingDog.postcode || 
+      !existingDog.latitude || 
+      !existingDog.longitude
+    ) {
+      const newCoordinates = await geocodeAddress(
+        city || existingDog.city, 
+        postcode || existingDog.postcode
+      );
+      if (newCoordinates) {
+        coords = newCoordinates;
       }
     }
 
@@ -404,6 +440,9 @@ export const updateDog = async (req: AuthRequest, res: Response) => {
         city: city || '',
         county: county || '',
         postcode: postcode || null,
+        
+        latitude: coords.lat,
+        longitude: coords.lng,
       },
       include: {
         owner: {
@@ -419,8 +458,6 @@ export const updateDog = async (req: AuthRequest, res: Response) => {
         },
       },
     });
-
-    console.log('Dog updated successfully:', dog.id);
 
     res.json({ success: true, dog: transformDogForFrontend(dog) });
   } catch (error: any) {
@@ -447,8 +484,6 @@ export const deleteDog = async (req: AuthRequest, res: Response) => {
       where: { id: req.params.id as string },
     });
 
-    console.log('Dog deleted successfully:', req.params.id);
-
     res.json({ success: true, message: 'Dog deleted' });
   } catch (error: any) {
     console.error('Delete dog error:', error);
@@ -474,12 +509,87 @@ export const getMyDogs = async (req: AuthRequest, res: Response) => {
 
 export const searchNearby = async (req: AuthRequest, res: Response) => {
   try {
-    const { lat, lng, city, county, maxDistance = 50 } = req.query;
+    const { 
+      latitude,
+      longitude,
+      lat, 
+      lng, 
+      city, 
+      county, 
+      radius = '50',
+      breed,
+      gender,
+      available 
+    } = req.query;
 
-    // For now, search by city/county
-    // You can add PostGIS extension for real geospatial queries later
-    const where: any = { status: 'ACTIVE' };
+    // Use either latitude/longitude or lat/lng
+    const searchLat = latitude || lat;
+    const searchLng = longitude || lng;
 
+    const where: any = { 
+      status: 'ACTIVE',
+      latitude: { not: null },
+      longitude: { not: null }
+    };
+
+    if (breed) where.breed = { contains: breed as string, mode: 'insensitive' };
+    if (gender) where.gender = (gender as string).toUpperCase();
+    if (available !== undefined) where.available = available === 'true';
+
+    // If coordinates provided, calculate distance
+    if (searchLat && searchLng) {
+      const userLat = parseFloat(searchLat as string);
+      const userLng = parseFloat(searchLng as string);
+      const radiusKm = parseFloat(radius as string);
+
+      const allDogs = await prisma.dog.findMany({
+        where,
+        include: {
+          owner: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              avatar: true,
+              city: true,
+              county: true,
+            },
+          },
+        },
+      });
+
+      // Calculate distance using Haversine formula
+      const dogsWithDistance = allDogs
+        .map(dog => {
+          if (!dog.latitude || !dog.longitude) return null;
+
+          const R = 6371; // Earth's radius in km
+          const dLat = toRad(dog.latitude - userLat);
+          const dLon = toRad(dog.longitude - userLng);
+          const a = 
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRad(userLat)) * Math.cos(toRad(dog.latitude)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          const distance = R * c;
+
+          return {
+            ...dog,
+            distance: Math.round(distance * 10) / 10
+          };
+        })
+        .filter((dog): dog is NonNullable<typeof dog> => dog !== null && dog.distance <= radiusKm)
+        .sort((a, b) => a.distance - b.distance);
+
+      const transformedDogs = dogsWithDistance.map(dog => ({
+        ...transformDogForFrontend(dog),
+        distance: dog.distance
+      }));
+
+      return res.json({ success: true, dogs: transformedDogs });
+    }
+
+    // Fallback to city/county search
     if (city || county) {
       where.OR = [];
       if (city) {
