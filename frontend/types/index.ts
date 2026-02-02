@@ -1,21 +1,28 @@
 export interface User {
   id: string;
-  _id?: string; // For backwards compatibility
+  _id?: string;
   email: string;
   firstName: string;
   lastName: string;
   role: 'USER' | 'ADMIN';
+  avatar?: string;
+  bio?: string;
   phone?: string;
+  verified?: boolean;
+  address?: string;
+  city?: string;
+  county?: string;
+  postcode?: string;
+  country?: string;
   location?: {
-    address?: string;
     city?: string;
-    county?: string;
-    postcode?: string;
+    state?: string;
+    zipCode?: string;
+    address?: string;
     country?: string;
   };
-  avatar?: string;
-  verified: boolean;
-  createdAt: string;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 }
 
 export interface Dog {
@@ -25,94 +32,130 @@ export interface Dog {
   breed: string;
   age: number;
   gender: 'male' | 'female';
-  description?: string;
+  dateOfBirth: Date | string;
+  weight: number;
+  color: string;
+  description: string;
   mainImage?: string;
   images?: string[];
-  status: 'pending' | 'active' | 'rejected';
+  status: 'pending' | 'active' | 'rejected' | 'inactive';
   views?: number;
-  owner: string | {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
+  favorites?: number;
+  
+  // Owner
+  owner: User | string;
+  ownerId?: string;
+  
+  // Location
+  address?: string;
+  city: string;
+  county: string;
+  postcode?: string;
+  country?: string;
+  latitude?: number;
+  longitude?: number;
   location?: {
+    address?: string;
     city?: string;
-    county?: string;
+    state?: string;
+    zipCode?: string;
     country?: string;
-    postcode?: string;
     coordinates?: {
       lat: number;
       lng: number;
     };
   };
+  
+  // Health Info (direct fields from DB)
+  vaccinated: boolean;
+  neutered: boolean;
+  vetName?: string;
+  vetContact?: string;
+  medicalHistory?: string;
+  // Formatted version for frontend
+  healthInfo?: {
+    vaccinated: boolean;
+    neutered: boolean;
+    veterinarian?: {
+      name: string;
+      contact: string;
+    };
+    medicalHistory?: string;
+  };
+  
+  // Pedigree (direct fields from DB)
+  registered: boolean;
+  registrationNumber?: string;
+  registry?: string;
+  sire?: string;
+  dam?: string;
+  // Formatted version for frontend
+  pedigree?: {
+    registered: boolean;
+    registrationNumber?: string;
+    registry?: string;
+    sire?: string;
+    dam?: string;
+  };
+  
+  // Breeding (direct fields from DB)
+  available: boolean;
+  studFee?: number;
+  studFeeNegotiable?: boolean;
+  previousLitters?: number;
+  temperament?: string[];
+  // Formatted version for frontend
   breeding?: {
     available: boolean;
     fee?: number;
+    studFee?: number;
+    feeNegotiable?: boolean;
+    studFeeNegotiable?: boolean;
+    previousLitters?: number;
     experience?: string;
+    temperament?: string[];
   };
-  health?: {
-    vaccinated: boolean;
-    neutered: boolean;
-    healthIssues?: string;
-  };
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-export interface Message {
-  id: string;
-  _id?: string;
-  conversation: string;
-  conversationId?: string;
-  sender: User;
-  receiver: User;
-  content: string;
-  read: boolean;
-  createdAt: string;
-}
-export interface Conversation {
-  id: string;
-  _id?: string;
-  participants: User[];
-  dogReference?: Dog;
-  dog?: Dog;
-  lastMessage?: string;
-  lastMessageAt: string;
-  createdAt: string;
+  
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 }
 
 export interface Review {
   id: string;
   _id?: string;
-  dog?: string;
-  dogId?: string;
-  reviewer: User;
   rating: number;
   comment: string;
-  createdAt: string;
-}
-
-export interface AuthResponse {
-  success: boolean;
-  token: string;
-  user: User;
-}
-
-export interface ApiResponse<T = unknown> {
-  success: boolean;
-  data?: T;
-  message?: string;
-  error?: string;
-}
-
-export interface PaginatedResponse<T> {
-  success: boolean;
-  dogs?: T[];
-  users?: T[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    pages: number;
+  dogId: string;
+  reviewerId: string;
+  reviewer: {
+    id: string;
+    _id?: string;
+    firstName: string;
+    lastName: string;
+    avatar?: string;
   };
+  createdAt: Date | string;
+}
+
+export interface Message {
+  id: string;
+  _id?: string;
+  content: string;
+  senderId: string;
+  receiverId: string;
+  conversationId: string;
+  read: boolean;
+  createdAt: Date | string;
+}
+
+export interface Conversation {
+  id: string;
+  _id?: string;
+  participants: User[];
+  dogId?: string;
+  dog?: Dog;
+  lastMessage?: string;
+  lastMessageAt?: Date | string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
 }

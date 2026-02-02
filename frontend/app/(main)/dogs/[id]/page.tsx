@@ -8,20 +8,60 @@ import { messagesApi } from '@/lib/api/messages';
 import { adminApi } from '@/lib/api/admin';
 import { getImageUrl } from '@/lib/api/client';
 import { useAuthStore } from '@/lib/store/authStore';
-import { Dog, Review } from '@/types';
+import { Dog, Review, User } from '@/types';
 import Image from 'next/image';
 import {
   MapPin, MessageCircle, Share2, CheckCircle, XCircle, Star, 
-  Loader2, User, ShieldCheck, ArrowLeft, Heart, Eye, Calendar,
+  Loader2, User as UserIcon, ShieldCheck, ArrowLeft, Heart, Eye, Calendar,
 } from 'lucide-react';
 import { formatAge, formatCurrency, formatDate } from '@/lib/utils/formatters';
 import { Card } from '@/components/ui/Card';
-// import { Section } from '@/components/ui/Section';
 import toast from 'react-hot-toast';
 import ReviewCard from '@/components/dog/ReviewCard';
 import ReviewForm from '@/components/dog/ReviewForm';
 import DogImagePlaceholder from '@/components/ui/DogImagePlaceholder';
 import Link from 'next/link';
+
+// Helper function to safely get owner info
+function getOwnerInfo(owner: User | string | undefined): User | null {
+  if (!owner || typeof owner === 'string') return null;
+  return owner;
+}
+
+// Helper function to safely get breeding info
+function getBreedingInfo(dog: Dog) {
+  return {
+    available: dog.breeding?.available ?? dog.available ?? false,
+    studFee: dog.breeding?.studFee ?? dog.studFee,
+    studFeeNegotiable: dog.breeding?.studFeeNegotiable ?? dog.studFeeNegotiable ?? false,
+    previousLitters: dog.breeding?.previousLitters ?? dog.previousLitters ?? 0,
+    temperament: dog.breeding?.temperament ?? dog.temperament ?? [],
+  };
+}
+
+// Helper function to safely get health info
+function getHealthInfo(dog: Dog) {
+  return {
+    vaccinated: dog.healthInfo?.vaccinated ?? dog.vaccinated ?? false,
+    neutered: dog.healthInfo?.neutered ?? dog.neutered ?? false,
+    veterinarian: dog.healthInfo?.veterinarian ?? (dog.vetName ? {
+      name: dog.vetName,
+      contact: dog.vetContact || ''
+    } : undefined),
+    medicalHistory: dog.healthInfo?.medicalHistory ?? dog.medicalHistory,
+  };
+}
+
+// Helper function to safely get pedigree info
+function getPedigreeInfo(dog: Dog) {
+  return {
+    registered: dog.pedigree?.registered ?? dog.registered ?? false,
+    registrationNumber: dog.pedigree?.registrationNumber ?? dog.registrationNumber,
+    registry: dog.pedigree?.registry ?? dog.registry,
+    sire: dog.pedigree?.sire ?? dog.sire,
+    dam: dog.pedigree?.dam ?? dog.dam,
+  };
+}
 
 export default function DogDetailPage() {
   const params = useParams();
@@ -36,6 +76,12 @@ export default function DogDetailPage() {
   const [imageError, setImageError] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [adminActionLoading, setAdminActionLoading] = useState(false);
+
+  // Derived values
+  const ownerInfo = dog ? getOwnerInfo(dog.owner) : null;
+  const breedingInfo = dog ? getBreedingInfo(dog) : null;
+  const healthInfo = dog ? getHealthInfo(dog) : null;
+  const pedigreeInfo = dog ? getPedigreeInfo(dog) : null;
 
   const fetchDog = useCallback(async () => {
     if (!params.id) return;
@@ -78,9 +124,14 @@ export default function DogDetailPage() {
       return;
     }
 
+    if (!ownerInfo) {
+      toast.error('Owner information not available');
+      return;
+    }
+
     try {
       const response = await messagesApi.getOrCreateConversation(
-        dog!.owner._id || dog!.owner.id,
+        ownerInfo._id || ownerInfo.id,
         dog!._id || dog!.id
       );
       router.push(`/messages?conversation=${response.conversation._id || response.conversation.id}`);
@@ -145,7 +196,7 @@ export default function DogDetailPage() {
     return null;
   }
 
-  const isOwner = user?._id === dog.owner._id || user?.id === dog.owner.id;
+  const isOwner = ownerInfo && user && (user._id === ownerInfo._id || user.id === ownerInfo.id);
   const isAdmin = user?.role === 'ADMIN';
   const isPending = dog.status === 'pending';
 
@@ -250,7 +301,7 @@ export default function DogDetailPage() {
               <Card>
                 <div className="flex items-center mb-4">
                   <div className="bg-primary-100 p-2 rounded-lg mr-3">
-                    <User className="h-6 w-6 text-primary-600" />
+                    <UserIcon className="h-6 w-6 text-primary-600" />
                   </div>
                   <h2 className="text-2xl font-bold text-gray-900">About {dog.name}</h2>
                 </div>
@@ -269,7 +320,7 @@ export default function DogDetailPage() {
               </Card>
 
               {/* Health Information */}
-              {dog.healthInfo && (
+              {healthInfo && (
                 <Card>
                   <div className="flex items-center mb-6">
                     <div className="bg-green-100 p-2 rounded-lg mr-3">
@@ -280,25 +331,27 @@ export default function DogDetailPage() {
                   <div className="grid gap-4">
                     <HealthStatusCard
                       label="Vaccinated"
-                      value={dog.healthInfo.vaccinated}
+                      value={healthInfo.vaccinated}
                       description="Up to date with all vaccinations"
                     />
                     <HealthStatusCard
                       label="Neutered/Spayed"
-                      value={dog.healthInfo.neutered}
+                      value={healthInfo.neutered}
                       description="Surgical procedure completed"
                     />
-                    {dog.healthInfo.veterinarian && (
+                    {healthInfo.veterinarian && (
                       <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
                         <p className="font-semibold text-blue-900 mb-2">Veterinarian</p>
-                        <p className="text-blue-800">{dog.healthInfo.veterinarian.name}</p>
-                        <p className="text-blue-600 text-sm">{dog.healthInfo.veterinarian.contact}</p>
+                        <p className="text-blue-800">{healthInfo.veterinarian.name}</p>
+                        {healthInfo.veterinarian.contact && (
+                          <p className="text-blue-600 text-sm">{healthInfo.veterinarian.contact}</p>
+                        )}
                       </div>
                     )}
-                    {dog.healthInfo.medicalHistory && (
+                    {healthInfo.medicalHistory && (
                       <div className="p-4 bg-gray-50 rounded-lg">
                         <p className="font-semibold text-gray-900 mb-2">Medical History</p>
-                        <p className="text-gray-700">{dog.healthInfo.medicalHistory}</p>
+                        <p className="text-gray-700">{healthInfo.medicalHistory}</p>
                       </div>
                     )}
                   </div>
@@ -306,7 +359,7 @@ export default function DogDetailPage() {
               )}
 
               {/* Pedigree */}
-              {dog.pedigree?.registered && (
+              {pedigreeInfo?.registered && (
                 <Card>
                   <div className="flex items-center mb-6">
                     <div className="bg-purple-100 p-2 rounded-lg mr-3">
@@ -315,16 +368,16 @@ export default function DogDetailPage() {
                     <h2 className="text-2xl font-bold text-gray-900">Pedigree Information</h2>
                   </div>
                   <div className="grid md:grid-cols-2 gap-4">
-                    <InfoCard label="Registry" value={dog.pedigree.registry || 'N/A'} />
-                    <InfoCard label="Registration Number" value={dog.pedigree.registrationNumber || 'N/A'} />
-                    {dog.pedigree.sire && <InfoCard label="Sire (Father)" value={dog.pedigree.sire} />}
-                    {dog.pedigree.dam && <InfoCard label="Dam (Mother)" value={dog.pedigree.dam} />}
+                    <InfoCard label="Registry" value={pedigreeInfo.registry || 'N/A'} />
+                    <InfoCard label="Registration Number" value={pedigreeInfo.registrationNumber || 'N/A'} />
+                    {pedigreeInfo.sire && <InfoCard label="Sire (Father)" value={pedigreeInfo.sire} />}
+                    {pedigreeInfo.dam && <InfoCard label="Dam (Mother)" value={pedigreeInfo.dam} />}
                   </div>
                 </Card>
               )}
 
               {/* Breeding Info */}
-              {dog.breeding && (
+              {breedingInfo && (
                 <Card>
                   <div className="flex items-center mb-6">
                     <div className="bg-pink-100 p-2 rounded-lg mr-3">
@@ -335,28 +388,28 @@ export default function DogDetailPage() {
                   <div className="space-y-4">
                     <HealthStatusCard
                       label="Available for Breeding"
-                      value={dog.breeding.available}
-                      description={dog.breeding.available ? "Currently accepting breeding requests" : "Not available at this time"}
+                      value={breedingInfo.available}
+                      description={breedingInfo.available ? "Currently accepting breeding requests" : "Not available at this time"}
                     />
-                    {dog.breeding.studFee && (
+                    {breedingInfo.studFee && (
                       <div className="p-4 bg-green-50 rounded-lg border border-green-100">
                         <p className="text-sm font-medium text-green-800 mb-1">Stud Fee</p>
                         <p className="text-2xl font-bold text-green-900">
-                          {formatCurrency(dog.breeding.studFee)}
-                          {dog.breeding.studFeeNegotiable && (
+                          {formatCurrency(breedingInfo.studFee)}
+                          {breedingInfo.studFeeNegotiable && (
                             <span className="text-sm font-normal text-green-700 ml-2">(Negotiable)</span>
                           )}
                         </p>
                       </div>
                     )}
                     <div className="grid md:grid-cols-2 gap-4">
-                      <InfoCard label="Previous Litters" value={dog.breeding.previousLitters.toString()} />
+                      <InfoCard label="Previous Litters" value={breedingInfo.previousLitters.toString()} />
                     </div>
-                    {dog.breeding.temperament && dog.breeding.temperament.length > 0 && (
+                    {breedingInfo.temperament && breedingInfo.temperament.length > 0 && (
                       <div>
                         <p className="font-semibold text-gray-900 mb-3">Temperament Traits</p>
                         <div className="flex flex-wrap gap-2">
-                          {dog.breeding.temperament.map((trait, index) => (
+                          {breedingInfo.temperament.map((trait, index) => (
                             <span
                               key={index}
                               className="px-4 py-2 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-full text-sm font-medium shadow-sm hover:shadow-md transition-shadow"
@@ -457,7 +510,7 @@ export default function DogDetailPage() {
                   )}
 
                   <div className="flex flex-wrap gap-2 mb-6">
-                    {dog.breeding?.available ? (
+                    {breedingInfo?.available ? (
                       <span className="flex-1 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg text-sm font-bold text-center shadow-sm">
                         ✓ Available for Breeding
                       </span>
@@ -503,7 +556,7 @@ export default function DogDetailPage() {
                   )}
 
                   {/* Action Buttons */}
-                  {!isOwner && (
+                  {!isOwner && ownerInfo && (
                     <div className="space-y-2">
                       <button
                         onClick={handleContactOwner}
@@ -519,81 +572,112 @@ export default function DogDetailPage() {
                         <Share2 className="h-5 w-5 mr-2" />
                         Share
                       </button>
+                      <Link
+                        href={`/dogs/${dog._id || dog.id}/matches`}
+                        className="w-full btn-primary flex items-center justify-center py-3"
+                      >
+                        <Heart className="w-5 h-5 mr-2" />
+                        Find Matches
+                      </Link>
                     </div>
                   )}
 
                   {isOwner && (
-                    <button
-                      onClick={() => router.push(`/dashboard/edit-dog/${dog._id || dog.id}`)}
-                      className="w-full btn-primary py-3"
-                    >
-                      Edit Listing
-                    </button>
+                    <>
+                      <button
+                        onClick={() => router.push(`/dashboard/edit-dog/${dog._id || dog.id}`)}
+                        className="w-full btn-primary py-3 mb-2"
+                      >
+                        Edit Listing
+                      </button>
+                      <Link
+                        href={`/dogs/${dog._id || dog.id}/matches`}
+                        className="w-full btn-secondary flex items-center justify-center py-3"
+                      >
+                        <Heart className="w-5 h-5 mr-2" />
+                        Find Matches
+                      </Link>
+                    </>
                   )}
                 </Card>
 
                 {/* Owner Info Card */}
-                <Card hover={false}>
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">Owner Information</h3>
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-3">
-                      {dog.owner.avatar ? (
-                        <Image
-                          src={getImageUrl(dog.owner.avatar)}
-                          alt={dog.owner.firstName}
-                          width={56}
-                          height={56}
-                          className="rounded-full ring-2 ring-gray-200"
-                          unoptimized
-                        />
-                      ) : (
-                        <div className="w-14 h-14 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center ring-2 ring-gray-200">
-                          <User className="h-7 w-7 text-primary-600" />
+                {ownerInfo && (
+                  <Card hover={false}>
+                    <h3 className="text-lg font-bold text-gray-900 mb-4">Owner Information</h3>
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-3">
+                        {ownerInfo.avatar ? (
+                          <Image
+                            src={getImageUrl(ownerInfo.avatar)}
+                            alt={ownerInfo.firstName}
+                            width={56}
+                            height={56}
+                            className="rounded-full ring-2 ring-gray-200"
+                            unoptimized
+                          />
+                        ) : (
+                          <div className="w-14 h-14 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center ring-2 ring-gray-200">
+                            <UserIcon className="h-7 w-7 text-primary-600" />
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-bold text-gray-900">
+                            {ownerInfo.firstName} {ownerInfo.lastName}
+                          </p>
+                          {ownerInfo.verified && (
+                            <p className="text-sm text-green-600 flex items-center font-medium">
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              Verified Owner
+                            </p>
+                                                      )}
+                        </div>
+                      </div>
+
+                      {(ownerInfo.location || ownerInfo.city) && (
+                        <div className="flex items-start space-x-2 p-3 bg-gray-50 rounded-lg">
+                          <MapPin className="h-5 w-5 text-gray-400 mt-0.5" />
+                          <div className="text-sm text-gray-700">
+                            <p className="font-medium">
+                              {ownerInfo.location?.city || ownerInfo.city}
+                              {(ownerInfo.location?.state || ownerInfo.county) && 
+                                `, ${ownerInfo.location?.state || ownerInfo.county}`
+                              }
+                            </p>
+                          </div>
                         </div>
                       )}
-                      <div>
-                        <p className="font-bold text-gray-900">
-                          {dog.owner.firstName} {dog.owner.lastName}
-                        </p>
-                        {dog.owner.verified && (
-                          <p className="text-sm text-green-600 flex items-center font-medium">
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            Verified Owner
-                          </p>
-                        )}
-                      </div>
-                    </div>
 
-                    {dog.owner.location && (
-                      <div className="flex items-start space-x-2 p-3 bg-gray-50 rounded-lg">
-                        <MapPin className="h-5 w-5 text-gray-400 mt-0.5" />
-                        <div className="text-sm text-gray-700">
-                          <p className="font-medium">{dog.owner.location.city}, {dog.owner.location.county}</p>
+                      {ownerInfo.createdAt && (
+                        <div className="pt-3 border-t flex items-center justify-between">
+                          <div className="flex items-center text-gray-500">
+                            <Calendar className="h-4 w-4 mr-2" />
+                            <span className="text-sm">Member since</span>
+                          </div>
+                          <span className="text-sm font-semibold text-gray-900">
+                            {formatDate(ownerInfo.createdAt)}
+                          </span>
                         </div>
-                      </div>
-                    )}
-
-                    <div className="pt-3 border-t flex items-center justify-between">
-                      <div className="flex items-center text-gray-500">
-                        <Calendar className="h-4 w-4 mr-2" />
-                        <span className="text-sm">Member since</span>
-                      </div>
-                      <span className="text-sm font-semibold text-gray-900">{formatDate(dog.owner.createdAt)}</span>
+                      )}
                     </div>
-                  </div>
-                </Card>
+                  </Card>
+                )}
 
                 {/* Quick Stats Card */}
                 <Card hover={false} className="bg-gradient-to-br from-primary-50 to-primary-100">
                   <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Stats</h3>
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center text-gray-700">
-                        <Calendar className="h-4 w-4 mr-2" />
-                        <span className="text-sm">Posted</span>
+                    {dog.createdAt && (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center text-gray-700">
+                          <Calendar className="h-4 w-4 mr-2" />
+                          <span className="text-sm">Posted</span>
+                        </div>
+                        <span className="text-sm font-bold text-gray-900">
+                          {formatDate(dog.createdAt)}
+                        </span>
                       </div>
-                      <span className="text-sm font-bold text-gray-900">{formatDate(dog.createdAt)}</span>
-                    </div>
+                    )}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center text-gray-700">
                         <Eye className="h-4 w-4 mr-2" />
@@ -647,7 +731,15 @@ function InfoCard({ label, value }: { label: string; value: string }) {
   );
 }
 
-function HealthStatusCard({ label, value, description }: { label: string; value: boolean; description: string }) {
+function HealthStatusCard({ 
+  label, 
+  value, 
+  description 
+}: { 
+  label: string; 
+  value: boolean; 
+  description: string;
+}) {
   return (
     <div className={`p-4 rounded-lg border-2 ${
       value 
@@ -655,14 +747,19 @@ function HealthStatusCard({ label, value, description }: { label: string; value:
         : 'bg-red-50 border-red-200'
     }`}>
       <div className="flex items-center justify-between mb-2">
-        <span className={`font-bold ${value ? 'text-green-900' : 'text-red-900'}`}>{label}</span>
+        <span className={`font-bold ${value ? 'text-green-900' : 'text-red-900'}`}>
+          {label}
+        </span>
         {value ? (
           <CheckCircle className="h-6 w-6 text-green-600" />
         ) : (
           <XCircle className="h-6 w-6 text-red-600" />
         )}
       </div>
-      <p className={`text-sm ${value ? 'text-green-700' : 'text-red-700'}`}>{description}</p>
+      <p className={`text-sm ${value ? 'text-green-700' : 'text-red-700'}`}>
+        {description}
+      </p>
     </div>
   );
 }
+                
