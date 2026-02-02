@@ -61,8 +61,8 @@ export default function AddDogPage() {
     
     address: user?.location?.address || '',
     city: user?.location?.city || '',
-    state: user?.location?.state || '',
-    zipCode: user?.location?.zipCode || '',
+    state: user?.location?.county || '',
+    zipCode: user?.location?.postcode || '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -750,12 +750,12 @@ export default function AddDogPage() {
                   </label>
                   <input
                     type="text"
-                    name="city"
-                    required
+                    name="city"                    
                     value={formData.city}
                     onChange={handleChange}
+                    required
                     className="input-field"
-                    placeholder="London"
+                    placeholder="Enter city"
                   />
                 </div>
 
@@ -765,7 +765,7 @@ export default function AddDogPage() {
                   </label>
                   <input
                     type="text"
-                    name="state"
+                    name="county"
                     required
                     value={formData.state}
                     onChange={handleChange}
@@ -780,7 +780,7 @@ export default function AddDogPage() {
                   </label>
                   <input
                     type="text"
-                    name="zipCode"
+                    name="postcode"
                     value={formData.zipCode}
                     onChange={handleChange}
                     className="input-field"

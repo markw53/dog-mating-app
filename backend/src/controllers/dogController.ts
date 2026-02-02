@@ -116,6 +116,29 @@ export const createDog = async (req: AuthRequest, res: Response) => {
     console.log('Creating dog with data:', req.body);
     console.log('Files received:', req.files);
 
+    // Get owner's location as fallback
+    const owner = await prisma.user.findUnique({
+      where: { id: req.user!.id },
+      select: { 
+        city: true, 
+        county: true, 
+        postcode: true,
+        country: true 
+      }
+    });
+
+    // Use dog's location or fallback to owner's location
+    const dogCity = city || owner?.city || '';
+    const dogCounty = county || owner?.county || '';
+    const dogPostcode = postcode || owner?.postcode || null;
+    const dogCountry = country || owner?.country || 'UK';
+
+    console.log('Location data:', {
+      provided: { city, county, postcode },
+      owner: owner,
+      final: { dogCity, dogCounty, dogPostcode, dogCountry }
+    });
+
     const birthDate = new Date(dateOfBirth);
     const age = new Date().getFullYear() - birthDate.getFullYear();
 
@@ -137,8 +160,14 @@ export const createDog = async (req: AuthRequest, res: Response) => {
     let coords = null;
     if (latitude && longitude) {
       coords = { lat: parseFloat(latitude), lng: parseFloat(longitude) };
-    } else {
-      coords = await geocodeAddress(city, postcode, country || 'UK');
+      console.log('Using provided coordinates:', coords);
+    } else if (dogCity || dogPostcode) {
+      console.log('Attempting to geocode:', { dogCity, dogPostcode, dogCountry });
+      coords = await geocodeAddress(dogCity, dogPostcode, dogCountry);
+    }
+
+    if (!coords) {
+      console.warn('⚠️ No coordinates available for this dog');
     }
 
     const dog = await prisma.dog.create({
@@ -173,14 +202,14 @@ export const createDog = async (req: AuthRequest, res: Response) => {
         temperament: temperamentArray,
 
         address: address || null,
-        city: city || '',
-        county: county || '',
-        postcode: postcode || null,
-        country: country || 'UK',
+        city: dogCity,
+        county: dogCounty,
+        postcode: dogPostcode,
+        country: dogCountry,
         
         // Add coordinates
-        latitude: coords?.lat,
-        longitude: coords?.lng,
+        latitude: coords?.lat || null,
+        longitude: coords?.lng || null,
 
         ownerId: req.user!.id,
       },
@@ -202,8 +231,12 @@ export const createDog = async (req: AuthRequest, res: Response) => {
       },
     });
 
-    console.log('Dog created successfully:', dog.id);
-    console.log('Coordinates:', coords);
+    console.log('Dog created successfully:', {
+      id: dog.id,
+      name: dog.name,
+      city: dog.city,
+      coordinates: coords
+    });
 
     res.status(201).json({ success: true, dog: transformDogForFrontend(dog) });
   } catch (error: any) {
@@ -347,9 +380,26 @@ export const updateDog = async (req: AuthRequest, res: Response) => {
       vaccinated, neutered, vetName, vetContact, medicalHistory,
       registered, registrationNumber, registry, sire, dam,
       available, studFee, studFeeNegotiable, previousLitters, temperament,
-      address, city, county, postcode, existingImages,
+      address, city, county, postcode, country, existingImages,
       latitude, longitude
     } = req.body;
+
+    // Get owner's location as fallback
+    const owner = await prisma.user.findUnique({
+      where: { id: req.user!.id },
+      select: { 
+        city: true, 
+        county: true, 
+        postcode: true,
+        country: true 
+      }
+    });
+
+    // Use provided values or existing values, with owner location as final fallback
+    const dogCity = city !== undefined ? city : (existingDog.city || owner?.city || '');
+    const dogCounty = county !== undefined ? county : (existingDog.county || owner?.county || '');
+    const dogPostcode = postcode !== undefined ? postcode : (existingDog.postcode || owner?.postcode || null);
+    const dogCountry = country !== undefined ? country : (existingDog.country || owner?.country || 'UK');
 
     const birthDate = new Date(dateOfBirth);
     const age = new Date().getFullYear() - birthDate.getFullYear();
@@ -381,7 +431,7 @@ export const updateDog = async (req: AuthRequest, res: Response) => {
       }
     }
 
-    // Update coordinates if location changed
+    // Update coordinates if location changed or missing
     let coords = {
       lat: existingDog.latitude,
       lng: existingDog.longitude
@@ -389,18 +439,18 @@ export const updateDog = async (req: AuthRequest, res: Response) => {
 
     if (latitude && longitude) {
       coords = { lat: parseFloat(latitude), lng: parseFloat(longitude) };
+      console.log('Using provided coordinates:', coords);
     } else if (
-      city !== existingDog.city || 
-      postcode !== existingDog.postcode || 
+      dogCity !== existingDog.city || 
+      dogPostcode !== existingDog.postcode || 
       !existingDog.latitude || 
       !existingDog.longitude
     ) {
-      const newCoordinates = await geocodeAddress(
-        city || existingDog.city, 
-        postcode || existingDog.postcode
-      );
+      console.log('Location changed or missing, geocoding:', { dogCity, dogPostcode });
+      const newCoordinates = await geocodeAddress(dogCity, dogPostcode, dogCountry);
       if (newCoordinates) {
         coords = newCoordinates;
+        console.log('New coordinates:', coords);
       }
     }
 
@@ -436,10 +486,11 @@ export const updateDog = async (req: AuthRequest, res: Response) => {
         previousLitters: previousLitters ? parseInt(previousLitters) : 0,
         temperament: temperamentArray,
 
-        address: address || null,
-        city: city || '',
-        county: county || '',
-        postcode: postcode || null,
+        address: address !== undefined ? address : existingDog.address,
+        city: dogCity,
+        county: dogCounty,
+        postcode: dogPostcode,
+        country: dogCountry,
         
         latitude: coords.lat,
         longitude: coords.lng,
@@ -457,6 +508,13 @@ export const updateDog = async (req: AuthRequest, res: Response) => {
           },
         },
       },
+    });
+
+    console.log('Dog updated successfully:', {
+      id: dog.id,
+      name: dog.name,
+      city: dog.city,
+      coordinates: { lat: dog.latitude, lng: dog.longitude }
     });
 
     res.json({ success: true, dog: transformDogForFrontend(dog) });
@@ -483,6 +541,8 @@ export const deleteDog = async (req: AuthRequest, res: Response) => {
     await prisma.dog.delete({
       where: { id: req.params.id as string },
     });
+
+    console.log('Dog deleted successfully:', req.params.id);
 
     res.json({ success: true, message: 'Dog deleted' });
   } catch (error: any) {

@@ -40,6 +40,7 @@ export interface Dog {
     city?: string;
     county?: string;
     country?: string;
+    postcode?: string;
     coordinates?: {
       lat: number;
       lng: number;
