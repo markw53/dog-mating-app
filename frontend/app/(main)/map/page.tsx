@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { dogsApi } from '@/lib/api/dogs';
 import { Dog } from '@/types';
-import DogMap from '@/components/map/DogMap';
+import DogMap from '@/components/map/DogMapClient';
 import { Loader2, Map as MapIcon, List } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';

@@ -71,6 +71,19 @@ export default function MatchesPage() {
     );
   }
 
+  if (dog && !dog.breeding?.available) {
+  return (
+    <div className="flex justify-center items-center min-h-screen">
+      <div className="text-center">
+        <p className="text-gray-600">This dog is not available for breeding</p>
+        <Link href={`/dogs/${dogId}`} className="btn-primary mt-4">
+          Back to Profile
+        </Link>
+      </div>
+    </div>
+  );
+}
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
