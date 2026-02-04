@@ -7,8 +7,8 @@ export interface RegisterData {
   location?: {
     address: string;
     city: string;
-    state: string;
-    zipCode: string;
+    county: string;
+    postcode: string;
     country: string;
     coordinates?: {
       lat: number;

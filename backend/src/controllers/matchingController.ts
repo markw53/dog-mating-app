@@ -8,7 +8,7 @@ import { Gender, Status } from '@prisma/client';
 export const findMatches = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     console.log('🔍 findMatches called');
-    console.log('   User:', req.user?.id);
+    console.log('   User:', req.user?.id, req.user?.email);
     console.log('   Params:', req.params);
     console.log('   Query:', req.query);
 
@@ -16,6 +16,7 @@ export const findMatches = async (req: AuthRequest, res: Response, next: NextFun
     const { limit = '10', minScore = '30' } = req.query;
 
     if (!dogId || Array.isArray(dogId)) {
+      console.log('   ❌ Invalid dog ID');
       return res.status(400).json({ message: 'Invalid dog ID' });
     }
 
@@ -42,14 +43,18 @@ export const findMatches = async (req: AuthRequest, res: Response, next: NextFun
       return res.status(404).json({ message: 'Dog not found' });
     }
 
-    console.log('   ✅ Dog found:', sourceDog.name);
+    console.log('   ✅ Dog found:', sourceDog.name, 'Owner:', sourceDog.ownerId);
 
+    // Check ownership or admin
     if (sourceDog.ownerId !== req.user!.id && req.user!.role !== 'ADMIN') {
-      console.log('   ❌ Not authorized');
-      return res.status(403).json({ message: 'Not authorized' });
+      console.log('   ❌ Not authorized. Dog owner:', sourceDog.ownerId, 'User:', req.user!.id);
+      return res.status(403).json({ message: 'Not authorized to view matches for this dog' });
     }
 
+    console.log('   ✅ Authorization passed');
+
     const oppositeGender = sourceDog.gender === Gender.MALE ? Gender.FEMALE : Gender.MALE;
+    console.log('   Looking for opposite gender:', oppositeGender);
 
     const potentialMatches = await prisma.dog.findMany({
       where: {
@@ -169,7 +174,7 @@ export const findMatches = async (req: AuthRequest, res: Response, next: NextFun
       .sort((a, b) => b.matchScore - a.matchScore)
       .slice(0, parseInt(limit as string));
 
-    console.log('   ✅ Returning', matches.length, 'matches');
+    console.log('   ✅ Returning', matches.length, 'matches after filtering');
 
     res.json({
       success: true,
@@ -183,7 +188,7 @@ export const findMatches = async (req: AuthRequest, res: Response, next: NextFun
       matches,
       total: matches.length,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('❌ Find matches error:', error);
     next(error);
   }
@@ -192,10 +197,13 @@ export const findMatches = async (req: AuthRequest, res: Response, next: NextFun
 export const getMatchStats = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     console.log('📈 getMatchStats called');
+    console.log('   User:', req.user?.id);
+    console.log('   Params:', req.params);
     
     const dogId = req.params.dogId as string;
 
     if (!dogId || Array.isArray(dogId)) {
+      console.log('   ❌ Invalid dog ID');
       return res.status(400).json({ message: 'Invalid dog ID' });
     }
 
@@ -204,10 +212,14 @@ export const getMatchStats = async (req: AuthRequest, res: Response, next: NextF
     });
 
     if (!sourceDog) {
+      console.log('   ❌ Dog not found');
       return res.status(404).json({ message: 'Dog not found' });
     }
 
+    console.log('   ✅ Dog found:', sourceDog.name);
+
     if (sourceDog.ownerId !== req.user!.id && req.user!.role !== 'ADMIN') {
+      console.log('   ❌ Not authorized');
       return res.status(403).json({ message: 'Not authorized' });
     }
 
@@ -236,6 +248,8 @@ export const getMatchStats = async (req: AuthRequest, res: Response, next: NextF
         : 0,
     ]);
 
+    console.log('   ✅ Stats:', { totalPotential, sameBreed, nearbyCount });
+
     res.json({
       success: true,
       stats: {
@@ -245,7 +259,7 @@ export const getMatchStats = async (req: AuthRequest, res: Response, next: NextF
         breedCompatibility: totalPotential > 0 ? Math.round((sameBreed / totalPotential) * 100) : 0,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('❌ Get match stats error:', error);
     next(error);
   }

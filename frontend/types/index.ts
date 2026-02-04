@@ -47,12 +47,12 @@ export interface Dog {
   ownerId?: string;
   
   // Location
-  address?: string;
+  address?: string | null;
   city: string;
   county: string;
-  postcode?: string;
-  country?: string;
-  latitude?: number;
+  postcode?: string | null;
+  country?: string | null;
+  latitude?: number | null;
   longitude?: number;
   location?: {
     address?: string;
@@ -69,9 +69,9 @@ export interface Dog {
   // Health Info (direct fields from DB)
   vaccinated: boolean;
   neutered: boolean;
-  vetName?: string;
-  vetContact?: string;
-  medicalHistory?: string;
+  vetName?: string | null;
+  vetContact?: string | null;
+  medicalHistory?: string | null;
   // Formatted version for frontend
   healthInfo?: {
     vaccinated: boolean;
@@ -85,30 +85,30 @@ export interface Dog {
   
   // Pedigree (direct fields from DB)
   registered: boolean;
-  registrationNumber?: string;
-  registry?: string;
-  sire?: string;
-  dam?: string;
+  registrationNumber?: string | null;
+  registry?: string | null;
+  sire?: string | null;
+  dam?: string | null;
   // Formatted version for frontend
   pedigree?: {
     registered: boolean;
-    registrationNumber?: string;
-    registry?: string;
-    sire?: string;
-    dam?: string;
+    registrationNumber?: string | null;
+    registry?: string | null;
+    sire?: string | null;
+    dam?: string | null;
   };
   
   // Breeding (direct fields from DB)
   available: boolean;
-  studFee?: number;
+  studFee?: number | null;
   studFeeNegotiable?: boolean;
   previousLitters?: number;
   temperament?: string[];
   // Formatted version for frontend
   breeding?: {
     available: boolean;
-    fee?: number;
-    studFee?: number;
+    fee?: number | null;
+    studFee?: number | null;
     feeNegotiable?: boolean;
     studFeeNegotiable?: boolean;
     previousLitters?: number;
@@ -158,4 +158,48 @@ export interface Conversation {
   lastMessageAt?: Date | string;
   createdAt: Date | string;
   updatedAt: Date | string;
+}
+
+// Type for updating a dog
+export interface UpdateDogData {
+  name?: string;
+  breed?: string;
+  gender?: 'MALE' | 'FEMALE';
+  dateOfBirth?: string;
+  age?: number;
+  weight?: number;
+  color?: string;
+  description?: string;
+  images?: string[];
+  mainImage?: string | null;
+  
+  // Health
+  vaccinated?: boolean;
+  neutered?: boolean;
+  vetName?: string;
+  vetContact?: string;
+  medicalHistory?: string;
+  
+  // Pedigree
+  registered?: boolean;
+  registrationNumber?: string;
+  registry?: string;
+  sire?: string;
+  dam?: string;
+  
+  // Breeding
+  available?: boolean;
+  studFee?: number;
+  studFeeNegotiable?: boolean;
+  previousLitters?: number;
+  temperament?: string[];
+  
+  // Location
+  address?: string;
+  city?: string;
+  county?: string;
+  postcode?: string;
+  country?: string;
+  latitude?: number;
+  longitude?: number;
 }

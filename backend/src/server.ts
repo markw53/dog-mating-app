@@ -14,6 +14,7 @@ import dogRoutes from './routes/dogRoutes';
 import messageRoutes from './routes/messageRoutes';
 import reviewRoutes from './routes/reviewRoutes';
 import adminRoutes from './routes/adminRoutes';
+import matchingRoutes from './routes/matchingRoutes';
 
 dotenv.config();
 
@@ -33,6 +34,13 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// ADD REQUEST LOGGING MIDDLEWARE
+app.use((req, res, next) => {
+  console.log(`📥 ${req.method} ${req.path}`);
+  console.log('   Headers:', req.headers.authorization ? 'Auth header present' : 'No auth header');
+  next();
+});
 
 // Serve static files with logging
 const uploadsPath = path.join(__dirname, '../uploads');
@@ -65,17 +73,26 @@ app.get('/test-uploads', (req, res) => {
 });
 
 // API Routes
+app.use('/api/test', testRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/dogs', dogRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/matching', matchingRoutes);
+
+// ADD 404 HANDLER BEFORE ERROR HANDLER
+app.use((req, res, next) => {
+  console.log('⚠️  404 - Route not found:', req.method, req.path);
+  res.status(404).json({ 
+    message: 'Route not found',
+    path: req.path,
+    method: req.method 
+  });
+});
 
 // Error handler
 app.use(errorHandler);
-
-// Test Routes
-app.use('/api/test', testRoutes);
 
 // Socket.io
 const userSockets = new Map<string, string>();
@@ -111,6 +128,13 @@ server.listen(PORT, async () => {
   console.log(`✅ Server running on port ${PORT}`);
   console.log(`📁 Uploads directory: ${uploadsPath}`);
   console.log(`🌐 CORS enabled for: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`);
+  console.log(`📋 API Routes mounted:`);
+  console.log(`   - /api/auth`);
+  console.log(`   - /api/dogs`);
+  console.log(`   - /api/messages`);
+  console.log(`   - /api/reviews`);
+  console.log(`   - /api/admin`);
+  console.log(`   - /api/matching`);
 });
 
 export { io };
