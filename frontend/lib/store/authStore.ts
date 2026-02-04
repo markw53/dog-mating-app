@@ -1,3 +1,4 @@
+// lib/store/authStore.ts
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User } from '@/types';
@@ -14,6 +15,7 @@ interface AuthState {
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
   setUser: (user: User) => void;
+  setToken: (token: string) => void;
   checkAuth: () => Promise<void>;
 }
 
@@ -28,8 +30,23 @@ export const useAuthStore = create<AuthState>()(
       login: async (email: string, password: string) => {
         set({ loading: true });
         try {
-          const response = await authApi.login(email, password);
+          console.log('🔐 Login attempt:', { email });
+          
+          // FIX: Create credentials object
+          const credentials = {
+            email: email.trim(),
+            password: password,
+          };
+
+          console.log('📦 Calling authApi.login with credentials object');
+          
+          const response = await authApi.login(credentials); // Pass object, not separate params
+          
+          console.log('✅ Login successful');
+          
           localStorage.setItem('token', response.token);
+          localStorage.setItem('user', JSON.stringify(response.user));
+          
           set({
             user: response.user,
             token: response.token,
@@ -37,6 +54,7 @@ export const useAuthStore = create<AuthState>()(
             loading: false,
           });
         } catch (error) {
+          console.error('❌ Login failed in store:', error);
           set({ loading: false });
           throw error;
         }
@@ -45,8 +63,13 @@ export const useAuthStore = create<AuthState>()(
       register: async (data: RegisterData) => {
         set({ loading: true });
         try {
+          console.log('📝 Registration attempt');
+          
           const response = await authApi.register(data);
+          
           localStorage.setItem('token', response.token);
+          localStorage.setItem('user', JSON.stringify(response.user));
+          
           set({
             user: response.user,
             token: response.token,
@@ -54,6 +77,7 @@ export const useAuthStore = create<AuthState>()(
             loading: false,
           });
         } catch (error) {
+          console.error('❌ Registration failed:', error);
           set({ loading: false });
           throw error;
         }
@@ -61,6 +85,7 @@ export const useAuthStore = create<AuthState>()(
 
       logout: () => {
         localStorage.removeItem('token');
+        localStorage.removeItem('user');
         set({
           user: null,
           token: null,
@@ -69,7 +94,11 @@ export const useAuthStore = create<AuthState>()(
       },
 
       setUser: (user: User) => {
-        set({ user });
+        set({ user, isAuthenticated: true });
+      },
+
+      setToken: (token: string) => {
+        set({ token });
       },
 
       checkAuth: async () => {
@@ -80,14 +109,16 @@ export const useAuthStore = create<AuthState>()(
         }
 
         try {
-          const response = await authApi.getMe();
+          const response = await authApi.getCurrentUser();
           set({
             user: response.user,
             token,
             isAuthenticated: true,
           });
-        } catch {
+        } catch (error) {
+          console.error('❌ Auth check failed:', error);
           localStorage.removeItem('token');
+          localStorage.removeItem('user');
           set({
             user: null,
             token: null,

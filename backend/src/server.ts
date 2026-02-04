@@ -44,16 +44,13 @@ app.use((req, res, next) => {
 
 // Serve static files with logging
 const uploadsPath = path.join(__dirname, '../uploads');
-console.log('Uploads directory path:', uploadsPath);
+console.log('📁 Uploads directory:', uploadsPath);
 
-app.use('/uploads', (req, res, next) => {
-  console.log('Serving static file:', req.url);
-  next();
-}, express.static(uploadsPath, {
-  setHeaders: (res, filePath) => {
-    console.log('Serving file:', filePath);
+app.use('/uploads', express.static(uploadsPath, {
+  setHeaders: (res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
-  }
+    res.setHeader('Cache-Control', 'public, max-age=31536000');
+  },
 }));
 
 // Test route
@@ -64,12 +61,16 @@ app.get('/', (req, res) => {
 // Test uploads directory
 app.get('/test-uploads', (req, res) => {
   const fs = require('fs');
-  const files = fs.readdirSync(uploadsPath);
-  res.json({ 
-    uploadsPath,
-    files,
-    count: files.length 
-  });
+  try {
+    const files = fs.readdirSync(uploadsPath);
+    res.json({
+      uploadsPath,
+      files,
+      count: files.length,
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to read uploads directory' });
+  }
 });
 
 // API Routes

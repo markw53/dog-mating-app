@@ -29,7 +29,11 @@ interface ApiErrorResponse {
 export const authApi = {
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
     try {
+      console.log('🔐 authApi.login called with:', credentials);
+      
       const response = await apiClient.post<AuthResponse>('/auth/login', credentials);
+      
+      console.log('✅ Login response received');
       
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
@@ -39,12 +43,15 @@ export const authApi = {
       return response.data;
     } catch (err) {
       const error = err as AxiosError<ApiErrorResponse>;
+      console.error('❌ Login error:', error.response?.data);
       throw error;
     }
   },
 
   register: async (data: RegisterData): Promise<AuthResponse> => {
     try {
+      console.log('📝 Register attempt');
+      
       const response = await apiClient.post<AuthResponse>('/auth/register', data);
       
       if (response.data.token) {
@@ -55,6 +62,7 @@ export const authApi = {
       return response.data;
     } catch (err) {
       const error = err as AxiosError<ApiErrorResponse>;
+      console.error('❌ Registration error:', error.response?.data);
       throw error;
     }
   },
@@ -75,6 +83,11 @@ export const authApi = {
     }
   },
 
+  // Add alias for checkAuth in store
+  getMe: async (): Promise<{ success: boolean; user: User }> => {
+    return authApi.getCurrentUser();
+  },
+
   updateProfile: async (data: UpdateProfileData): Promise<{ success: boolean; user: User }> => {
     try {
       const response = await apiClient.put<{ success: boolean; user: User }>(
@@ -82,7 +95,6 @@ export const authApi = {
         data
       );
       
-      // Update stored user data
       if (response.data.user) {
         localStorage.setItem('user', JSON.stringify(response.data.user));
       }
