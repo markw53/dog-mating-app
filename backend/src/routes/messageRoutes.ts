@@ -1,19 +1,28 @@
+// routes/messageRoutes.ts
 import express from 'express';
-import {
-  getConversations,
-  getOrCreateConversation,
-  getMessages,
-  sendMessage,
-  getUnreadCount
+import { 
+  getConversations, 
+  getMessages, 
+  sendMessage, 
+  createConversation,
+  markAsRead 
 } from '../controllers/messageController';
 import { protect } from '../middleware/auth';
 
 const router = express.Router();
 
-router.get('/conversations', protect, getConversations);
-router.post('/conversations', protect, getOrCreateConversation);
-router.get('/conversations/:conversationId', protect, getMessages);
-router.post('/send', protect, sendMessage);
-router.get('/unread', protect, getUnreadCount);
+// All message routes require authentication
+router.use(protect);
+
+// Conversations
+router.get('/conversations', getConversations);
+router.post('/conversations', createConversation);
+
+// Messages in a conversation
+router.get('/conversations/:conversationId/messages', getMessages);
+router.post('/conversations/:conversationId/messages', sendMessage);
+router.put('/conversations/:conversationId/read', markAsRead);
+
+console.log('✅ Message routes loaded');
 
 export default router;

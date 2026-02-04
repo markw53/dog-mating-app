@@ -31,6 +31,19 @@ export const dogsApi = {
     }
   },
 
+  getMyDogs: async (): Promise<{ success: boolean; dogs: Dog[]; total: number }> => {
+    try {
+      const response = await apiClient.get<{ success: boolean; dogs: Dog[]; total: number }>(
+        '/dogs/my-dogs'
+      );
+      return response.data;
+    } catch (err) {
+      const error = err as AxiosError<ApiErrorResponse>;
+      console.error('Get my dogs error:', error.response?.data);
+      throw error;
+    }
+  },
+
   getById: async (id: string): Promise<{ success: boolean; dog: Dog }> => {
     try {
       const response = await apiClient.get<{ success: boolean; dog: Dog }>(`/dogs/${id}`);

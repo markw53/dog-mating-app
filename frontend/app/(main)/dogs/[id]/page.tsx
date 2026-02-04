@@ -130,7 +130,7 @@ export default function DogDetailPage() {
     }
 
     try {
-      const response = await messagesApi.getOrCreateConversation(
+      const response = await messagesApi.createConversation(
         ownerInfo._id || ownerInfo.id,
         dog!._id || dog!.id
       );
@@ -585,7 +585,7 @@ export default function DogDetailPage() {
                   {isOwner && (
                     <>
                       <button
-                        onClick={() => router.push(`/dashboard/edit-dog/${dog._id || dog.id}`)}
+                        onClick={() => router.push(`/dogs/${dog._id || dog.id}/edit`)}
                         className="w-full btn-primary py-3 mb-2"
                       >
                         Edit Listing

@@ -175,26 +175,58 @@ export const uploadAvatar = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// controllers/authController.ts - updateProfile method
 export const updateProfile = async (req: AuthRequest, res: Response) => {
   try {
-    const { firstName, lastName, phone, location, avatar } = req.body;
+    const {
+      firstName,
+      lastName,
+      phone,
+      address,
+      city,
+      county,
+      postcode,
+      country,
+    } = req.body;
 
-    const user = await prisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: { id: req.user!.id },
       data: {
-        firstName,
-        lastName,
-        phone,
-        avatar,
-        city: location?.city,
-        county: location?.state,
-        postcode: location?.zipCode,
-        address: location?.address,
+        ...(firstName && { firstName }),
+        ...(lastName && { lastName }),
+        ...(phone !== undefined && { phone }),
+        ...(address !== undefined && { address }),
+        ...(city !== undefined && { city }),
+        ...(county !== undefined && { county }),
+        ...(postcode !== undefined && { postcode }),
+        ...(country && { country }),
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        phone: true,
+        avatar: true,
+        verified: true,
+        address: true,
+        city: true,
+        county: true,
+        postcode: true,
+        country: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
 
-    res.json({ success: true, user });
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.json({
+      success: true,
+      user: updatedUser,
+    });
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error('Update profile error:', err);
+    res.status(500).json({ message: err.message });
   }
 };

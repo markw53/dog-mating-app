@@ -291,7 +291,7 @@ function DogCard({ dog, onDelete }: { dog: Dog; onDelete: (id: string) => void }
             View
           </Link>
           <Link
-            href={`/dashboard/edit-dog/${dog._id || dog.id}`}
+            href={`/dogs/${dog._id || dog.id}/edit`}
             className="flex-1 btn-primary text-center text-sm py-2 flex items-center justify-center"
           >
             <Edit className="h-4 w-4 mr-1" />

@@ -4,21 +4,20 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
-  role: 'USER' | 'ADMIN';
-  avatar?: string;
-  bio?: string;
+  role: string;
   phone?: string;
+  avatar?: string | null;
   verified?: boolean;
-  address?: string;
-  city?: string;
-  county?: string;
-  postcode?: string;
+  address?: string | null;
+  city?: string | null;
+  county?: string | null;
+  postcode?: string | null;
   country?: string;
   location?: {
+    address?: string;
     city?: string;
     state?: string;
     zipCode?: string;
-    address?: string;
     country?: string;
   };
   createdAt?: Date | string;
@@ -141,23 +140,45 @@ export interface Message {
   id: string;
   _id?: string;
   content: string;
+  read: boolean;
+  conversationId: string;
   senderId: string;
   receiverId: string;
-  conversationId: string;
-  read: boolean;
+  sender: User;
+  receiver: User;
   createdAt: Date | string;
 }
 
+// Conversation type
 export interface Conversation {
   id: string;
   _id?: string;
   participants: User[];
-  dogId?: string;
-  dog?: Dog;
-  lastMessage?: string;
+  dogId?: string | null;
+  dog?: Dog | null;
+  lastMessage?: string | null;
   lastMessageAt?: Date | string;
+  messages?: Message[];
   createdAt: Date | string;
   updatedAt: Date | string;
+}
+
+// API Response types
+export interface ConversationsResponse {
+  success: boolean;
+  conversations: Conversation[];
+  total: number;
+}
+
+export interface MessagesResponse {
+  success: boolean;
+  messages: Message[];
+  total: number;
+}
+
+export interface SendMessageResponse {
+  success: boolean;
+  message: Message;
 }
 
 // Type for updating a dog
@@ -202,4 +223,15 @@ export interface UpdateDogData {
   country?: string;
   latitude?: number;
   longitude?: number;
+}
+
+export interface UpdateProfileData {
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  county?: string;
+  postcode?: string;
+  country?: string;
 }

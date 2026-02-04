@@ -524,6 +524,45 @@ export const updateDog = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const getMyDogs = async (req: AuthRequest, res: Response) => {
+  try {
+    console.log('📋 Getting dogs for user:', req.user?.id);
+
+    const dogs = await prisma.dog.findMany({
+      where: {
+        ownerId: req.user!.id,
+      },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            avatar: true,
+            city: true,
+            county: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    console.log('✅ Found', dogs.length, 'dogs for user');
+
+    res.json({
+      success: true,
+      dogs,
+      total: dogs.length,
+    });
+  } catch (error: any) {
+    console.error('❌ Get my dogs error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const deleteDog = async (req: AuthRequest, res: Response) => {
   try {
     const dog = await prisma.dog.findUnique({
@@ -547,22 +586,6 @@ export const deleteDog = async (req: AuthRequest, res: Response) => {
     res.json({ success: true, message: 'Dog deleted' });
   } catch (error: any) {
     console.error('Delete dog error:', error);
-    res.status(500).json({ message: error.message });
-  }
-};
-
-export const getMyDogs = async (req: AuthRequest, res: Response) => {
-  try {
-    const dogs = await prisma.dog.findMany({
-      where: { ownerId: req.user!.id },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    const transformedDogs = dogs.map(transformDogForFrontend);
-
-    res.json({ success: true, dogs: transformedDogs });
-  } catch (error: any) {
-    console.error('Get my dogs error:', error);
     res.status(500).json({ message: error.message });
   }
 };

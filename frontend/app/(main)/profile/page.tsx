@@ -1,9 +1,11 @@
+// app/(main)/profile/page.tsx
 'use client';
 
 import { useState, useRef } from 'react';
 import { useAuthStore } from '@/lib/store/authStore';
 import { authApi } from '@/lib/api/auth';
 import { apiClient, getImageUrl } from '@/lib/api/client';
+import { UpdateProfileData } from '@/types';
 import { 
   User, MapPin, Mail, Phone, Camera, Loader2, Edit, 
   Check, Shield, Calendar, Save, X 
@@ -14,6 +16,7 @@ import { Section } from '@/components/ui/Section';
 import toast from 'react-hot-toast';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { formatDate } from '@/lib/utils/formatters';
+import { AxiosError } from 'axios';
 
 function ProfilePageContent() {
   const { user, setUser } = useAuthStore();
@@ -27,10 +30,10 @@ function ProfilePageContent() {
     lastName: user?.lastName || '',
     email: user?.email || '',
     phone: user?.phone || '',
-    address: user?.location?.address || '',
-    city: user?.location?.city || '',
-    county: user?.location?.county || '',
-    postcode: user?.location?.postcode || '',
+    address: user?.address || user?.location?.address || '',
+    city: user?.city || user?.location?.city || '',
+    county: user?.county || user?.location?.state || '',
+    postcode: user?.postcode || user?.location?.zipCode || '',
   });
 
   const handleAvatarClick = () => {
@@ -65,9 +68,9 @@ function ProfilePageContent() {
 
       setUser(response.data.user);
       toast.success('Profile picture updated! 📸');
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to upload avatar';
-      toast.error(errorMessage);
+    } catch (err) {
+      const error = err as AxiosError<{ message?: string }>;
+      toast.error(error.response?.data?.message || 'Failed to upload avatar');
     } finally {
       setUploadingAvatar(false);
     }
@@ -85,25 +88,24 @@ function ProfilePageContent() {
     setLoading(true);
 
     try {
-      const response = await authApi.updateProfile({
+      const updateData: UpdateProfileData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
-        phone: formData.phone,
-        location: {
-          address: formData.address,
-          city: formData.city,
-          county: formData.county,
-          postcode: formData.postcode,
-          country: 'UK',
-        },
-      });
+        phone: formData.phone || undefined,
+        address: formData.address || undefined,
+        city: formData.city || undefined,
+        county: formData.county || undefined,
+        postcode: formData.postcode || undefined,
+        country: 'UK',
+      };
 
+      const response = await authApi.updateProfile(updateData);
       setUser(response.user);
       toast.success('Profile updated successfully! ✅');
       setEditing(false);
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update profile';
-      toast.error(errorMessage);
+    } catch (err) {
+      const error = err as AxiosError<{ message?: string }>;
+      toast.error(error.response?.data?.message || 'Failed to update profile');
     } finally {
       setLoading(false);
     }
@@ -112,6 +114,11 @@ function ProfilePageContent() {
   if (!user) return null;
 
   const avatarUrl = user.avatar ? getImageUrl(user.avatar) : null;
+
+  // Get display location (prefer direct properties, fallback to location object)
+  const displayCity = user.city || user.location?.city;
+  const displayCounty = user.county || user.location?.state;
+  const hasLocation = displayCity || displayCounty;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -202,13 +209,13 @@ function ProfilePageContent() {
                       <span className="text-sm font-medium">{user.phone}</span>
                     </div>
                   )}
-                  {user.location && (
+                  {hasLocation && (
                     <div className="flex items-center text-gray-700 p-3 bg-gray-50 rounded-lg">
                       <div className="bg-green-100 p-2 rounded-lg mr-3">
                         <MapPin className="h-5 w-5 text-green-600" />
                       </div>
                       <span className="text-sm font-medium">
-                        {user.location.city}, {user.location.county}
+                        {displayCity}{displayCity && displayCounty ? ', ' : ''}{displayCounty}
                       </span>
                     </div>
                   )}
@@ -218,7 +225,9 @@ function ProfilePageContent() {
                     </div>
                     <div className="text-left">
                       <p className="text-xs text-gray-500">Member since</p>
-                      <span className="text-sm font-medium">{formatDate(user.createdAt)}</span>
+                      <span className="text-sm font-medium">
+                        {user.createdAt ? formatDate(user.createdAt) : 'N/A'}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -230,7 +239,7 @@ function ProfilePageContent() {
                       <Shield className="h-5 w-5 text-primary-600" />
                     </div>
                     <span className="text-sm font-semibold text-gray-700 capitalize">
-                      {user.role} Account
+                      {user.role.toLowerCase()} Account
                     </span>
                   </div>
                 </div>
@@ -364,10 +373,10 @@ function ProfilePageContent() {
                               lastName: user.lastName || '',
                               email: user.email || '',
                               phone: user.phone || '',
-                              address: user.location?.address || '',
-                              city: user.location?.city || '',
-                              county: user.location?.county || '',
-                              postcode: user.location?.postcode || '',
+                              address: user.address || user.location?.address || '',
+                              city: user.city || user.location?.city || '',
+                              county: user.county || user.location?.state || '',
+                              postcode: user.postcode || user.location?.zipCode || '',
                             });
                           }
                         }}

@@ -6,19 +6,23 @@ import {
   updateDog,
   deleteDog,
   getMyDogs,
-  searchNearby
-} from '../controllers/dogController';
+  searchNearby,
+ } from '../controllers/dogController';
 import { protect } from '../middleware/auth';
 import { upload } from '../middleware/upload';
 
 const router = express.Router();
 
 router.get('/', getAllDogs);
-router.get('/my-dogs', protect, getMyDogs);
-router.get('/nearby', searchNearby);
 router.get('/:id', getDogById);
-router.post('/', protect, upload.array('images', 10), createDog);
-router.put('/:id', protect, upload.array('images', 10), updateDog);
-router.delete('/:id', protect, deleteDog);
+
+router.use(protect); // Protect all routes below this line
+
+router.get('/my-dogs', getMyDogs);
+router.get('/nearby', searchNearby);
+
+router.post('/', upload.array('images', 10), createDog);
+router.put('/:id', upload.array('images', 10), updateDog);
+router.delete('/:id', deleteDog);
 
 export default router;
