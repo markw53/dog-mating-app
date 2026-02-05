@@ -6,7 +6,6 @@ import {
   updateDog,
   deleteDog,
   getMyDogs,
-  searchNearby,
   uploadDogImages,
  } from '../controllers/dogController';
 import { protect } from '../middleware/auth';
@@ -20,7 +19,7 @@ router.get('/:id', getDogById);
 router.use(protect); // Protect all routes below this line
 
 router.get('/my-dogs', getMyDogs);
-router.get('/nearby', searchNearby);
+// router.get('/nearby', searchNearby);
 
 router.post('/', createDog);
 router.put('/:id', updateDog);
