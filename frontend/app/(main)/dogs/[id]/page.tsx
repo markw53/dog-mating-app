@@ -630,7 +630,7 @@ export default function DogDetailPage() {
                               <CheckCircle className="h-4 w-4 mr-1" />
                               Verified Owner
                             </p>
-                                                      )}
+                           )}
                         </div>
                       </div>
 
