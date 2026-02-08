@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useAuthStore } from '@/lib/store/authStore';
 import { dogsApi } from '@/lib/api/dogs';
+import { UpdateDogData } from '@/types';
 import { 
   Upload, X, Dog as DogIcon, Heart, Shield, 
   MapPin, Loader2, Image as ImageIcon, Check, Info
@@ -12,6 +13,7 @@ import {
 import { Card } from '@/components/ui/Card';
 import { Section } from '@/components/ui/Section';
 import toast from 'react-hot-toast';
+import { AxiosError } from 'axios';
 
 const POPULAR_BREEDS = [
   'Labrador Retriever', 'German Shepherd', 'Golden Retriever', 'French Bulldog',
@@ -35,7 +37,7 @@ export default function AddDogPage() {
   const [formData, setFormData] = useState({
     name: '',
     breed: '',
-    gender: 'male' as 'male' | 'female',
+    Gender: 'MALE' as 'MALE' | 'FEMALE',
     dateOfBirth: '',
     weight: '',
     color: '',
@@ -59,14 +61,16 @@ export default function AddDogPage() {
     previousLitters: '0',
     temperament: [] as string[],
     
-    address: user?.location?.address || '',
-    city: user?.location?.city || '',
-    state: user?.location?.county || '',
-    zipCode: user?.location?.postcode || '',
+    address: user?.address || user?.location?.address || '',
+    city: user?.city || user?.location?.city || '',
+    county: user?.county || user?.location?.state || '', // FIXED: county not state
+    postcode: user?.postcode || user?.location?.zipCode || '', // FIXED: postcode not zipCode
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
+    
+    console.log('🔄 Field change:', { name, value, type });
     
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
@@ -119,58 +123,70 @@ export default function AddDogPage() {
     setLoading(true);
 
     try {
-      const data = new FormData();
-
-      data.append('name', formData.name);
-      data.append('breed', formData.breed);
-      data.append('gender', formData.gender);
-      data.append('dateOfBirth', formData.dateOfBirth);
-      data.append('weight', formData.weight);
-      data.append('color', formData.color);
-      data.append('description', formData.description);
-
+      // Calculate age
       const birthDate = new Date(formData.dateOfBirth);
       const age = new Date().getFullYear() - birthDate.getFullYear();
-      data.append('age', age.toString());
 
-      data.append('healthInfo[vaccinated]', formData.vaccinated.toString());
-      data.append('healthInfo[neutered]', formData.neutered.toString());
-      if (formData.vetName) data.append('healthInfo[veterinarian][name]', formData.vetName);
-      if (formData.vetContact) data.append('healthInfo[veterinarian][contact]', formData.vetContact);
-      if (formData.medicalHistory) data.append('healthInfo[medicalHistory]', formData.medicalHistory);
+      // Create dog data object - NOT FormData
+      const dogData: UpdateDogData = {
+        name: formData.name,
+        breed: formData.breed,
+        gender: formData.Gender,
+        dateOfBirth: formData.dateOfBirth,
+        age: age,
+        weight: parseFloat(formData.weight),
+        color: formData.color,
+        description: formData.description,
+        
+        // Health
+        vaccinated: formData.vaccinated,
+        neutered: formData.neutered,
+        vetName: formData.vetName || undefined,
+        vetContact: formData.vetContact || undefined,
+        medicalHistory: formData.medicalHistory || undefined,
+        
+        // Pedigree
+        registered: formData.registered,
+        registrationNumber: formData.registrationNumber || undefined,
+        registry: formData.registry || undefined,
+        sire: formData.sire || undefined,
+        dam: formData.dam || undefined,
+        
+        // Breeding
+        available: formData.available,
+        studFee: formData.studFee ? parseFloat(formData.studFee) : undefined,
+        studFeeNegotiable: formData.studFeeNegotiable,
+        previousLitters: parseInt(formData.previousLitters) || 0,
+        temperament: formData.temperament,
+        
+        // Location
+        address: formData.address || undefined,
+        city: formData.city,
+        county: formData.county,
+        postcode: formData.postcode || undefined,
+        country: 'UK',
+      };
 
-      data.append('pedigree[registered]', formData.registered.toString());
-      if (formData.registrationNumber) data.append('pedigree[registrationNumber]', formData.registrationNumber);
-      if (formData.registry) data.append('pedigree[registry]', formData.registry);
-      if (formData.sire) data.append('pedigree[sire]', formData.sire);
-      if (formData.dam) data.append('pedigree[dam]', formData.dam);
+      console.log('📤 Creating dog with data:', dogData);
 
-      data.append('breeding[available]', formData.available.toString());
-      if (formData.studFee) data.append('breeding[studFee]', formData.studFee);
-      data.append('breeding[studFeeNegotiable]', formData.studFeeNegotiable.toString());
-      data.append('breeding[previousLitters]', formData.previousLitters);
-      formData.temperament.forEach((trait, index) => {
-        data.append(`breeding[temperament][${index}]`, trait);
-      });
+      // Create the dog first
+      const response = await dogsApi.create(dogData);
+      
+      console.log('✅ Dog created:', response.dog.id);
 
-      data.append('location[address]', formData.address);
-      data.append('location[city]', formData.city);
-      data.append('location[state]', formData.state);
-      data.append('location[zipCode]', formData.zipCode);
-      data.append('location[country]', 'UK');
+      // Upload images if dog was created successfully
+      if (images.length > 0 && response.dog.id) {
+        console.log('📸 Uploading images...');
+        await dogsApi.uploadImages(response.dog.id, images);
+        console.log('✅ Images uploaded');
+      }
 
-      images.forEach(image => {
-        data.append('images', image);
-      });
-
-      await dogsApi.create(data);
       toast.success('Dog added successfully! 🎉');
       router.push('/dashboard');
-    } catch (error: unknown) {
-      const message = error instanceof Object && 'response' in error && error.response instanceof Object && 'data' in error.response && error.response.data instanceof Object && 'message' in error.response.data
-        ? (error.response.data as { message: string }).message
-        : 'Failed to add dog';
-      toast.error(message);
+    } catch (err) {
+      const error = err as AxiosError<{ message?: string }>;
+      console.error('❌ Error adding dog:', error);
+      toast.error(error.response?.data?.message || 'Failed to add dog');
     } finally {
       setLoading(false);
     }
@@ -180,6 +196,7 @@ export default function AddDogPage() {
     router.push('/login');
     return null;
   }
+
 
   const steps = [
     { number: 1, name: 'Photos & Basic Info', icon: ImageIcon },
@@ -369,7 +386,7 @@ export default function AddDogPage() {
                   <select
                     name="gender"
                     required
-                    value={formData.gender}
+                    value={formData.Gender}
                     onChange={handleChange}
                     className="input-field"
                   >
@@ -394,7 +411,7 @@ export default function AddDogPage() {
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Weight (lbs) <span className="text-red-500">*</span>
+                    Weight (kgs) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -750,12 +767,12 @@ export default function AddDogPage() {
                   </label>
                   <input
                     type="text"
-                    name="city"                    
+                    name="city"
                     value={formData.city}
                     onChange={handleChange}
                     required
                     className="input-field"
-                    placeholder="Enter city"
+                    placeholder="London"
                   />
                 </div>
 
@@ -766,9 +783,9 @@ export default function AddDogPage() {
                   <input
                     type="text"
                     name="county"
-                    required
-                    value={formData.state}
+                    value={formData.county}  
                     onChange={handleChange}
+                    required
                     className="input-field"
                     placeholder="Greater London"
                   />
@@ -781,7 +798,7 @@ export default function AddDogPage() {
                   <input
                     type="text"
                     name="postcode"
-                    value={formData.zipCode}
+                    value={formData.postcode}  
                     onChange={handleChange}
                     className="input-field"
                     placeholder="SW1A 1AA"
@@ -789,6 +806,7 @@ export default function AddDogPage() {
                 </div>
               </div>
             </Card>
+
 
             {/* Info Box */}
             <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
