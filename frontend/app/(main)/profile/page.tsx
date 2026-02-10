@@ -1,8 +1,8 @@
 // app/(main)/profile/page.tsx
 'use client';
 
-import { useState, useRef } from 'react';
-import { useAuthStore } from '@/lib/store/authStore';
+import { useState, useRef, useEffect } from 'react';
+import { useRequireAuth } from '@/lib/hooks/useRequireAuth';
 import { authApi } from '@/lib/api/auth';
 import { apiClient, getImageUrl } from '@/lib/api/client';
 import { UpdateProfileData } from '@/types';
@@ -14,27 +14,46 @@ import Image from 'next/image';
 import { Card } from '@/components/ui/Card';
 import { Section } from '@/components/ui/Section';
 import toast from 'react-hot-toast';
-import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { formatDate } from '@/lib/utils/formatters';
 import { AxiosError } from 'axios';
+import { useAuthStore } from '@/lib/store/authStore';
 
-function ProfilePageContent() {
-  const { user, setUser } = useAuthStore();
+export default function ProfilePage() {
+  // Use the auth hook - handles redirect automatically if not authenticated
+  const { user, loading: authLoading, isAuthorized } = useRequireAuth();
+  const { setUser } = useAuthStore();
+  
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
-    firstName: user?.firstName || '',
-    lastName: user?.lastName || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
-    address: user?.address || user?.location?.address || '',
-    city: user?.city || user?.location?.city || '',
-    county: user?.county || user?.location?.state || '',
-    postcode: user?.postcode || user?.location?.zipCode || '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    county: '',
+    postcode: '',
   });
+
+  // Update form data when user is loaded
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        address: user.address || user.location?.address || '',
+        city: user.city || user.location?.city || '',
+        county: user.county || user.location?.state || '',
+        postcode: user.postcode || user.location?.zipCode || '',
+      });
+    }
+  }, [user]);
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
@@ -57,10 +76,10 @@ function ProfilePageContent() {
     setUploadingAvatar(true);
 
     try {
-      const formData = new FormData();
-      formData.append('avatar', file);
+      const avatarFormData = new FormData();
+      avatarFormData.append('avatar', file);
 
-      const response = await apiClient.post('/auth/upload-avatar', formData, {
+      const response = await apiClient.post('/auth/upload-avatar', avatarFormData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -77,10 +96,10 @@ function ProfilePageContent() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
       [e.target.name]: e.target.value,
-    });
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -111,7 +130,45 @@ function ProfilePageContent() {
     }
   };
 
-  if (!user) return null;
+  const handleCancelEdit = () => {
+    setEditing(false);
+    if (user) {
+      setFormData({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        address: user.address || user.location?.address || '',
+        city: user.city || user.location?.city || '',
+        county: user.county || user.location?.state || '',
+        postcode: user.postcode || user.location?.zipCode || '',
+      });
+    }
+  };
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="text-center">
+          <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">Loading your profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading if not authorized (will redirect)
+  if (!isAuthorized || !user) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="text-center">
+          <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
 
   const avatarUrl = user.avatar ? getImageUrl(user.avatar) : null;
 
@@ -365,21 +422,7 @@ function ProfilePageContent() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => {
-                          setEditing(false);
-                          if (user) {
-                            setFormData({
-                              firstName: user.firstName || '',
-                              lastName: user.lastName || '',
-                              email: user.email || '',
-                              phone: user.phone || '',
-                              address: user.address || user.location?.address || '',
-                              city: user.city || user.location?.city || '',
-                              county: user.county || user.location?.state || '',
-                              postcode: user.postcode || user.location?.zipCode || '',
-                            });
-                          }
-                        }}
+                        onClick={handleCancelEdit}
                         className="flex-1 btn-secondary flex items-center justify-center py-3"
                       >
                         <X className="h-5 w-5 mr-2" />
@@ -483,13 +526,5 @@ function ProfilePageContent() {
         </div>
       </section>
     </div>
-  );
-}
-
-export default function ProfilePage() {
-  return (
-    <ProtectedRoute>
-      <ProfilePageContent />
-    </ProtectedRoute>
   );
 }

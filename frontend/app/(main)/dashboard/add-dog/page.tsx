@@ -1,9 +1,10 @@
+// app/(dashboard)/dashboard/add-dog/page.tsx
 'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { useAuthStore } from '@/lib/store/authStore';
+import { useRequireAuth } from '@/lib/hooks/useRequireAuth';
 import { dogsApi } from '@/lib/api/dogs';
 import { UpdateDogData } from '@/types';
 import { 
@@ -28,16 +29,19 @@ const TEMPERAMENT_OPTIONS = [
 
 export default function AddDogPage() {
   const router = useRouter();
-  const { isAuthenticated, user } = useAuthStore();
+  
+  // Use the auth hook - handles redirect automatically if not authenticated
+  const { user, loading: authLoading, isAuthorized } = useRequireAuth();
+  
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
-  const currentStep = 1
+  const currentStep = 1;
 
   const [formData, setFormData] = useState({
     name: '',
     breed: '',
-    Gender: 'MALE' as 'MALE' | 'FEMALE',
+    gender: 'MALE' as 'MALE' | 'FEMALE',
     dateOfBirth: '',
     weight: '',
     color: '',
@@ -61,10 +65,24 @@ export default function AddDogPage() {
     previousLitters: '0',
     temperament: [] as string[],
     
-    address: user?.address || user?.location?.address || '',
-    city: user?.city || user?.location?.city || '',
-    county: user?.county || user?.location?.state || '', // FIXED: county not state
-    postcode: user?.postcode || user?.location?.zipCode || '', // FIXED: postcode not zipCode
+    // Initialize with empty strings - will be populated when user is available
+    address: '',
+    city: '',
+    county: '',
+    postcode: '',
+  });
+
+  // Update form data when user becomes available
+  useState(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        address: user.address || user.location?.address || '',
+        city: user.city || user.location?.city || '',
+        county: user.county || user.location?.state || '',
+        postcode: user.postcode || user.location?.zipCode || '',
+      }));
+    }
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -74,19 +92,19 @@ export default function AddDogPage() {
     
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
-      setFormData({ ...formData, [name]: checked });
+      setFormData(prev => ({ ...prev, [name]: checked }));
     } else {
-      setFormData({ ...formData, [name]: value });
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
 
   const handleTemperamentToggle = (trait: string) => {
-    setFormData({
-      ...formData,
-      temperament: formData.temperament.includes(trait)
-        ? formData.temperament.filter(t => t !== trait)
-        : [...formData.temperament, trait]
-    });
+    setFormData(prev => ({
+      ...prev,
+      temperament: prev.temperament.includes(trait)
+        ? prev.temperament.filter(t => t !== trait)
+        : [...prev.temperament, trait]
+    }));
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -96,7 +114,7 @@ export default function AddDogPage() {
       return;
     }
 
-    setImages([...images, ...files]);
+    setImages(prev => [...prev, ...files]);
 
     files.forEach(file => {
       const reader = new FileReader();
@@ -108,8 +126,8 @@ export default function AddDogPage() {
   };
 
   const removeImage = (index: number) => {
-    setImages(images.filter((_, i) => i !== index));
-    setPreviews(previews.filter((_, i) => i !== index));
+    setImages(prev => prev.filter((_, i) => i !== index));
+    setPreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -127,11 +145,11 @@ export default function AddDogPage() {
       const birthDate = new Date(formData.dateOfBirth);
       const age = new Date().getFullYear() - birthDate.getFullYear();
 
-      // Create dog data object - NOT FormData
+      // Create dog data object
       const dogData: UpdateDogData = {
         name: formData.name,
         breed: formData.breed,
-        gender: formData.Gender,
+        gender: formData.gender,
         dateOfBirth: formData.dateOfBirth,
         age: age,
         weight: parseFloat(formData.weight),
@@ -192,11 +210,29 @@ export default function AddDogPage() {
     }
   };
 
-  if (!isAuthenticated) {
-    router.push('/login');
-    return null;
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="text-center">
+          <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">Checking authentication...</p>
+        </div>
+      </div>
+    );
   }
 
+  // Show nothing if not authorized (hook will redirect)
+  if (!isAuthorized) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="text-center">
+          <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
 
   const steps = [
     { number: 1, name: 'Photos & Basic Info', icon: ImageIcon },
@@ -386,12 +422,12 @@ export default function AddDogPage() {
                   <select
                     name="gender"
                     required
-                    value={formData.Gender}
+                    value={formData.gender}
                     onChange={handleChange}
                     className="input-field"
                   >
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
+                    <option value="MALE">Male</option>
+                    <option value="FEMALE">Female</option>
                   </select>
                 </div>
 
@@ -806,7 +842,6 @@ export default function AddDogPage() {
                 </div>
               </div>
             </Card>
-
 
             {/* Info Box */}
             <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">

@@ -1,80 +1,72 @@
-// hooks/useAuth.ts
-import { useState, useEffect, useCallback } from 'react';
+// lib/hooks/useAuth.ts
+import { useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-
-interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: string;
-}
+import { useAuthStore } from '@/lib/store/authStore';
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
   const router = useRouter();
+  
+  const {
+    user,
+    token,
+    loading,
+    isAuthenticated,
+    login: storeLogin,
+    register: storeRegister,
+    logout: storeLogout,
+    checkAuth,
+    setUser,
+  } = useAuthStore();
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
-    router.push('/login');
-  }, [router]);
-
+  // Check auth status on mount
   useEffect(() => {
-    // Check auth immediately when component mounts
-    const checkAuth = () => {
-      try {
-        const token = localStorage.getItem('token');
-        const userStr = localStorage.getItem('user');
-
-        if (token && userStr) {
-          const userData = JSON.parse(userStr);
-          setUser(userData);
-        }
-      } catch (error) {
-        console.error('Failed to parse user data:', error);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkAuth();
-  }, []); // Empty dependency array - only run once on mount
-
-  const login = useCallback((token: string, userData: User) => {
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(userData));
-    setUser(userData);
-  }, []);
-
-  const refreshAuth = useCallback(() => {
-    try {
-      const token = localStorage.getItem('token');
-      const userStr = localStorage.getItem('user');
-
-      if (token && userStr) {
-        const userData = JSON.parse(userStr);
-        setUser(userData);
-      } else {
-        setUser(null);
-      }
-    } catch (error) {
-      console.error('Failed to refresh user data:', error);
-      logout();
+    if (!isAuthenticated && token) {
+      checkAuth();
     }
-  }, [logout]);
+  }, [isAuthenticated, token, checkAuth]);
+
+  // Logout with redirect
+  const logout = useCallback((redirectTo: string = '/login') => {
+    storeLogout();
+    router.push(redirectTo);
+  }, [storeLogout, router]);
+
+  // Login with optional redirect
+  const login = useCallback(async (
+    email: string, 
+    password: string, 
+    redirectTo: string = '/browse'
+  ) => {
+    await storeLogin(email, password);
+    router.push(redirectTo);
+  }, [storeLogin, router]);
+
+  // Register with optional redirect
+  const register = useCallback(async (
+    data: Parameters<typeof storeRegister>[0],
+    redirectTo: string = '/browse'
+  ) => {
+    await storeRegister(data);
+    router.push(redirectTo);
+  }, [storeRegister, router]);
 
   return {
+    // State
     user,
+    token,
     loading,
-    isAuthenticated: !!user,
+    isAuthenticated,
+    
+    // Computed
     isAdmin: user?.role === 'ADMIN',
+    isBreeder: user?.role === 'BREEDER',
+    isVerified: user?.verified ?? false,
+    
+    // Actions
     login,
+    register,
     logout,
-    refreshAuth, // Expose this to manually refresh auth state
+    checkAuth,
+    setUser,
   };
 }

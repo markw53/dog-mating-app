@@ -1,3 +1,4 @@
+// app/(main)/dogs/[id]/page.tsx
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -7,7 +8,7 @@ import { reviewsApi } from '@/lib/api/reviews';
 import { messagesApi } from '@/lib/api/messages';
 import { adminApi } from '@/lib/api/admin';
 import { getImageUrl } from '@/lib/api/client';
-import { useAuthStore } from '@/lib/store/authStore';
+import { useAuth } from '@/lib/hooks/useAuth';
 import { Dog, Review, User } from '@/types';
 import Image from 'next/image';
 import {
@@ -66,7 +67,9 @@ function getPedigreeInfo(dog: Dog) {
 export default function DogDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
+  
+  // Use useAuth hook (doesn't redirect, just provides auth state)
+  const { user, isAuthenticated, isAdmin } = useAuth();
 
   const [dog, setDog] = useState<Dog | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -82,6 +85,14 @@ export default function DogDetailPage() {
   const breedingInfo = dog ? getBreedingInfo(dog) : null;
   const healthInfo = dog ? getHealthInfo(dog) : null;
   const pedigreeInfo = dog ? getPedigreeInfo(dog) : null;
+
+  // Check if current user is the owner
+  const isOwner = useCallback(() => {
+    if (!ownerInfo || !user) return false;
+    const ownerId = ownerInfo._id || ownerInfo.id;
+    const userId = user._id || user.id;
+    return ownerId === userId;
+  }, [ownerInfo, user]);
 
   const fetchDog = useCallback(async () => {
     if (!params.id) return;
@@ -120,7 +131,8 @@ export default function DogDetailPage() {
   const handleContactOwner = async () => {
     if (!isAuthenticated) {
       toast.error('Please login to contact the owner');
-      router.push('/login');
+      // Redirect to login with return URL
+      router.push(`/login?redirect=${encodeURIComponent(`/dogs/${params.id}`)}`);
       return;
     }
 
@@ -130,31 +142,51 @@ export default function DogDetailPage() {
     }
 
     try {
-      const response = await messagesApi.createConversation(
-        ownerInfo._id || ownerInfo.id,
-        dog!._id || dog!.id
-      );
-      router.push(`/messages?conversation=${response.conversation._id || response.conversation.id}`);
+      const ownerId = ownerInfo._id || ownerInfo.id;
+      const dogId = dog!._id || dog!.id;
+      const response = await messagesApi.createConversation(ownerId, dogId);
+      const conversationId = response.conversation._id || response.conversation.id;
+      router.push(`/messages?conversation=${conversationId}`);
     } catch {
       toast.error('Failed to start conversation');
     }
   };
 
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: `${dog?.name} - ${dog?.breed}`,
-        text: `Check out ${dog?.name} on DogMate!`,
-        url: window.location.href,
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      toast.success('Link copied to clipboard!');
+  const handleShare = async () => {
+    const shareData = {
+      title: `${dog?.name} - ${dog?.breed}`,
+      text: `Check out ${dog?.name} on DogMate!`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success('Link copied to clipboard!');
+      }
+    } catch (error) {
+      // User cancelled share or error occurred
+      if ((error as Error).name !== 'AbortError') {
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success('Link copied to clipboard!');
+      }
     }
   };
 
+  const handleWriteReview = () => {
+    if (!isAuthenticated) {
+      toast.error('Please login to write a review');
+      router.push(`/login?redirect=${encodeURIComponent(`/dogs/${params.id}`)}`);
+      return;
+    }
+    setShowReviewForm(true);
+  };
+
   const handleApprove = async () => {
-    const id = dog!._id || dog!.id;
+    if (!dog) return;
+    const id = dog._id || dog.id;
     setAdminActionLoading(true);
     try {
       await adminApi.approveDog(id);
@@ -168,7 +200,8 @@ export default function DogDetailPage() {
   };
 
   const handleReject = async () => {
-    const id = dog!._id || dog!.id;
+    if (!dog) return;
+    const id = dog._id || dog.id;
     setAdminActionLoading(true);
     try {
       await adminApi.rejectDog(id);
@@ -193,12 +226,20 @@ export default function DogDetailPage() {
   }
 
   if (!dog) {
-    return null;
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="text-center">
+          <p className="text-gray-600 font-medium">Dog not found</p>
+          <Link href="/browse" className="btn-primary mt-4 inline-block">
+            Browse Dogs
+          </Link>
+        </div>
+      </div>
+    );
   }
 
-  const isOwner = ownerInfo && user && (user._id === ownerInfo._id || user.id === ownerInfo.id);
-  const isAdmin = user?.role === 'ADMIN';
   const isPending = dog.status === 'pending';
+  const dogId = dog._id || dog.id;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -313,7 +354,7 @@ export default function DogDetailPage() {
                   <StatBox icon="🐕" label="Breed" value={dog.breed} />
                   <StatBox icon="⚤" label="Gender" value={dog.gender} />
                   <StatBox icon="🎂" label="Age" value={formatAge(dog.dateOfBirth)} />
-                  <StatBox icon="⚖️" label="Weight" value={`${dog.weight} lbs`} />
+                  <StatBox icon="⚖️" label="Weight" value={`${dog.weight} kg`} />
                   <StatBox icon="🎨" label="Color" value={dog.color} />
                   <StatBox icon="👁️" label="Views" value={String(dog.views ?? 0)} />
                 </div>
@@ -435,9 +476,9 @@ export default function DogDetailPage() {
                       Reviews ({reviewStats.total})
                     </h2>
                   </div>
-                  {isAuthenticated && !isOwner && !isPending && (
+                  {!isOwner() && !isPending && (
                     <button
-                      onClick={() => setShowReviewForm(!showReviewForm)}
+                      onClick={handleWriteReview}
                       className="btn-primary text-sm"
                     >
                       Write Review
@@ -460,7 +501,7 @@ export default function DogDetailPage() {
                 {showReviewForm && (
                   <div className="mb-6">
                     <ReviewForm
-                      dogId={dog._id || dog.id}
+                      dogId={dogId}
                       onSuccess={() => {
                         setShowReviewForm(false);
                         fetchReviews();
@@ -556,7 +597,7 @@ export default function DogDetailPage() {
                   )}
 
                   {/* Action Buttons */}
-                  {!isOwner && ownerInfo && (
+                  {!isOwner() && ownerInfo && (
                     <div className="space-y-2">
                       <button
                         onClick={handleContactOwner}
@@ -573,7 +614,7 @@ export default function DogDetailPage() {
                         Share
                       </button>
                       <Link
-                        href={`/dogs/${dog._id || dog.id}/matches`}
+                        href={`/dogs/${dogId}/matches`}
                         className="w-full btn-primary flex items-center justify-center py-3"
                       >
                         <Heart className="w-5 h-5 mr-2" />
@@ -582,16 +623,16 @@ export default function DogDetailPage() {
                     </div>
                   )}
 
-                  {isOwner && (
+                  {isOwner() && (
                     <>
                       <button
-                        onClick={() => router.push(`/dogs/${dog._id || dog.id}/edit`)}
+                        onClick={() => router.push(`/dogs/${dogId}/edit`)}
                         className="w-full btn-primary py-3 mb-2"
                       >
                         Edit Listing
                       </button>
                       <Link
-                        href={`/dogs/${dog._id || dog.id}/matches`}
+                        href={`/dogs/${dogId}/matches`}
                         className="w-full btn-secondary flex items-center justify-center py-3"
                       >
                         <Heart className="w-5 h-5 mr-2" />
@@ -630,7 +671,7 @@ export default function DogDetailPage() {
                               <CheckCircle className="h-4 w-4 mr-1" />
                               Verified Owner
                             </p>
-                           )}
+                          )}
                         </div>
                       </div>
 
@@ -762,4 +803,3 @@ function HealthStatusCard({
     </div>
   );
 }
-                

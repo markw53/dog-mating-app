@@ -1,8 +1,9 @@
+// app/(main)/messages/page.tsx
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuthStore } from '@/lib/store/authStore';
+import { useSearchParams } from 'next/navigation';
+import { useRequireAuth } from '@/lib/hooks/useRequireAuth';
 import { messagesApi } from '@/lib/api/messages';
 import { getImageUrl } from '@/lib/api/client';
 import { Conversation, Message } from '@/types';
@@ -18,9 +19,11 @@ import toast from 'react-hot-toast';
 import { io, Socket } from 'socket.io-client';
 
 export default function MessagesPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, isAuthenticated } = useAuthStore();
+  
+  // Use the auth hook - handles redirect automatically if not authenticated
+  const { user, loading: authLoading, isAuthorized } = useRequireAuth();
+  
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -34,6 +37,11 @@ export default function MessagesPage() {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  // Get user ID safely
+  const getUserId = useCallback(() => {
+    return user?._id || user?.id || '';
+  }, [user]);
 
   const fetchConversations = useCallback(async () => {
     try {
@@ -66,60 +74,82 @@ export default function MessagesPage() {
     }
   }, []);
 
+  // Initialize socket and fetch conversations when authorized
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
-    }
+    if (!isAuthorized || !user) return;
 
     fetchConversations();
 
-    const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000');
+    // Initialize socket connection
+    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000';
+    const socket = io(socketUrl, {
+      transports: ['websocket', 'polling'],
+    });
     socketRef.current = socket;
 
-    socket.emit('join', user?._id || user?.id);
+    const userId = getUserId();
+    if (userId) {
+      socket.emit('join', userId);
+    }
 
     socket.on('newMessage', (message: Message) => {
       setMessages(prev => [...prev, message]);
       setTimeout(scrollToBottom, 100);
     });
 
+    socket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+    });
+
     return () => {
       socket.disconnect();
+      socketRef.current = null;
     };
-  }, [isAuthenticated, router, user, fetchConversations]);
+  }, [isAuthorized, user, fetchConversations, getUserId]);
 
+  // Fetch messages when conversation changes
   useEffect(() => {
     if (selectedConversation) {
-      fetchMessages(selectedConversation._id || selectedConversation.id);
+      const conversationId = selectedConversation._id || selectedConversation.id;
+      fetchMessages(conversationId);
     }
   }, [selectedConversation, fetchMessages]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!messageText.trim() || !selectedConversation) return;
+    if (!messageText.trim() || !selectedConversation || !user) return;
 
     setSending(true);
 
     try {
+      const userId = getUserId();
       const otherParticipant = selectedConversation.participants.find(
-        p => (p._id || p.id) !== (user?._id || user?.id)
+        p => (p._id || p.id) !== userId
       );
+
+      if (!otherParticipant) {
+        toast.error('Could not find recipient');
+        return;
+      }
+
+      const conversationId = selectedConversation._id || selectedConversation.id;
+      const receiverId = otherParticipant._id || otherParticipant.id;
 
       const response = await messagesApi.sendMessage(
-        selectedConversation._id || selectedConversation.id,
+        conversationId,
         messageText,
-        otherParticipant!._id || otherParticipant!.id
+        receiverId
       );
 
-      setMessages([...messages, response.message]);
+      setMessages(prev => [...prev, response.message]);
       setMessageText('');
       setTimeout(scrollToBottom, 100);
 
+      // Emit socket event
       if (socketRef.current) {
         socketRef.current.emit('sendMessage', {
-          receiverId: otherParticipant!._id || otherParticipant!.id,
+          receiverId,
           message: response.message
         });
       }
@@ -130,11 +160,10 @@ export default function MessagesPage() {
     }
   };
 
-  const getOtherParticipant = (conversation: Conversation) => {
-    return conversation.participants.find(
-      p => (p._id || p.id) !== (user?._id || user?.id)
-    );
-  };
+  const getOtherParticipant = useCallback((conversation: Conversation) => {
+    const userId = getUserId();
+    return conversation.participants.find(p => (p._id || p.id) !== userId);
+  }, [getUserId]);
 
   const filteredConversations = conversations.filter(conv => {
     const otherUser = getOtherParticipant(conv);
@@ -143,6 +172,31 @@ export default function MessagesPage() {
     return fullName.includes(searchQuery.toLowerCase());
   });
 
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="text-center">
+          <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading if not authorized (will redirect)
+  if (!isAuthorized) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="text-center">
+          <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading while fetching conversations
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -217,11 +271,13 @@ export default function MessagesPage() {
                       const otherUser = getOtherParticipant(conversation);
                       if (!otherUser) return null;
 
-                      const isSelected = (selectedConversation?._id || selectedConversation?.id) === (conversation._id || conversation.id);
+                      const conversationId = conversation._id || conversation.id;
+                      const selectedId = selectedConversation?._id || selectedConversation?.id;
+                      const isSelected = selectedId === conversationId;
 
                       return (
                         <button
-                          key={conversation._id || conversation.id}
+                          key={conversationId}
                           onClick={() => setSelectedConversation(conversation)}
                           className={`w-full text-left p-4 rounded-xl transition-all group ${
                             isSelected
@@ -319,9 +375,12 @@ export default function MessagesPage() {
                                     <CheckCircle className="h-5 w-5 text-green-500 ml-2" />
                                   )}
                                 </div>
-                                {otherUser.location && (
+                                {(otherUser.location || otherUser.city) && (
                                   <p className="text-sm text-gray-500">
-                                    {otherUser.location.city}, {otherUser.location.state}
+                                    {otherUser.location?.city || otherUser.city}
+                                    {(otherUser.location?.state || otherUser.county) && 
+                                      `, ${otherUser.location?.state || otherUser.county}`
+                                    }
                                   </p>
                                 )}
                               </div>
@@ -348,9 +407,14 @@ export default function MessagesPage() {
                         </div>
                       ) : (
                         messages.map((message, index) => {
-                          const isOwnMessage = (message.sender._id || message.sender.id) === (user?._id || user?.id);
-                          const showAvatar = index === 0 || 
-                            ((messages[index - 1].sender._id || messages[index - 1].sender.id) !== (message.sender._id || message.sender.id));
+                          const userId = getUserId();
+                          const senderId = message.sender._id || message.sender.id;
+                          const isOwnMessage = senderId === userId;
+                          
+                          const prevSenderId = index > 0 
+                            ? (messages[index - 1].sender._id || messages[index - 1].sender.id)
+                            : null;
+                          const showAvatar = index === 0 || prevSenderId !== senderId;
 
                           return (
                             <div

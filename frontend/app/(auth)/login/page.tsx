@@ -1,17 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useAuthStore } from '@/lib/store/authStore';
+import { useAuth } from '@/lib/hooks/useAuth';
 import { Dog, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import toast from 'react-hot-toast';
 import { AxiosError } from 'axios';
 
 export default function LoginPage() {
-  const router = useRouter();
-  const { login, loading } = useAuthStore();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || '/browse';
+  
+  const { login, loading } = useAuth();
   
   const [formData, setFormData] = useState({
     email: '',
@@ -22,9 +24,8 @@ export default function LoginPage() {
     e.preventDefault();
     
     try {
-      await login(formData.email, formData.password);
+      await login(formData.email, formData.password, redirectTo);
       toast.success('Welcome back!');
-      router.push('/browse');
     } catch (error: unknown) {
       const axiosError = error as AxiosError<{ message: string }>;
       toast.error(axiosError.response?.data?.message || 'Invalid credentials');
@@ -32,12 +33,12 @@ export default function LoginPage() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
       [e.target.name]: e.target.value,
-    });
+    }));
   };
-
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-primary-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">

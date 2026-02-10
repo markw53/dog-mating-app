@@ -1,16 +1,19 @@
+// app/(auth)/main/register/page.tsx
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useAuthStore } from '@/lib/store/authStore';
+import { useAuth } from '@/lib/hooks/useAuth';
 import { Dog, Mail, Lock, User, Phone, MapPin, ArrowRight, Loader2, CheckCircle } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import toast from 'react-hot-toast';
 
 export default function RegisterPage() {
-  const router = useRouter();
-  const { register, loading } = useAuthStore();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || '/browse';
+  
+  const { register, loading, isAuthenticated } = useAuth();
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -24,6 +27,13 @@ export default function RegisterPage() {
   });
 
   const [passwordStrength, setPasswordStrength] = useState(0);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      window.location.href = redirectTo;
+    }
+  }, [isAuthenticated, redirectTo]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,14 +57,13 @@ export default function RegisterPage() {
         phone: formData.phone,
         location: {
           city: formData.city,
-          state: formData.state,
+          county: formData.state,
           address: '',
-          zipCode: '',
+          postcode: '',
           country: 'UK',
         },
-      });
+      }, redirectTo);
       toast.success('Account created successfully!');
-      router.push('/browse');
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Registration failed';
       toast.error(errorMessage);
@@ -63,10 +72,10 @@ export default function RegisterPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
       [name]: value,
-    });
+    }));
 
     // Calculate password strength
     if (name === 'password') {
@@ -94,6 +103,18 @@ export default function RegisterPage() {
     if (passwordStrength === 3) return 'Good';
     return 'Strong';
   };
+
+  // Don't render the form if already authenticated
+  if (isAuthenticated) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-primary-50 via-white to-primary-50">
+        <div className="text-center">
+          <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">Redirecting...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-primary-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -386,7 +407,7 @@ export default function RegisterPage() {
           {/* Sign In Link */}
           <div className="mt-6">
             <Link
-              href="/login"
+              href={`/login${redirectTo !== '/browse' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`}
               className="w-full btn-secondary flex items-center justify-center text-base py-3"
             >
               Sign In Instead

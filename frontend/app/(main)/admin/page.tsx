@@ -1,12 +1,12 @@
+// app/(admin)/admin/page.tsx
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/lib/store/authStore';
+import { useRequireAuth } from '@/lib/hooks/useRequireAuth';
 import { adminApi } from '@/lib/api/admin';
 import { Dog, User } from '@/types';
 import toast from 'react-hot-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ShieldAlert } from 'lucide-react';
 import AdminStatsCards from '@/components/admin/AdminStatsCard';
 import AdminTabs from '@/components/admin/AdminTabs';
 import PendingDogsList from '@/components/admin/PendingDogsList';
@@ -18,7 +18,6 @@ const getErrorMessage = (error: unknown): string => {
     return error.message;
   }
   
-  // Handle Axios errors
   if (typeof error === 'object' && error !== null && 'response' in error) {
     const axiosError = error as AxiosError<{ message?: string }>;
     return axiosError.response?.data?.message || 'An error occurred';
@@ -28,8 +27,12 @@ const getErrorMessage = (error: unknown): string => {
 };
 
 export default function AdminPage() {
-  const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
+  // Use the auth hook with ADMIN role requirement
+  const { user, loading: authLoading, isAuthorized } = useRequireAuth({
+    requiredRole: 'ADMIN',
+    redirectTo: '/login',
+  });
+
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'pending' | 'users' | 'stats'>('pending');
 
@@ -83,21 +86,9 @@ export default function AdminPage() {
     }
   }, []);
 
+  // Fetch data only when authorized
   useEffect(() => {
-    console.log('Admin page mounted', { isAuthenticated, user });
-    
-    if (!isAuthenticated) {
-      console.log('Not authenticated, redirecting to login');
-      router.push('/login');
-      return;
-    }
-    
-    if (user?.role !== 'ADMIN') {
-      console.log('Not admin, redirecting to home', { role: user?.role });
-      toast.error('You do not have admin access');
-      router.push('/');
-      return;
-    }
+    if (!isAuthorized) return;
 
     const loadData = async () => {
       console.log('Loading admin data...');
@@ -107,9 +98,9 @@ export default function AdminPage() {
     };
 
     loadData();
-  }, [isAuthenticated, user, router, fetchPendingDogs, fetchUsers, fetchStats]);
+  }, [isAuthorized, fetchPendingDogs, fetchUsers, fetchStats]);
 
-    const handleApproveDog = async (id: string) => {
+  const handleApproveDog = async (id: string) => {
     try {
       console.log('Approving dog:', id);
       const response = await adminApi.approveDog(id);
@@ -137,9 +128,36 @@ export default function AdminPage() {
     }
   };
 
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary-600 mx-auto mb-4" />
+          <p className="text-gray-600">Verifying admin access...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show unauthorized message (briefly before redirect)
+  if (!isAuthorized) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <ShieldAlert className="h-16 w-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Access Denied</h2>
+          <p className="text-gray-600">You don&apos;t have permission to access this page.</p>
+          <p className="text-sm text-gray-500 mt-2">Redirecting...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading while fetching data
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
+      <div className="flex justify-center items-center min-h-screen bg-gray-50">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-primary-600 mx-auto mb-4" />
           <p className="text-gray-600">Loading admin dashboard...</p>

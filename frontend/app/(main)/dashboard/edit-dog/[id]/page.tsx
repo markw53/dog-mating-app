@@ -1,11 +1,11 @@
-'use client';
-
+// app/(dashboard)/dogs/[id]/edit/page.tsx
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { useAuthStore } from '@/lib/store/authStore';
+import { useRequireAuth } from '@/lib/hooks/useRequireAuth';
 import { dogsApi } from '@/lib/api/dogs';
 import { getImageUrl } from '@/lib/api/client';
+import { Dog, UpdateDogData } from '@/types';
 import { 
   Upload, X, Loader2, Dog as DogIcon, Shield, 
   Heart, MapPin, Image as ImageIcon, Check, Edit 
@@ -25,15 +25,38 @@ const TEMPERAMENT_OPTIONS = [
   'Protective', 'Playful', 'Independent', 'Affectionate'
 ];
 
+// Helper function to format date for input
+const formatDateForInput = (date: string | Date | undefined): string => {
+  if (!date) return '';
+  try {
+    const dateObj = date instanceof Date ? date : new Date(date);
+    if (isNaN(dateObj.getTime())) return '';
+    return dateObj.toISOString().split('T')[0];
+  } catch {
+    return '';
+  }
+};
+
+// Helper function to get owner ID from Dog
+const getOwnerIdFromDog = (dog: Dog): string | null => {
+  if (dog.ownerId) return dog.ownerId;
+  if (!dog.owner) return null;
+  if (typeof dog.owner === 'string') return dog.owner;
+  return dog.owner._id || dog.owner.id || null;
+};
+
 export default function EditDogPage() {
   const params = useParams();
   const router = useRouter();
-  const { isAuthenticated } = useAuthStore();
+  
+  const { user, loading: authLoading, isAuthorized } = useRequireAuth();
+  
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [images, setImages] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [dogOwnerId, setDogOwnerId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -72,39 +95,65 @@ export default function EditDogPage() {
     try {
       const response = await dogsApi.getById(params.id as string);
       const dogData = response.dog;
+      
+      setDogOwnerId(getOwnerIdFromDog(dogData));
       setExistingImages(dogData.images || []);
+
+      // Get values from either direct fields or nested objects
+      const vaccinated = dogData.vaccinated ?? dogData.healthInfo?.vaccinated ?? false;
+      const neutered = dogData.neutered ?? dogData.healthInfo?.neutered ?? false;
+      const vetName = dogData.vetName ?? dogData.healthInfo?.veterinarian?.name ?? '';
+      const vetContact = dogData.vetContact ?? dogData.healthInfo?.veterinarian?.contact ?? '';
+      const medicalHistory = dogData.medicalHistory ?? dogData.healthInfo?.medicalHistory ?? '';
+
+      const registered = dogData.registered ?? dogData.pedigree?.registered ?? false;
+      const registrationNumber = dogData.registrationNumber ?? dogData.pedigree?.registrationNumber ?? '';
+      const registry = dogData.registry ?? dogData.pedigree?.registry ?? '';
+      const sire = dogData.sire ?? dogData.pedigree?.sire ?? '';
+      const dam = dogData.dam ?? dogData.pedigree?.dam ?? '';
+
+      const available = dogData.available ?? dogData.breeding?.available ?? true;
+      const studFee = dogData.studFee ?? dogData.breeding?.studFee ?? dogData.breeding?.fee ?? '';
+      const studFeeNegotiable = dogData.studFeeNegotiable ?? dogData.breeding?.studFeeNegotiable ?? dogData.breeding?.feeNegotiable ?? false;
+      const previousLitters = dogData.previousLitters ?? dogData.breeding?.previousLitters ?? 0;
+      const temperament = dogData.temperament ?? dogData.breeding?.temperament ?? [];
+
+      const address = dogData.address ?? dogData.location?.address ?? '';
+      const city = dogData.city ?? dogData.location?.city ?? '';
+      const county = dogData.county ?? dogData.location?.state ?? '';
+      const postcode = dogData.postcode ?? dogData.location?.zipCode ?? '';
 
       setFormData({
         name: dogData.name,
         breed: dogData.breed,
         gender: dogData.gender,
-        dateOfBirth: dogData.dateOfBirth.split('T')[0],
-        weight: dogData.weight.toString(),
+        dateOfBirth: formatDateForInput(dogData.dateOfBirth),
+        weight: dogData.weight?.toString() || '',
         color: dogData.color,
         description: dogData.description,
         
-        vaccinated: dogData.healthInfo?.vaccinated ?? false,
-        neutered: dogData.healthInfo?.neutered ?? false,
-        vetName: dogData.healthInfo?.veterinarian?.name ?? '',
-        vetContact: dogData.healthInfo?.veterinarian?.contact ?? '',
-        medicalHistory: dogData.healthInfo?.medicalHistory ?? '',
+        vaccinated,
+        neutered,
+        vetName: vetName || '',
+        vetContact: vetContact || '',
+        medicalHistory: medicalHistory || '',
         
-        registered: dogData.pedigree?.registered ?? false,
-        registrationNumber: dogData.pedigree?.registrationNumber ?? '',
-        registry: dogData.pedigree?.registry ?? '',
-        sire: dogData.pedigree?.sire ?? '',
-        dam: dogData.pedigree?.dam ?? '',
+        registered,
+        registrationNumber: registrationNumber || '',
+        registry: registry || '',
+        sire: sire || '',
+        dam: dam || '',
         
-        available: dogData.breeding?.available ?? true,
-        studFee: dogData.breeding?.studFee?.toString() ?? '',
-        studFeeNegotiable: dogData.breeding?.studFeeNegotiable ?? false,
-        previousLitters: dogData.breeding?.previousLitters.toString() ?? '0',
-        temperament: dogData.breeding?.temperament ?? [],
+        available,
+        studFee: studFee?.toString() || '',
+        studFeeNegotiable,
+        previousLitters: previousLitters.toString(),
+        temperament,
         
-        address: dogData.location?.address ?? '',
-        city: dogData.location?.city ?? '',
-        county: dogData.location?.state ?? '',
-        postcode: dogData.location?.zipCode ?? '',
+        address: address || '',
+        city: city || '',
+        county: county || '',
+        postcode: postcode || '',
       });
     } catch {
       toast.error('Failed to load dog details');
@@ -115,31 +164,42 @@ export default function EditDogPage() {
   }, [params.id, router]);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
+    if (isAuthorized) {
+      fetchDog();
     }
-    fetchDog();
-  }, [isAuthenticated, router, fetchDog]);
+  }, [isAuthorized, fetchDog]);
+
+  useEffect(() => {
+    if (!loading && dogOwnerId && user) {
+      const userId = user._id || user.id;
+      const isOwner = dogOwnerId === userId;
+      const isAdmin = user.role === 'ADMIN';
+      
+      if (!isOwner && !isAdmin) {
+        toast.error('You can only edit your own dogs');
+        router.push('/dashboard');
+      }
+    }
+  }, [loading, dogOwnerId, user, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
-      setFormData({ ...formData, [name]: checked });
+      setFormData(prev => ({ ...prev, [name]: checked }));
     } else {
-      setFormData({ ...formData, [name]: value });
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
 
   const handleTemperamentToggle = (trait: string) => {
-    setFormData({
-      ...formData,
-      temperament: formData.temperament.includes(trait)
-        ? formData.temperament.filter(t => t !== trait)
-        : [...formData.temperament, trait]
-    });
+    setFormData(prev => ({
+      ...prev,
+      temperament: prev.temperament.includes(trait)
+        ? prev.temperament.filter(t => t !== trait)
+        : [...prev.temperament, trait]
+    }));
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -149,7 +209,7 @@ export default function EditDogPage() {
       return;
     }
 
-    setImages([...images, ...files]);
+    setImages(prev => [...prev, ...files]);
 
     files.forEach(file => {
       const reader = new FileReader();
@@ -161,12 +221,12 @@ export default function EditDogPage() {
   };
 
   const removeNewImage = (index: number) => {
-    setImages(images.filter((_, i) => i !== index));
-    setPreviews(previews.filter((_, i) => i !== index));
+    setImages(prev => prev.filter((_, i) => i !== index));
+    setPreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const removeExistingImage = (index: number) => {
-    setExistingImages(existingImages.filter((_, i) => i !== index));
+    setExistingImages(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -180,58 +240,62 @@ export default function EditDogPage() {
     setSubmitting(true);
 
     try {
-      const data = new FormData();
-
-      data.append('name', formData.name);
-      data.append('breed', formData.breed);
-      data.append('gender', formData.gender);
-      data.append('dateOfBirth', formData.dateOfBirth);
-      data.append('weight', formData.weight);
-      data.append('color', formData.color);
-      data.append('description', formData.description);
-
       const birthDate = new Date(formData.dateOfBirth);
       const age = new Date().getFullYear() - birthDate.getFullYear();
-      data.append('age', age.toString());
 
-      data.append('healthInfo[vaccinated]', formData.vaccinated.toString());
-      data.append('healthInfo[neutered]', formData.neutered.toString());
-      if (formData.vetName) data.append('healthInfo[veterinarian][name]', formData.vetName);
-      if (formData.vetContact) data.append('healthInfo[veterinarian][contact]', formData.vetContact);
-      if (formData.medicalHistory) data.append('healthInfo[medicalHistory]', formData.medicalHistory);
+      const updateData: UpdateDogData = {
+        name: formData.name,
+        breed: formData.breed,
+        gender: formData.gender.toUpperCase() as 'MALE' | 'FEMALE',
+        dateOfBirth: formData.dateOfBirth,
+        age,
+        weight: parseFloat(formData.weight),
+        color: formData.color,
+        description: formData.description,
 
-      data.append('pedigree[registered]', formData.registered.toString());
-      if (formData.registrationNumber) data.append('pedigree[registrationNumber]', formData.registrationNumber);
-      if (formData.registry) data.append('pedigree[registry]', formData.registry);
-      if (formData.sire) data.append('pedigree[sire]', formData.sire);
-      if (formData.dam) data.append('pedigree[dam]', formData.dam);
+        vaccinated: formData.vaccinated,
+        neutered: formData.neutered,
+        vetName: formData.vetName || undefined,
+        vetContact: formData.vetContact || undefined,
+        medicalHistory: formData.medicalHistory || undefined,
 
-      data.append('breeding[available]', formData.available.toString());
-      if (formData.studFee) data.append('breeding[studFee]', formData.studFee);
-      data.append('breeding[studFeeNegotiable]', formData.studFeeNegotiable.toString());
-      data.append('breeding[previousLitters]', formData.previousLitters);
-      formData.temperament.forEach((trait, index) => {
-        data.append(`breeding[temperament][${index}]`, trait);
-      });
+        registered: formData.registered,
+        registrationNumber: formData.registrationNumber || undefined,
+        registry: formData.registry || undefined,
+        sire: formData.sire || undefined,
+        dam: formData.dam || undefined,
 
-      data.append('location[address]', formData.address);
-      data.append('location[city]', formData.city);
-      data.append('location[state]', formData.county);
-      data.append('location[zipCode]', formData.postcode);
-      data.append('location[country]', 'UK');
+        available: formData.available,
+        studFee: formData.studFee ? parseFloat(formData.studFee) : undefined,
+        studFeeNegotiable: formData.studFeeNegotiable,
+        previousLitters: parseInt(formData.previousLitters) || 0,
+        temperament: formData.temperament,
 
-      existingImages.forEach((img, index) => {
-        data.append(`existingImages[${index}]`, img);
-      });
+        address: formData.address || undefined,
+        city: formData.city,
+        county: formData.county,
+        postcode: formData.postcode || undefined,
+        country: 'UK',
 
-      images.forEach(image => {
-        data.append('images', image);
-      });
+        // Pass existing images to keep
+        images: existingImages,
+      };
 
-      await dogsApi.update(params.id as string, data);
+      console.log('📤 Submitting update:', updateData);
+
+      // Update dog data
+      await dogsApi.update(params.id as string, updateData);
+
+      // Upload new images if any
+      if (images.length > 0) {
+        console.log('📸 Uploading', images.length, 'new images...');
+        await dogsApi.uploadImages(params.id as string, images);
+      }
+
       toast.success('Dog updated successfully! 🎉');
       router.push('/dashboard');
     } catch (error: unknown) {
+      console.error('❌ Update failed:', error);
       const errorMessage = error instanceof Error 
         ? error.message 
         : 'Failed to update dog';
@@ -240,6 +304,28 @@ export default function EditDogPage() {
       setSubmitting(false);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="text-center">
+          <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthorized) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="text-center">
+          <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -251,7 +337,6 @@ export default function EditDogPage() {
       </div>
     );
   }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Hero Section */}
@@ -261,7 +346,7 @@ export default function EditDogPage() {
             <span className="text-white font-semibold text-sm">✏️ Edit Listing</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold mb-3">
-            Update Dog Information
+            Update {formData.name || 'Dog'}&apos;s Profile
           </h1>
           <p className="text-lg text-primary-100 max-w-2xl mx-auto">
             Make changes to your dog&apos;s profile
@@ -312,6 +397,11 @@ export default function EditDogPage() {
                     <p className="text-sm font-semibold text-gray-700">
                       {existingImages.length + previews.length} image{(existingImages.length + previews.length) > 1 ? 's' : ''}
                     </p>
+                    {existingImages.length > 0 && previews.length > 0 && (
+                      <p className="text-xs text-gray-500">
+                        {existingImages.length} existing • {previews.length} new
+                      </p>
+                    )}
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {/* Existing Images */}

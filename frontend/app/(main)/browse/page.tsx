@@ -17,7 +17,7 @@ interface Filters {
   minAge: string;
   maxAge: string;
   city: string;
-  state: string;
+  county: string;
   available: boolean;
 }
 
@@ -33,7 +33,7 @@ export default function BrowsePage() {
     minAge: searchParams.get('minAge') || '',
     maxAge: searchParams.get('maxAge') || '',
     city: searchParams.get('city') || '',
-    state: searchParams.get('state') || '',
+    county: searchParams.get('county') || '',
     available: searchParams.get('available') === 'true',
   });
 
@@ -47,7 +47,7 @@ export default function BrowsePage() {
         minAge: filters.minAge ? Number(filters.minAge) : undefined,
         maxAge: filters.maxAge ? Number(filters.maxAge) : undefined,
         city: filters.city || undefined,
-        state: filters.state || undefined,
+        county: filters.county || undefined,
         available: filters.available || undefined,
       };
 
@@ -89,7 +89,7 @@ export default function BrowsePage() {
       minAge: '',
       maxAge: '',
       city: '',
-      state: '',
+      county: '',
       available: false,
     });
   };
@@ -149,7 +149,7 @@ export default function BrowsePage() {
                     <span className="font-semibold text-gray-900">{dogs.length}</span> dogs found
                   </p>
                 </div>
-                {(filters.breed || filters.gender || filters.city || filters.state || filters.available || filters.minAge || filters.maxAge) && (
+                {(filters.breed || filters.gender || filters.city || filters.county || filters.available || filters.minAge || filters.maxAge) && (
                   <button
                     onClick={clearFilters}
                     className="text-primary-600 hover:text-primary-700 font-semibold text-sm"

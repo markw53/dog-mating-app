@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/lib/store/authStore';
+import { useRequireAuth } from '@/lib/hooks/useRequireAuth';
 import { dogsApi } from '@/lib/api/dogs';
 import { getImageUrl } from '@/lib/api/client';
 import { Dog } from '@/types';
@@ -13,11 +12,13 @@ import {
   AlertCircle, CheckCircle, Clock 
 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
-import { Section } from '@/components/ui/Section';import toast from 'react-hot-toast';
+import { Section } from '@/components/ui/Section';
+import toast from 'react-hot-toast';
 
 export default function DashboardPage() {
-  const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
+  // Use the auth hook - handles redirect automatically if not authenticated
+  const { user, loading: authLoading, isAuthorized } = useRequireAuth();
+  
   const [dogs, setDogs] = useState<Dog[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,13 +33,12 @@ export default function DashboardPage() {
     }
   }, []);
 
+  // Fetch dogs only when authorized
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
+    if (isAuthorized) {
+      fetchMyDogs();
     }
-    fetchMyDogs();
-  }, [isAuthenticated, router, fetchMyDogs]);
+  }, [isAuthorized, fetchMyDogs]);
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this dog listing? This action cannot be undone.')) {
@@ -62,12 +62,15 @@ export default function DashboardPage() {
     totalViews: dogs.reduce((sum, d) => sum + (d.views || 0), 0),
   };
 
-  if (loading) {
+  // Show loading while checking auth or fetching data
+  if (authLoading || !isAuthorized || loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <div className="text-center">
           <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" />
-          <p className="text-gray-600 font-medium">Loading your dashboard...</p>
+          <p className="text-gray-600 font-medium">
+            {authLoading ? 'Checking authentication...' : 'Loading your dashboard...'}
+          </p>
         </div>
       </div>
     );
@@ -181,7 +184,7 @@ export default function DashboardPage() {
   );
 }
 
-// Stat Card Component
+// StatCard and DogCard components remain the same...
 function StatCard({ 
   icon, 
   label, 
@@ -213,7 +216,6 @@ function StatCard({
   );
 }
 
-// Dog Card Component
 function DogCard({ dog, onDelete }: { dog: Dog; onDelete: (id: string) => void }) {
   const getStatusStyles = () => {
     switch (dog.status) {
@@ -239,7 +241,6 @@ function DogCard({ dog, onDelete }: { dog: Dog; onDelete: (id: string) => void }
 
   return (
     <Card className="group overflow-hidden">
-      {/* Image */}
       <div className="relative bg-gray-200 rounded-xl overflow-hidden mb-4 h-48">
         <Image
           src={getImageUrl(dog.mainImage || dog.images?.[0] || '') || '/placeholder-dog.jpg'}
@@ -249,7 +250,6 @@ function DogCard({ dog, onDelete }: { dog: Dog; onDelete: (id: string) => void }
           unoptimized
         />
         
-        {/* Status Badge Overlay */}
         <div className="absolute top-3 right-3">
           <span className={`px-3 py-1 rounded-full text-xs font-bold border-2 backdrop-blur-sm ${getStatusStyles()} flex items-center`}>
             {getStatusIcon()}
@@ -257,14 +257,12 @@ function DogCard({ dog, onDelete }: { dog: Dog; onDelete: (id: string) => void }
           </span>
         </div>
 
-        {/* Views Overlay */}
         <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-medium flex items-center">
           <Eye className="h-3 w-3 mr-1" />
           {dog.views || 0} views
         </div>
       </div>
 
-      {/* Content */}
       <div className="space-y-3">
         <div>
           <h3 className="text-xl font-bold text-gray-900 group-hover:text-primary-600 transition-colors">
@@ -273,7 +271,6 @@ function DogCard({ dog, onDelete }: { dog: Dog; onDelete: (id: string) => void }
           <p className="text-gray-600">{dog.breed}</p>
         </div>
 
-        {/* Breeding Status */}
         {dog.breeding?.available && (
           <div className="flex items-center text-sm text-green-600 font-medium">
             <CheckCircle className="h-4 w-4 mr-1" />
@@ -281,7 +278,6 @@ function DogCard({ dog, onDelete }: { dog: Dog; onDelete: (id: string) => void }
           </div>
         )}
 
-        {/* Action Buttons */}
         <div className="flex gap-2 pt-3 border-t border-gray-200">
           <Link
             href={`/dogs/${dog._id || dog.id}`}
