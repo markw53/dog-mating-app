@@ -1,8 +1,10 @@
+// app/(main)/browse/page.tsx
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { dogsApi } from '@/lib/api/dogs';
+import { useDebounce } from '@/lib/hooks/useDebounce';
 import { Dog } from '@/types';
 import DogCard from '@/components/dog/DogCard';
 import DogFilters from '@/components/dog/DogFilters';
@@ -21,12 +23,23 @@ interface Filters {
   available: boolean;
 }
 
+const INITIAL_FILTERS: Filters = {
+  breed: '',
+  gender: '',
+  minAge: '',
+  maxAge: '',
+  city: '',
+  county: '',
+  available: false,
+};
+
 export default function BrowsePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [dogs, setDogs] = useState<Dog[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  
   const [filters, setFilters] = useState<Filters>({
     breed: searchParams.get('breed') || '',
     gender: searchParams.get('gender') || '',
@@ -37,18 +50,24 @@ export default function BrowsePage() {
     available: searchParams.get('available') === 'true',
   });
 
-  const fetchDogs = useCallback(async () => {
+  // Debounce filters to avoid excessive API calls
+  const debouncedFilters = useDebounce(filters, 300);
+  
+  // Derive if filters are being applied (for loading indicator)
+  const isFiltering = filters !== debouncedFilters;
+
+  const fetchDogs = useCallback(async (filtersToUse: Filters) => {
     setLoading(true);
     try {
       // Convert string ages to numbers for API
       const apiFilters: Record<string, string | number | boolean | undefined> = {
-        breed: filters.breed || undefined,
-        gender: filters.gender || undefined,
-        minAge: filters.minAge ? Number(filters.minAge) : undefined,
-        maxAge: filters.maxAge ? Number(filters.maxAge) : undefined,
-        city: filters.city || undefined,
-        county: filters.county || undefined,
-        available: filters.available || undefined,
+        breed: filtersToUse.breed || undefined,
+        gender: filtersToUse.gender || undefined,
+        minAge: filtersToUse.minAge ? Number(filtersToUse.minAge) : undefined,
+        maxAge: filtersToUse.maxAge ? Number(filtersToUse.maxAge) : undefined,
+        city: filtersToUse.city || undefined,
+        county: filtersToUse.county || undefined,
+        available: filtersToUse.available || undefined,
       };
 
       // Filter out undefined values
@@ -63,36 +82,48 @@ export default function BrowsePage() {
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, []);
 
+  // Fetch dogs when debounced filters change
   useEffect(() => {
-    fetchDogs();
-  }, [fetchDogs]);
+    fetchDogs(debouncedFilters);
+  }, [debouncedFilters, fetchDogs]);
 
-  const handleFilterChange = (newFilters: Filters) => {
-    setFilters(newFilters);
-    // Update URL params
+  // Update URL when debounced filters change
+  useEffect(() => {
     const params = new URLSearchParams();
-    Object.entries(newFilters).forEach(([key, value]) => {
+    Object.entries(debouncedFilters).forEach(([key, value]) => {
       if (value && value !== '' && value !== false) {
         params.set(key, value.toString());
       }
     });
     const queryString = params.toString();
-    router.push(queryString ? `/browse?${queryString}` : '/browse');
+    const newPath = queryString ? `/browse?${queryString}` : '/browse';
+    
+    // Only update if different from current URL to avoid unnecessary history entries
+    const currentPath = window.location.pathname + window.location.search;
+    if (currentPath !== newPath) {
+      router.replace(newPath, { scroll: false });
+    }
+  }, [debouncedFilters, router]);
+
+  const handleFilterChange = (newFilters: Filters) => {
+    setFilters(newFilters);
+    // No need to update URL here - it's handled by the debounced effect
   };
 
   const clearFilters = () => {
-    handleFilterChange({
-      breed: '',
-      gender: '',
-      minAge: '',
-      maxAge: '',
-      city: '',
-      county: '',
-      available: false,
-    });
+    setFilters(INITIAL_FILTERS);
   };
+
+  const hasActiveFilters = 
+    filters.breed || 
+    filters.gender || 
+    filters.city || 
+    filters.county || 
+    filters.available || 
+    filters.minAge || 
+    filters.maxAge;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -144,12 +175,16 @@ export default function BrowsePage() {
             {/* Dogs Grid */}
             <main className="lg:col-span-3">
               <div className="mb-6 flex justify-between items-center flex-wrap gap-4">
-                <div>
+                <div className="flex items-center gap-2">
                   <p className="text-gray-600">
                     <span className="font-semibold text-gray-900">{dogs.length}</span> dogs found
                   </p>
+                  {/* Show subtle loading indicator when filtering */}
+                  {isFiltering && (
+                    <Loader2 className="h-4 w-4 animate-spin text-primary-600" />
+                  )}
                 </div>
-                {(filters.breed || filters.gender || filters.city || filters.county || filters.available || filters.minAge || filters.maxAge) && (
+                {hasActiveFilters && (
                   <button
                     onClick={clearFilters}
                     className="text-primary-600 hover:text-primary-700 font-semibold text-sm"
@@ -161,7 +196,10 @@ export default function BrowsePage() {
 
               {loading ? (
                 <div className="flex justify-center items-center py-20">
-                  <Loader2 className="h-12 w-12 animate-spin text-primary-600" />
+                  <div className="text-center">
+                    <Loader2 className="h-12 w-12 animate-spin text-primary-600 mx-auto mb-4" />
+                    <p className="text-gray-600">Loading dogs...</p>
+                  </div>
                 </div>
               ) : dogs.length === 0 ? (
                 <Card hover={false} className="text-center py-16">

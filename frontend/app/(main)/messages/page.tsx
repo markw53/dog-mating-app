@@ -17,6 +17,7 @@ import { Section } from '@/components/ui/Section';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { io, Socket } from 'socket.io-client';
+import { useDebounce } from '@/lib/hooks';
 
 export default function MessagesPage() {
   const searchParams = useSearchParams();
@@ -31,6 +32,7 @@ export default function MessagesPage() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
 
@@ -168,8 +170,9 @@ export default function MessagesPage() {
   const filteredConversations = conversations.filter(conv => {
     const otherUser = getOtherParticipant(conv);
     if (!otherUser) return false;
+    if (!debouncedSearch) return true;
     const fullName = `${otherUser.firstName} ${otherUser.lastName}`.toLowerCase();
-    return fullName.includes(searchQuery.toLowerCase());
+    return fullName.includes(debouncedSearch.toLowerCase());
   });
 
   // Show loading while checking auth

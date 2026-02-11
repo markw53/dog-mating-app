@@ -1,12 +1,13 @@
 // app/(admin)/admin/page.tsx
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRequireAuth } from '@/lib/hooks/useRequireAuth';
+import { useDebounce } from '@/lib/hooks/useDebounce';
 import { adminApi } from '@/lib/api/admin';
 import { Dog, User } from '@/types';
 import toast from 'react-hot-toast';
-import { Loader2, ShieldAlert } from 'lucide-react';
+import { Loader2, ShieldAlert, Search, X } from 'lucide-react';
 import AdminStatsCards from '@/components/admin/AdminStatsCard';
 import AdminTabs from '@/components/admin/AdminTabs';
 import PendingDogsList from '@/components/admin/PendingDogsList';
@@ -27,7 +28,6 @@ const getErrorMessage = (error: unknown): string => {
 };
 
 export default function AdminPage() {
-  // Use the auth hook with ADMIN role requirement
   const { user, loading: authLoading, isAuthorized } = useRequireAuth({
     requiredRole: 'ADMIN',
     redirectTo: '/login',
@@ -45,11 +45,61 @@ export default function AdminPage() {
     pendingDogs: 0,
   });
 
+  // Search states
+  const [userSearch, setUserSearch] = useState('');
+  const [dogSearch, setDogSearch] = useState('');
+
+  // Debounce search terms
+  const debouncedUserSearch = useDebounce(userSearch, 300);
+  const debouncedDogSearch = useDebounce(dogSearch, 300);
+
+  // Derive if searching (for loading indicators)
+  const isSearchingUsers = userSearch !== debouncedUserSearch;
+  const isSearchingDogs = dogSearch !== debouncedDogSearch;
+
+  // Filter users based on debounced search
+  const filteredUsers = useMemo(() => {
+    if (!debouncedUserSearch.trim()) return users;
+    
+    const searchLower = debouncedUserSearch.toLowerCase().trim();
+    return users.filter(user => {
+      const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
+      const email = user.email.toLowerCase();
+      const role = user.role.toLowerCase();
+      const location = `${user.city || ''} ${user.county || ''}`.toLowerCase();
+      
+      return (
+        fullName.includes(searchLower) ||
+        email.includes(searchLower) ||
+        role.includes(searchLower) ||
+        location.includes(searchLower)
+      );
+    });
+  }, [users, debouncedUserSearch]);
+
+  // Filter pending dogs based on debounced search
+  const filteredPendingDogs = useMemo(() => {
+    if (!debouncedDogSearch.trim()) return pendingDogs;
+    
+    const searchLower = debouncedDogSearch.toLowerCase().trim();
+    return pendingDogs.filter(dog => {
+      const ownerName = typeof dog.owner === 'object' 
+        ? `${dog.owner.firstName} ${dog.owner.lastName}`.toLowerCase()
+        : '';
+      const location = `${dog.city || ''} ${dog.county || ''}`.toLowerCase();
+      
+      return (
+        dog.name.toLowerCase().includes(searchLower) ||
+        dog.breed.toLowerCase().includes(searchLower) ||
+        ownerName.includes(searchLower) ||
+        location.includes(searchLower)
+      );
+    });
+  }, [pendingDogs, debouncedDogSearch]);
+
   const fetchPendingDogs = useCallback(async () => {
     try {
-      console.log('Fetching pending dogs...');
       const response = await adminApi.getPendingDogs();
-      console.log('Pending dogs response:', response);
       setPendingDogs(response.dogs || []);
     } catch (error) {
       console.error('Failed to fetch pending dogs:', error);
@@ -59,9 +109,7 @@ export default function AdminPage() {
 
   const fetchUsers = useCallback(async () => {
     try {
-      console.log('Fetching users...');
       const response = await adminApi.getAllUsers();
-      console.log('Users response:', response);
       setUsers(response.users || []);
     } catch (error) {
       console.error('Failed to fetch users:', error);
@@ -71,9 +119,7 @@ export default function AdminPage() {
 
   const fetchStats = useCallback(async () => {
     try {
-      console.log('Fetching stats...');
       const response = await adminApi.getStats();
-      console.log('Stats response:', response);
       setStats(response.stats || {
         totalUsers: 0,
         totalDogs: 0,
@@ -86,15 +132,12 @@ export default function AdminPage() {
     }
   }, []);
 
-  // Fetch data only when authorized
   useEffect(() => {
     if (!isAuthorized) return;
 
     const loadData = async () => {
-      console.log('Loading admin data...');
       await Promise.all([fetchPendingDogs(), fetchUsers(), fetchStats()]);
       setLoading(false);
-      console.log('Admin data loaded');
     };
 
     loadData();
@@ -102,9 +145,7 @@ export default function AdminPage() {
 
   const handleApproveDog = async (id: string) => {
     try {
-      console.log('Approving dog:', id);
-      const response = await adminApi.approveDog(id);
-      console.log('Approve response:', response);
+      await adminApi.approveDog(id);
       toast.success('Dog approved successfully');
       await fetchPendingDogs();
       await fetchStats();
@@ -116,9 +157,7 @@ export default function AdminPage() {
 
   const handleRejectDog = async (id: string) => {
     try {
-      console.log('Rejecting dog:', id);
-      const response = await adminApi.rejectDog(id);
-      console.log('Reject response:', response);
+      await adminApi.rejectDog(id);
       toast.success('Dog rejected');
       await fetchPendingDogs();
       await fetchStats();
@@ -128,7 +167,14 @@ export default function AdminPage() {
     }
   };
 
-  // Show loading while checking auth
+  // Clear search when switching tabs
+  const handleTabChange = (tab: 'pending' | 'users' | 'stats') => {
+    setActiveTab(tab);
+    // Optionally clear search when switching tabs
+    // setUserSearch('');
+    // setDogSearch('');
+  };
+
   if (authLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50">
@@ -140,7 +186,6 @@ export default function AdminPage() {
     );
   }
 
-  // Show unauthorized message (briefly before redirect)
   if (!isAuthorized) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50">
@@ -154,7 +199,6 @@ export default function AdminPage() {
     );
   }
 
-  // Show loading while fetching data
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50">
@@ -181,20 +225,81 @@ export default function AdminPage() {
 
         <AdminTabs
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={handleTabChange}
           pendingCount={pendingDogs.length}
           usersCount={users.length}
         />
 
+        {/* Search Bar - Contextual based on active tab */}
+        {activeTab !== 'stats' && (
+          <div className="mb-6">
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder={
+                  activeTab === 'pending' 
+                    ? 'Search pending dogs by name, breed, owner...' 
+                    : 'Search users by name, email, role...'
+                }
+                value={activeTab === 'pending' ? dogSearch : userSearch}
+                onChange={(e) => {
+                  if (activeTab === 'pending') {
+                    setDogSearch(e.target.value);
+                  } else {
+                    setUserSearch(e.target.value);
+                  }
+                }}
+                className="w-full pl-10 pr-10 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all bg-white"
+              />
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+                {/* Loading indicator while debouncing */}
+                {((activeTab === 'pending' && isSearchingDogs) || 
+                  (activeTab === 'users' && isSearchingUsers)) && (
+                  <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                )}
+                {/* Clear button */}
+                {((activeTab === 'pending' && dogSearch) || 
+                  (activeTab === 'users' && userSearch)) && (
+                  <button
+                    onClick={() => {
+                      if (activeTab === 'pending') {
+                        setDogSearch('');
+                      } else {
+                        setUserSearch('');
+                      }
+                    }}
+                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <X className="h-4 w-4 text-gray-400" />
+                  </button>
+                )}
+              </div>
+            </div>
+            
+            {/* Search results count */}
+            {activeTab === 'pending' && debouncedDogSearch && (
+              <p className="text-sm text-gray-500 mt-2">
+                Showing {filteredPendingDogs.length} of {pendingDogs.length} pending dogs
+              </p>
+            )}
+            {activeTab === 'users' && debouncedUserSearch && (
+              <p className="text-sm text-gray-500 mt-2">
+                Showing {filteredUsers.length} of {users.length} users
+              </p>
+            )}
+          </div>
+        )}
+
         {activeTab === 'pending' && (
           <PendingDogsList
-            dogs={pendingDogs}
+            dogs={filteredPendingDogs}
             onApprove={handleApproveDog}
             onReject={handleRejectDog}
           />
         )}
 
-        {activeTab === 'users' && <UsersTable users={users} />}
+        {activeTab === 'users' && <UsersTable users={filteredUsers} />}
       </div>
     </div>
   );
