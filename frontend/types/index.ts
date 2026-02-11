@@ -30,6 +30,7 @@ export interface Dog {
   name: string;
   breed: string;
   age: number;
+  years: number;
   gender: 'male' | 'female';
   dateOfBirth: Date | string;
   weight: number;
