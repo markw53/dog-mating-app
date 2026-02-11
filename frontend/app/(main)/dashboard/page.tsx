@@ -1,54 +1,68 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
 import { useRequireAuth } from '@/lib/hooks/useRequireAuth';
 import { dogsApi } from '@/lib/api/dogs';
+import { useFetch } from '@/lib/hooks/useFetch';
 import { getImageUrl } from '@/lib/api/client';
 import { Dog } from '@/types';
 import Image from 'next/image';
 import Link from 'next/link';
-import { 
-  PlusCircle, Edit, Trash2, Eye, Loader2, Dog as DogIcon, 
-  AlertCircle, CheckCircle, Clock 
+import {
+  PlusCircle,
+  Edit,
+  Trash2,
+  Eye,
+  Loader2,
+  Dog as DogIcon,
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  RefreshCw,
 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Section } from '@/components/ui/Section';
 import toast from 'react-hot-toast';
 
+interface DogsResponse {
+  dogs: Dog[];
+}
+
 export default function DashboardPage() {
   // Use the auth hook - handles redirect automatically if not authenticated
   const { user, loading: authLoading, isAuthorized } = useRequireAuth();
-  
-  const [dogs, setDogs] = useState<Dog[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  const fetchMyDogs = useCallback(async () => {
-    try {
-      const response = await dogsApi.getMyDogs();
-      setDogs(response.dogs);
-    } catch {
-      toast.error('Failed to load your dogs');
-    } finally {
-      setLoading(false);
+  // Use useFetch hook for fetching dogs - only fetch when authorized
+  const {
+    data,
+    loading: dogsLoading,
+    error,
+    refetch,
+  } = useFetch<DogsResponse>(
+    () => dogsApi.getMyDogs(),
+    [isAuthorized], // Refetch when authorization changes
+    {
+      onError: () => {
+        toast.error('Failed to load your dogs');
+      },
     }
-  }, []);
+  );
 
-  // Fetch dogs only when authorized
-  useEffect(() => {
-    if (isAuthorized) {
-      fetchMyDogs();
-    }
-  }, [isAuthorized, fetchMyDogs]);
+  // Only fetch when authorized - handled by dependency array
+  const dogs = isAuthorized ? data?.dogs || [] : [];
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this dog listing? This action cannot be undone.')) {
+    if (
+      !confirm(
+        'Are you sure you want to delete this dog listing? This action cannot be undone.'
+      )
+    ) {
       return;
     }
 
     try {
       await dogsApi.delete(id);
       toast.success('Dog listing deleted successfully');
-      fetchMyDogs();
+      refetch(); // Use refetch from useFetch instead of manual fetch
     } catch {
       toast.error('Failed to delete dog listing');
     }
@@ -57,21 +71,56 @@ export default function DashboardPage() {
   // Calculate stats
   const stats = {
     total: dogs.length,
-    active: dogs.filter(d => d.status === 'active').length,
-    pending: dogs.filter(d => d.status === 'pending').length,
+    active: dogs.filter((d) => d.status === 'active').length,
+    pending: dogs.filter((d) => d.status === 'pending').length,
     totalViews: dogs.reduce((sum, d) => sum + (d.views || 0), 0),
   };
 
-  // Show loading while checking auth or fetching data
-  if (authLoading || !isAuthorized || loading) {
+  // Show loading while checking auth
+  if (authLoading || !isAuthorized) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <div className="text-center">
           <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" />
           <p className="text-gray-600 font-medium">
-            {authLoading ? 'Checking authentication...' : 'Loading your dashboard...'}
+            Checking authentication...
           </p>
         </div>
+      </div>
+    );
+  }
+
+  // Show loading while fetching dogs
+  if (dogsLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="text-center">
+          <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <Card className="text-center py-12 px-8 max-w-md">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="h-8 w-8 text-red-600" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">
+            Failed to Load Dashboard
+          </h3>
+          <p className="text-gray-600 mb-6">
+            There was an error loading your dogs. Please try again.
+          </p>
+          <button onClick={refetch} className="btn-primary">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Try Again
+          </button>
+        </Card>
       </div>
     );
   }
@@ -89,13 +138,26 @@ export default function DashboardPage() {
               Manage your dog listings and track their performance
             </p>
           </div>
-          <Link 
-            href="/dashboard/add-dog" 
-            className="group bg-white text-primary-700 px-6 py-3 rounded-xl font-bold hover:bg-primary-50 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 inline-flex items-center justify-center"
-          >
-            <PlusCircle className="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform" />
-            Add New Dog
-          </Link>
+          <div className="flex items-center gap-3">
+            {/* Refresh Button */}
+            <button
+              onClick={refetch}
+              disabled={dogsLoading}
+              className="bg-white/20 backdrop-blur-sm text-white px-4 py-3 rounded-xl font-medium hover:bg-white/30 transition-all inline-flex items-center justify-center disabled:opacity-50"
+              title="Refresh data"
+            >
+              <RefreshCw
+                className={`h-5 w-5 ${dogsLoading ? 'animate-spin' : ''}`}
+              />
+            </button>
+            <Link
+              href="/dashboard/add-dog"
+              className="group bg-white text-primary-700 px-6 py-3 rounded-xl font-bold hover:bg-primary-50 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 inline-flex items-center justify-center"
+            >
+              <PlusCircle className="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform" />
+              Add New Dog
+            </Link>
+          </div>
         </div>
       </Section>
 
@@ -148,10 +210,11 @@ export default function DashboardPage() {
                   No Dogs Listed Yet
                 </h3>
                 <p className="text-gray-600 mb-8 text-lg">
-                  Start by adding your first dog to connect with potential breeding partners
+                  Start by adding your first dog to connect with potential
+                  breeding partners
                 </p>
-                <Link 
-                  href="/dashboard/add-dog" 
+                <Link
+                  href="/dashboard/add-dog"
                   className="btn-primary inline-flex items-center text-lg px-8 py-4"
                 >
                   <PlusCircle className="h-5 w-5 mr-2" />
@@ -166,12 +229,12 @@ export default function DashboardPage() {
                   Your Dogs ({dogs.length})
                 </h2>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {dogs.map((dog) => (
-                  <DogCard 
-                    key={dog._id || dog.id} 
-                    dog={dog} 
+                  <DogCard
+                    key={dog._id || dog.id}
+                    dog={dog}
                     onDelete={handleDelete}
                   />
                 ))}
@@ -184,17 +247,17 @@ export default function DashboardPage() {
   );
 }
 
-// StatCard and DogCard components remain the same...
-function StatCard({ 
-  icon, 
-  label, 
-  value, 
-  color, 
-  bgColor 
-}: { 
-  icon: React.ReactNode; 
-  label: string; 
-  value: string; 
+// StatCard component remains the same
+function StatCard({
+  icon,
+  label,
+  value,
+  color,
+  bgColor,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
   color: string;
   bgColor: string;
 }) {
@@ -206,17 +269,28 @@ function StatCard({
           <p className="text-3xl font-bold text-gray-900">{value}</p>
         </div>
         <div className={`${bgColor} p-4 rounded-2xl`}>
-          <div className={`bg-gradient-to-br ${color} text-white p-3 rounded-xl shadow-lg`}>
+          <div
+            className={`bg-gradient-to-br ${color} text-white p-3 rounded-xl shadow-lg`}
+          >
             {icon}
           </div>
         </div>
       </div>
-      <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${color} transform scale-x-0 group-hover:scale-x-100 transition-transform`}></div>
+      <div
+        className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${color} transform scale-x-0 group-hover:scale-x-100 transition-transform`}
+      ></div>
     </Card>
   );
 }
 
-function DogCard({ dog, onDelete }: { dog: Dog; onDelete: (id: string) => void }) {
+// DogCard component remains the same
+function DogCard({
+  dog,
+  onDelete,
+}: {
+  dog: Dog;
+  onDelete: (id: string) => void;
+}) {
   const getStatusStyles = () => {
     switch (dog.status) {
       case 'active':
@@ -243,15 +317,20 @@ function DogCard({ dog, onDelete }: { dog: Dog; onDelete: (id: string) => void }
     <Card className="group overflow-hidden">
       <div className="relative bg-gray-200 rounded-xl overflow-hidden mb-4 h-48">
         <Image
-          src={getImageUrl(dog.mainImage || dog.images?.[0] || '') || '/placeholder-dog.jpg'}
+          src={
+            getImageUrl(dog.mainImage || dog.images?.[0] || '') ||
+            '/placeholder-dog.jpg'
+          }
           alt={dog.name}
           fill
           className="object-cover group-hover:scale-110 transition-transform duration-300"
           unoptimized
         />
-        
+
         <div className="absolute top-3 right-3">
-          <span className={`px-3 py-1 rounded-full text-xs font-bold border-2 backdrop-blur-sm ${getStatusStyles()} flex items-center`}>
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-bold border-2 backdrop-blur-sm ${getStatusStyles()} flex items-center`}
+          >
             {getStatusIcon()}
             {dog.status.toUpperCase()}
           </span>

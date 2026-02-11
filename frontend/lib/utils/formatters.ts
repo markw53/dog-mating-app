@@ -1,5 +1,6 @@
 import { formatDistanceToNow, format, isValid, parseISO } from 'date-fns';
 import { enGB } from 'date-fns/locale';
+import { Dog } from '@/types';
 
 const parseDate = (date: string | Date): Date | null => {
   if (!date) return null;
@@ -70,6 +71,55 @@ export const formatAge = (dateOfBirth: string | Date) => {
   return `${adjustedYears} year${adjustedYears !== 1 ? 's' : ''}, ${adjustedMonths} month${adjustedMonths !== 1 ? 's' : ''}`;
 };
 
+/**
+ * Format dog age for display
+ * Uses `years` field first, falls back to `age` field, then tries `dateOfBirth`
+ */
+export const formatDogAge = (dog: Pick<Dog, 'age' | 'years' | 'dateOfBirth'>): string => {
+  // Try years field first
+  if (dog.years) {
+    return `${dog.years} year${dog.years > 1 ? 's' : ''} old`;
+  }
+  
+  // Try age field
+  if (dog.age) {
+    return `${dog.age} year${dog.age > 1 ? 's' : ''} old`;
+  }
+  
+  // Try calculating from dateOfBirth
+  if (dog.dateOfBirth) {
+    return formatAge(dog.dateOfBirth);
+  }
+  
+  return 'Age unknown';
+};
+
+/**
+ * Format dog age - short version (e.g., "3y" or "6m")
+ */
+export const formatDogAgeShort = (dog: Pick<Dog, 'age' | 'years' | 'dateOfBirth'>): string => {
+  if (dog.years) return `${dog.years}y`;
+  if (dog.age) return `${dog.age}y`;
+  
+  if (dog.dateOfBirth) {
+    const birthDate = parseDate(dog.dateOfBirth);
+    if (birthDate) {
+      const today = new Date();
+      const years = today.getFullYear() - birthDate.getFullYear();
+      const months = today.getMonth() - birthDate.getMonth();
+      const adjustedYears = months < 0 ? years - 1 : years;
+      
+      if (adjustedYears === 0) {
+        const adjustedMonths = months < 0 ? 12 + months : months;
+        return `${adjustedMonths}m`;
+      }
+      return `${adjustedYears}y`;
+    }
+  }
+  
+  return '?';
+};
+
 // Additional UK-specific formatters
 export const formatPostcode = (postcode: string): string => {
   if (!postcode) return '';
@@ -104,20 +154,69 @@ export const formatPhoneNumber = (phone: string): string => {
   return phone;
 };
 
-export const formatWeight = (weightLbs: number): string => {
-  if (typeof weightLbs !== 'number' || isNaN(weightLbs)) return 'Unknown';
-  
-  // Convert pounds to stone and pounds (UK format)
-  const stone = Math.floor(weightLbs / 14);
-  const pounds = Math.round(weightLbs % 14);
-  
-  if (stone === 0) {
-    return `${pounds} lbs`;
+/**
+ * Format weight in kilograms
+ * @param weightKg - Weight in kilograms
+ * @returns Formatted weight string (e.g., "25 kg" or "12.5 kg")
+ */
+export const formatWeight = (weightKg: number | null | undefined): string => {
+  if (weightKg === null || weightKg === undefined || isNaN(weightKg)) {
+    return 'Unknown';
   }
   
-  if (pounds === 0) {
-    return `${stone} stone`;
+  // Round to 1 decimal place if needed
+  const rounded = Math.round(weightKg * 10) / 10;
+  
+  // Remove unnecessary decimal (e.g., 25.0 -> 25)
+  const formatted = rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toFixed(1);
+  
+  return `${formatted} kg`;
+};
+
+/**
+ * Format weight with range (useful for breed standards)
+ * @param minKg - Minimum weight in kg
+ * @param maxKg - Maximum weight in kg
+ * @returns Formatted weight range (e.g., "25-30 kg")
+ */
+export const formatWeightRange = (minKg: number, maxKg: number): string => {
+  if (isNaN(minKg) || isNaN(maxKg)) return 'Unknown';
+  
+  return `${Math.round(minKg)}-${Math.round(maxKg)} kg`;
+};
+
+/**
+ * Convert pounds to kilograms
+ * @param lbs - Weight in pounds
+ * @returns Weight in kilograms
+ */
+export const lbsToKg = (lbs: number): number => {
+  return lbs * 0.453592;
+};
+
+/**
+ * Convert kilograms to pounds
+ * @param kg - Weight in kilograms
+ * @returns Weight in pounds
+ */
+export const kgToLbs = (kg: number): number => {
+  return kg * 2.20462;
+};
+
+/**
+ * Format weight with both kg and lbs (for international users)
+ * @param weightKg - Weight in kilograms
+ * @returns Formatted string with both units (e.g., "25 kg (55 lbs)")
+ */
+export const formatWeightDual = (weightKg: number | null | undefined): string => {
+  if (weightKg === null || weightKg === undefined || isNaN(weightKg)) {
+    return 'Unknown';
   }
   
-  return `${stone} stone ${pounds} lbs`;
+  const kg = Math.round(weightKg * 10) / 10;
+  const lbs = Math.round(kgToLbs(weightKg));
+  
+  const kgFormatted = kg % 1 === 0 ? kg.toFixed(0) : kg.toFixed(1);
+  
+  return `${kgFormatted} kg (${lbs} lbs)`;
 };

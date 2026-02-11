@@ -1,14 +1,25 @@
 // app/(main)/profile/page.tsx
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRequireAuth } from '@/lib/hooks/useRequireAuth';
 import { authApi } from '@/lib/api/auth';
 import { apiClient, getImageUrl } from '@/lib/api/client';
-import { UpdateProfileData } from '@/types';
-import { 
-  User, MapPin, Mail, Phone, Camera, Loader2, Edit, 
-  Check, Shield, Calendar, Save, X 
+import { UpdateProfileData, User } from '@/types';
+import {
+  User as UserIcon,
+  MapPin,
+  Mail,
+  Phone,
+  Camera,
+  Loader2,
+  Edit,
+  Check,
+  Shield,
+  Calendar,
+  Save,
+  X,
+  RefreshCw,
 } from 'lucide-react';
 import Image from 'next/image';
 import { Card } from '@/components/ui/Card';
@@ -18,46 +29,54 @@ import { formatDate } from '@/lib/utils/formatters';
 import { AxiosError } from 'axios';
 import { useAuthStore } from '@/lib/store/authStore';
 
+interface FormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  county: string;
+  postcode: string;
+}
+
+const getInitialFormData = (user: User | null): FormData => ({
+  firstName: user?.firstName || '',
+  lastName: user?.lastName || '',
+  email: user?.email || '',
+  phone: user?.phone || '',
+  address: user?.address || user?.location?.address || '',
+  city: user?.city || user?.location?.city || '',
+  county: user?.county || user?.location?.state || '',
+  postcode: user?.postcode || user?.location?.zipCode || '',
+});
+
 export default function ProfilePage() {
-  // Use the auth hook - handles redirect automatically if not authenticated
+  // Auth hook - handles redirect automatically if not authenticated
   const { user, loading: authLoading, isAuthorized } = useRequireAuth();
-  const { setUser } = useAuthStore();
-  
-  const [loading, setLoading] = useState(false);
+  const { setUser, checkAuth } = useAuthStore();
+
+  // Form state
+  const [formData, setFormData] = useState<FormData>(() => getInitialFormData(user));
   const [editing, setEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    address: '',
-    city: '',
-    county: '',
-    postcode: '',
-  });
-
-  // Update form data when user is loaded
+  // Update form data when user changes
   useEffect(() => {
     if (user) {
-      setFormData({
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        email: user.email || '',
-        phone: user.phone || '',
-        address: user.address || user.location?.address || '',
-        city: user.city || user.location?.city || '',
-        county: user.county || user.location?.state || '',
-        postcode: user.postcode || user.location?.zipCode || '',
-      });
+      setFormData(getInitialFormData(user));
     }
   }, [user]);
 
-  const handleAvatarClick = () => {
+  // Handle avatar upload
+  const handleAvatarClick = useCallback(() => {
     fileInputRef.current?.click();
-  };
+  }, []);
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -95,13 +114,16 @@ export default function ProfilePage() {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
+  // Handle form input changes
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [name]: value,
     }));
-  };
+  }, []);
 
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -130,67 +152,61 @@ export default function ProfilePage() {
     }
   };
 
-  const handleCancelEdit = () => {
+  // Handle cancel edit
+  const handleCancelEdit = useCallback(() => {
     setEditing(false);
-    if (user) {
-      setFormData({
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        email: user.email || '',
-        phone: user.phone || '',
-        address: user.address || user.location?.address || '',
-        city: user.city || user.location?.city || '',
-        county: user.county || user.location?.state || '',
-        postcode: user.postcode || user.location?.zipCode || '',
-      });
+    setFormData(getInitialFormData(user));
+  }, [user]);
+
+  // Handle refresh profile - use checkAuth from store
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await checkAuth();
+      toast.success('Profile refreshed');
+    } catch {
+      toast.error('Failed to refresh profile');
+    } finally {
+      setRefreshing(false);
     }
-  };
+  }, [checkAuth]);
 
-  // Show loading while checking auth
+  // Loading: Auth check
   if (authLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="text-center">
-          <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" />
-          <p className="text-gray-600 font-medium">Loading your profile...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen message="Loading your profile..." />;
   }
 
-  // Show loading if not authorized (will redirect)
+  // Not authorized - redirect handled by useRequireAuth
   if (!isAuthorized || !user) {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="text-center">
-          <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" />
-          <p className="text-gray-600 font-medium">Redirecting to login...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen message="Redirecting to login..." />;
   }
-
-  const avatarUrl = user.avatar ? getImageUrl(user.avatar) : null;
-
-  // Get display location (prefer direct properties, fallback to location object)
-  const displayCity = user.city || user.location?.city;
-  const displayCounty = user.county || user.location?.state;
-  const hasLocation = displayCity || displayCounty;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Hero Section */}
       <Section variant="primary" className="py-12 md:py-16">
-        <div className="text-center">
-          <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-4">
-            <span className="text-white font-semibold text-sm">👤 Your Profile</span>
+        <div className="flex items-center justify-between">
+          <div className="text-center flex-1">
+            <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-4">
+              <span className="text-white font-semibold text-sm">
+                👤 Your Profile
+              </span>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold mb-3">
+              Account Settings
+            </h1>
+            <p className="text-lg text-primary-100 max-w-2xl mx-auto">
+              Manage your personal information and preferences
+            </p>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-3">
-            Account Settings
-          </h1>
-          <p className="text-lg text-primary-100 max-w-2xl mx-auto">
-            Manage your personal information and preferences
-          </p>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="text-white/80 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-colors disabled:opacity-50"
+            title="Refresh profile"
+          >
+            <RefreshCw className={`h-5 w-5 ${refreshing ? 'animate-spin' : ''}`} />
+          </button>
         </div>
       </Section>
 
@@ -200,331 +216,434 @@ export default function ProfilePage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Profile Card - Sidebar */}
             <div className="lg:col-span-1">
-              <Card className="text-center sticky top-4">
-                {/* Avatar Section */}
-                <div className="relative inline-block mb-6">
-                  <div className="relative group">
-                    {avatarUrl ? (
-                      <div className="w-32 h-32 rounded-full overflow-hidden mx-auto border-4 border-white shadow-xl group-hover:scale-105 transition-transform">
-                        <Image
-                          src={avatarUrl}
-                          alt={user.firstName}
-                          width={128}
-                          height={128}
-                          className="rounded-full object-cover w-full h-full"
-                          unoptimized
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-32 h-32 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center mx-auto border-4 border-white shadow-xl group-hover:scale-105 transition-transform">
-                        <User className="h-16 w-16 text-primary-600" />
-                      </div>
-                    )}
-                    <button
-                      onClick={handleAvatarClick}
-                      disabled={uploadingAvatar}
-                      className="absolute bottom-2 right-2 bg-gradient-to-br from-primary-600 to-primary-700 text-white p-3 rounded-full hover:from-primary-700 hover:to-primary-800 disabled:opacity-50 shadow-lg transform hover:scale-110 transition-all"
-                      title="Change profile picture"
-                    >
-                      {uploadingAvatar ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                      ) : (
-                        <Camera className="h-5 w-5" />
-                      )}
-                    </button>
-                  </div>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAvatarChange}
-                    className="hidden"
-                  />
-                </div>
-
-                {/* User Info */}
-                <h2 className="text-2xl font-bold text-gray-900 mb-1">
-                  {user.firstName} {user.lastName}
-                </h2>
-                <p className="text-gray-600 mb-4">{user.email}</p>
-
-                {/* Verified Badge */}
-                {user.verified && (
-                  <div className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-bold shadow-md mb-6">
-                    <Check className="h-4 w-4 mr-2" />
-                    Verified User
-                  </div>
-                )}
-
-                {/* Quick Info */}
-                <div className="pt-6 border-t space-y-4">
-                  {user.phone && (
-                    <div className="flex items-center text-gray-700 p-3 bg-gray-50 rounded-lg">
-                      <div className="bg-blue-100 p-2 rounded-lg mr-3">
-                        <Phone className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <span className="text-sm font-medium">{user.phone}</span>
-                    </div>
-                  )}
-                  {hasLocation && (
-                    <div className="flex items-center text-gray-700 p-3 bg-gray-50 rounded-lg">
-                      <div className="bg-green-100 p-2 rounded-lg mr-3">
-                        <MapPin className="h-5 w-5 text-green-600" />
-                      </div>
-                      <span className="text-sm font-medium">
-                        {displayCity}{displayCity && displayCounty ? ', ' : ''}{displayCounty}
-                      </span>
-                    </div>
-                  )}
-                  <div className="flex items-center text-gray-700 p-3 bg-gray-50 rounded-lg">
-                    <div className="bg-purple-100 p-2 rounded-lg mr-3">
-                      <Calendar className="h-5 w-5 text-purple-600" />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-xs text-gray-500">Member since</p>
-                      <span className="text-sm font-medium">
-                        {user.createdAt ? formatDate(user.createdAt) : 'N/A'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Role Badge */}
-                <div className="mt-6 pt-6 border-t">
-                  <div className="flex items-center justify-center">
-                    <div className="bg-primary-100 p-2 rounded-lg mr-2">
-                      <Shield className="h-5 w-5 text-primary-600" />
-                    </div>
-                    <span className="text-sm font-semibold text-gray-700 capitalize">
-                      {user.role.toLowerCase()} Account
-                    </span>
-                  </div>
-                </div>
-              </Card>
+              <ProfileSidebar
+                user={user}
+                uploadingAvatar={uploadingAvatar}
+                onAvatarClick={handleAvatarClick}
+                onAvatarChange={handleAvatarChange}
+                fileInputRef={fileInputRef}
+              />
             </div>
 
             {/* Edit Form - Main Content */}
             <div className="lg:col-span-2 space-y-6">
               {/* Personal Information Card */}
-              <Card>
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center">
-                    <div className="bg-blue-100 p-3 rounded-xl mr-4">
-                      <User className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-bold text-gray-900">Personal Information</h2>
-                      <p className="text-sm text-gray-600">Update your personal details</p>
-                    </div>
-                  </div>
-                  {!editing && (
-                    <button
-                      onClick={() => setEditing(true)}
-                      className="btn-primary flex items-center"
-                    >
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit Profile
-                    </button>
-                  )}
-                </div>
-
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        First Name
-                      </label>
-                      <input
-                        type="text"
-                        name="firstName"
-                        value={formData.firstName}
-                        onChange={handleChange}
-                        disabled={!editing}
-                        className={`input-field ${!editing ? 'bg-gray-50 cursor-not-allowed' : ''}`}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Last Name
-                      </label>
-                      <input
-                        type="text"
-                        name="lastName"
-                        value={formData.lastName}
-                        onChange={handleChange}
-                        disabled={!editing}
-                        className={`input-field ${!editing ? 'bg-gray-50 cursor-not-allowed' : ''}`}
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Email Address
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <Mail className="h-5 w-5 text-gray-400" />
-                        </div>
-                        <input
-                          type="email"
-                          name="email"
-                          value={formData.email}
-                          disabled
-                          className="input-field pl-10 bg-gray-100 cursor-not-allowed"
-                        />
-                      </div>
-                      <p className="text-xs text-gray-500 mt-2 flex items-center">
-                        <Shield className="h-3 w-3 mr-1" />
-                        Email cannot be changed for security reasons
-                      </p>
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Phone Number
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <Phone className="h-5 w-5 text-gray-400" />
-                        </div>
-                        <input
-                          type="tel"
-                          name="phone"
-                          value={formData.phone}
-                          onChange={handleChange}
-                          disabled={!editing}
-                          className={`input-field pl-10 ${!editing ? 'bg-gray-50 cursor-not-allowed' : ''}`}
-                          placeholder="+44 20 1234 5678"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {editing && (
-                    <div className="flex gap-4 pt-4 border-t">
-                      <button
-                        type="submit"
-                        disabled={loading}
-                        className="flex-1 btn-primary flex items-center justify-center py-3"
-                      >
-                        {loading ? (
-                          <>
-                            <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                            Saving...
-                          </>
-                        ) : (
-                          <>
-                            <Save className="h-5 w-5 mr-2" />
-                            Save Changes
-                          </>
-                        )}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleCancelEdit}
-                        className="flex-1 btn-secondary flex items-center justify-center py-3"
-                      >
-                        <X className="h-5 w-5 mr-2" />
-                        Cancel
-                      </button>
-                    </div>
-                  )}
-                </form>
-              </Card>
+              <PersonalInfoCard
+                formData={formData}
+                editing={editing}
+                loading={loading}
+                onEdit={() => setEditing(true)}
+                onCancel={handleCancelEdit}
+                onChange={handleChange}
+                onSubmit={handleSubmit}
+              />
 
               {/* Address Card */}
-              <Card>
-                <div className="flex items-center mb-6">
-                  <div className="bg-green-100 p-3 rounded-xl mr-4">
-                    <MapPin className="h-6 w-6 text-green-600" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Address Information</h2>
-                    <p className="text-sm text-gray-600">Your location details</p>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Street Address
-                    </label>
-                    <input
-                      type="text"
-                      name="address"
-                      value={formData.address}
-                      onChange={handleChange}
-                      disabled={!editing}
-                      className={`input-field ${!editing ? 'bg-gray-50 cursor-not-allowed' : ''}`}
-                      placeholder="123 Main Street"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        City
-                      </label>
-                      <input
-                        type="text"
-                        name="city"
-                        value={formData.city}
-                        onChange={handleChange}
-                        disabled={!editing}
-                        className={`input-field ${!editing ? 'bg-gray-50 cursor-not-allowed' : ''}`}
-                        placeholder="London"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        County
-                      </label>
-                      <input
-                        type="text"
-                        name="county"
-                        value={formData.county}
-                        onChange={handleChange}
-                        disabled={!editing}
-                        className={`input-field ${!editing ? 'bg-gray-50 cursor-not-allowed' : ''}`}
-                        placeholder="Greater London"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Postcode
-                      </label>
-                      <input
-                        type="text"
-                        name="postcode"
-                        value={formData.postcode}
-                        onChange={handleChange}
-                        disabled={!editing}
-                        className={`input-field ${!editing ? 'bg-gray-50 cursor-not-allowed' : ''}`}
-                        placeholder="SW1A 1AA"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Country
-                      </label>
-                      <input
-                        type="text"
-                        value="United Kingdom"
-                        disabled
-                        className="input-field bg-gray-100 cursor-not-allowed"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </Card>
+              <AddressCard
+                formData={formData}
+                editing={editing}
+                onChange={handleChange}
+              />
             </div>
           </div>
         </div>
       </section>
+    </div>
+  );
+}
+
+// ============ Helper Components ============
+
+function LoadingScreen({ message }: { message: string }) {
+  return (
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="text-center">
+        <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" />
+        <p className="text-gray-600 font-medium">{message}</p>
+      </div>
+    </div>
+  );
+}
+
+function ProfileSidebar({
+  user,
+  uploadingAvatar,
+  onAvatarClick,
+  onAvatarChange,
+  fileInputRef,
+}: {
+  user: User;
+  uploadingAvatar: boolean;
+  onAvatarClick: () => void;
+  onAvatarChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
+}) {
+  const avatarUrl = user.avatar ? getImageUrl(user.avatar) : null;
+  const displayCity = user.city || user.location?.city;
+  const displayCounty = user.county || user.location?.state;
+  const hasLocation = displayCity || displayCounty;
+
+  return (
+    <Card className="text-center sticky top-4">
+      {/* Avatar Section */}
+      <div className="relative inline-block mb-6">
+        <div className="relative group">
+          {avatarUrl ? (
+            <div className="w-32 h-32 rounded-full overflow-hidden mx-auto border-4 border-white shadow-xl group-hover:scale-105 transition-transform">
+              <Image
+                src={avatarUrl}
+                alt={user.firstName}
+                width={128}
+                height={128}
+                className="rounded-full object-cover w-full h-full"
+                unoptimized
+              />
+            </div>
+          ) : (
+            <div className="w-32 h-32 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center mx-auto border-4 border-white shadow-xl group-hover:scale-105 transition-transform">
+              <UserIcon className="h-16 w-16 text-primary-600" />
+            </div>
+          )}
+          <button
+            onClick={onAvatarClick}
+            disabled={uploadingAvatar}
+            className="absolute bottom-2 right-2 bg-gradient-to-br from-primary-600 to-primary-700 text-white p-3 rounded-full hover:from-primary-700 hover:to-primary-800 disabled:opacity-50 shadow-lg transform hover:scale-110 transition-all"
+            title="Change profile picture"
+          >
+            {uploadingAvatar ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <Camera className="h-5 w-5" />
+            )}
+          </button>
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={onAvatarChange}
+          className="hidden"
+        />
+      </div>
+
+      {/* User Info */}
+      <h2 className="text-2xl font-bold text-gray-900 mb-1">
+        {user.firstName} {user.lastName}
+      </h2>
+      <p className="text-gray-600 mb-4">{user.email}</p>
+
+      {/* Verified Badge */}
+      {user.verified && (
+        <div className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-bold shadow-md mb-6">
+          <Check className="h-4 w-4 mr-2" />
+          Verified User
+        </div>
+      )}
+
+      {/* Quick Info */}
+      <div className="pt-6 border-t space-y-4">
+        {user.phone && (
+          <InfoItem
+            icon={<Phone className="h-5 w-5 text-blue-600" />}
+            iconBg="bg-blue-100"
+            value={user.phone}
+          />
+        )}
+        {hasLocation && (
+          <InfoItem
+            icon={<MapPin className="h-5 w-5 text-green-600" />}
+            iconBg="bg-green-100"
+            value={`${displayCity}${displayCity && displayCounty ? ', ' : ''}${displayCounty || ''}`}
+          />
+        )}
+        <div className="flex items-center text-gray-700 p-3 bg-gray-50 rounded-lg">
+          <div className="bg-purple-100 p-2 rounded-lg mr-3">
+            <Calendar className="h-5 w-5 text-purple-600" />
+          </div>
+          <div className="text-left">
+            <p className="text-xs text-gray-500">Member since</p>
+            <span className="text-sm font-medium">
+              {user.createdAt ? formatDate(user.createdAt) : 'N/A'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Role Badge */}
+      <div className="mt-6 pt-6 border-t">
+        <div className="flex items-center justify-center">
+          <div className="bg-primary-100 p-2 rounded-lg mr-2">
+            <Shield className="h-5 w-5 text-primary-600" />
+          </div>
+          <span className="text-sm font-semibold text-gray-700 capitalize">
+            {user.role.toLowerCase()} Account
+          </span>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function InfoItem({
+  icon,
+  iconBg,
+  value,
+}: {
+  icon: React.ReactNode;
+  iconBg: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-center text-gray-700 p-3 bg-gray-50 rounded-lg">
+      <div className={`${iconBg} p-2 rounded-lg mr-3`}>{icon}</div>
+      <span className="text-sm font-medium">{value}</span>
+    </div>
+  );
+}
+
+function PersonalInfoCard({
+  formData,
+  editing,
+  loading,
+  onEdit,
+  onCancel,
+  onChange,
+  onSubmit,
+}: {
+  formData: FormData;
+  editing: boolean;
+  loading: boolean;
+  onEdit: () => void;
+  onCancel: () => void;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSubmit: (e: React.FormEvent) => void;
+}) {
+  return (
+    <Card>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center">
+          <div className="bg-blue-100 p-3 rounded-xl mr-4">
+            <UserIcon className="h-6 w-6 text-blue-600" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">
+              Personal Information
+            </h2>
+            <p className="text-sm text-gray-600">Update your personal details</p>
+          </div>
+        </div>
+        {!editing && (
+          <button onClick={onEdit} className="btn-primary flex items-center">
+            <Edit className="h-4 w-4 mr-2" />
+            Edit Profile
+          </button>
+        )}
+      </div>
+
+      <form onSubmit={onSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormField
+            label="First Name"
+            name="firstName"
+            value={formData.firstName}
+            onChange={onChange}
+            disabled={!editing}
+          />
+
+          <FormField
+            label="Last Name"
+            name="lastName"
+            value={formData.lastName}
+            onChange={onChange}
+            disabled={!editing}
+          />
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Email Address
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Mail className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                disabled
+                className="input-field pl-10 bg-gray-100 cursor-not-allowed"
+              />
+            </div>
+            <p className="text-xs text-gray-500 mt-2 flex items-center">
+              <Shield className="h-3 w-3 mr-1" />
+              Email cannot be changed for security reasons
+            </p>
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Phone Number
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Phone className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={onChange}
+                disabled={!editing}
+                className={`input-field pl-10 ${!editing ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+                placeholder="+44 20 1234 5678"
+              />
+            </div>
+          </div>
+        </div>
+
+        {editing && (
+          <div className="flex gap-4 pt-4 border-t">
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 btn-primary flex items-center justify-center py-3"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-5 w-5 mr-2" />
+                  Save Changes
+                </>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={onCancel}
+              className="flex-1 btn-secondary flex items-center justify-center py-3"
+            >
+              <X className="h-5 w-5 mr-2" />
+              Cancel
+            </button>
+          </div>
+        )}
+      </form>
+    </Card>
+  );
+}
+
+function AddressCard({
+  formData,
+  editing,
+  onChange,
+}: {
+  formData: FormData;
+  editing: boolean;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}) {
+  return (
+    <Card>
+      <div className="flex items-center mb-6">
+        <div className="bg-green-100 p-3 rounded-xl mr-4">
+          <MapPin className="h-6 w-6 text-green-600" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">
+            Address Information
+          </h2>
+          <p className="text-sm text-gray-600">Your location details</p>
+        </div>
+      </div>
+
+      <div className="space-y-6">
+        <FormField
+          label="Street Address"
+          name="address"
+          value={formData.address}
+          onChange={onChange}
+          disabled={!editing}
+          placeholder="123 Main Street"
+        />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormField
+            label="City"
+            name="city"
+            value={formData.city}
+            onChange={onChange}
+            disabled={!editing}
+            placeholder="London"
+          />
+
+          <FormField
+            label="County"
+            name="county"
+            value={formData.county}
+            onChange={onChange}
+            disabled={!editing}
+            placeholder="Greater London"
+          />
+
+          <FormField
+            label="Postcode"
+            name="postcode"
+            value={formData.postcode}
+            onChange={onChange}
+            disabled={!editing}
+            placeholder="SW1A 1AA"
+          />
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Country
+            </label>
+            <input
+              type="text"
+              value="United Kingdom"
+              disabled
+              className="input-field bg-gray-100 cursor-not-allowed"
+            />
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function FormField({
+  label,
+  name,
+  value,
+  onChange,
+  disabled,
+  placeholder,
+  type = 'text',
+}: {
+  label: string;
+  name: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  disabled: boolean;
+  placeholder?: string;
+  type?: string;
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-2">
+        {label}
+      </label>
+      <input
+        type={type}
+        name={name}
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+        placeholder={placeholder}
+        className={`input-field ${disabled ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+      />
     </div>
   );
 }

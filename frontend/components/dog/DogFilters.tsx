@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useDebounce } from '@/lib/hooks/useDebounce';
 
 interface FiltersProps {
   filters: {
@@ -38,6 +39,14 @@ const POPULAR_BREEDS = [
 
 export default function DogFilters({ filters, onFilterChange }: FiltersProps) {
   const [localFilters, setLocalFilters] = useState(filters);
+  
+  // Debounce the entire filters object
+  const debouncedFilters = useDebounce(localFilters, 500);
+
+  // Apply filters automatically when debounced value changes
+  useEffect(() => {
+    onFilterChange(debouncedFilters);
+  }, [debouncedFilters, onFilterChange]);
 
   const handleChange = (
     field: keyof typeof localFilters,
@@ -45,10 +54,6 @@ export default function DogFilters({ filters, onFilterChange }: FiltersProps) {
   ) => {
     const newFilters = { ...localFilters, [field]: value };
     setLocalFilters(newFilters);
-  };
-
-  const handleApply = () => {
-    onFilterChange(localFilters);
   };
 
   const handleReset = () => {
@@ -62,6 +67,7 @@ export default function DogFilters({ filters, onFilterChange }: FiltersProps) {
       available: true,
     };
     setLocalFilters(resetFilters);
+    // Immediately apply reset without waiting for debounce
     onFilterChange(resetFilters);
   };
 
@@ -171,13 +177,10 @@ export default function DogFilters({ filters, onFilterChange }: FiltersProps) {
           </label>
         </div>
 
-        {/* Buttons */}
-        <div className="space-y-2 pt-4 border-t">
-          <button onClick={handleApply} className="btn-primary w-full">
-            Apply Filters
-          </button>
+        {/* Reset Button */}
+        <div className="pt-4 border-t">
           <button onClick={handleReset} className="btn-secondary w-full">
-            Reset
+            Reset Filters
           </button>
         </div>
       </div>

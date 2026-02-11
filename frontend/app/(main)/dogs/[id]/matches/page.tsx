@@ -1,194 +1,247 @@
 // app/(main)/dogs/[id]/matches/page.tsx
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useState, useMemo } from 'react';
+import { useParams } from 'next/navigation';
 import { useRequireAuth } from '@/lib/hooks/useRequireAuth';
 import { useDebounce } from '@/lib/hooks/useDebounce';
+import { useFetch } from '@/lib/hooks/useFetch';
 import { matchingApi, Match, MatchStats } from '@/lib/api/matching';
 import { dogsApi } from '@/lib/api/dogs';
 import { Dog } from '@/types';
 import MatchCard from '@/components/matching/MatchCard';
-import { Loader2, Heart, TrendingUp, MapPin, Award, Search, X } from 'lucide-react';
+import { Card } from '@/components/ui/Card';
+import {
+  Loader2,
+  Heart,
+  TrendingUp,
+  MapPin,
+  Award,
+  Search,
+  X,
+  RefreshCw,
+  AlertCircle,
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getImageUrl } from '@/lib/api/client';
-import { AxiosError } from 'axios';
+import { formatDogAge } from '@/lib/utils/formatters';
+
+interface DogResponse {
+  dog: Dog;
+}
+
+interface MatchesResponse {
+  matches: Match[];
+}
+
+interface StatsResponse {
+  stats: MatchStats;
+}
 
 export default function MatchesPage() {
   const params = useParams();
-  const router = useRouter();
   const dogId = params.id as string;
 
   const { loading: authLoading, isAuthorized } = useRequireAuth();
 
-  const [loading, setLoading] = useState(true);
-  const [dog, setDog] = useState<Dog | null>(null);
-  const [matches, setMatches] = useState<Match[]>([]);
-  const [stats, setStats] = useState<MatchStats | null>(null);
-  
   // Filter states
   const [minScore, setMinScore] = useState(30);
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Debounce filters
   const debouncedMinScore = useDebounce(minScore, 500);
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
-  
-  // Track if initial load is complete
-  const initialLoadComplete = useRef(false);
-  
-  // Derive loading states
+
+  // Derive loading states for UI feedback
   const isFilteringScore = minScore !== debouncedMinScore;
   const isSearching = searchQuery !== debouncedSearchQuery;
 
-  // Single effect to handle all data fetching
-  useEffect(() => {
-    if (!isAuthorized) return;
+  // Fetch dog data - only when authorized
+  const {
+    data: dogData,
+    loading: dogLoading,
+    error: dogError,
+    refetch: refetchDog,
+  } = useFetch<DogResponse>(
+    () => dogsApi.getById(dogId),
+    [dogId, isAuthorized],
+    {
+      onError: () => {
+        toast.error('Failed to load dog profile');
+      },
+    }
+  );
 
-    const controller = new AbortController();
-    
-    const fetchData = async () => {
-      try {
-        // On initial load, fetch dog data first
-        if (!initialLoadComplete.current) {
-          setLoading(true);
-          
-          const dogData = await dogsApi.getById(dogId);
-          
-          if (controller.signal.aborted) return;
-          
-          setDog(dogData.dog);
-          
-          // Check if dog is available for breeding before fetching matches
-          const isAvailable = dogData.dog.breeding?.available ?? dogData.dog.available ?? false;
-          if (!isAvailable) {
-            setLoading(false);
-            initialLoadComplete.current = true;
-            return;
-          }
-        }
+  const dog = isAuthorized ? dogData?.dog : null;
+  const isAvailableForBreeding = dog?.breeding?.available ?? dog?.available ?? false;
 
-        // Fetch matches with current debounced minScore
-        const [matchData, statsData] = await Promise.all([
-          matchingApi.findMatches(dogId, { limit: 20, minScore: debouncedMinScore }),
-          matchingApi.getStats(dogId),
-        ]);
+  // Fetch matches - only when dog is available for breeding
+  const {
+    data: matchesData,
+    loading: matchesLoading,
+    error: matchesError,
+    refetch: refetchMatches,
+  } = useFetch<MatchesResponse>(
+    () => matchingApi.findMatches(dogId, { limit: 20, minScore: debouncedMinScore }),
+    [dogId, debouncedMinScore, isAvailableForBreeding],
+    {
+      onError: () => {
+        toast.error('Failed to load matches');
+      },
+    }
+  );
 
-        if (controller.signal.aborted) return;
+  // Fetch stats - only when dog is available for breeding
+  const {
+    data: statsData,
+    loading: statsLoading,
+    error: statsError,
+    refetch: refetchStats,
+  } = useFetch<StatsResponse>(
+    () => matchingApi.getStats(dogId),
+    [dogId, isAvailableForBreeding],
+    {
+      onError: () => {
+        console.error('Failed to load match stats');
+      },
+    }
+  );
 
-        setMatches(matchData.matches);
-        setStats(statsData.stats);
-        
-        if (!initialLoadComplete.current) {
-          setLoading(false);
-          initialLoadComplete.current = true;
-        }
-      } catch (error) {
-        if (controller.signal.aborted) return;
-        
-        console.error('Failed to fetch data:', error);
-        const axiosError = error as AxiosError<{ message?: string }>;
-        toast.error(axiosError.response?.data?.message || 'Failed to load data');
-        
-        if (axiosError.response?.status === 403 || axiosError.response?.status === 401) {
-          router.push('/login');
-        }
-        
-        setLoading(false);
-      }
-    };
+  // Memoize matches to prevent new array reference on every render
+  const matches = useMemo(() => {
+    return matchesData?.matches ?? [];
+  }, [matchesData?.matches]);
 
-    fetchData();
-
-    return () => {
-      controller.abort();
-    };
-  }, [isAuthorized, dogId, debouncedMinScore, router]);
+  const stats = statsData?.stats;
 
   // Filter matches locally based on search query
-  const filteredMatches = matches.filter(match => {
-    if (!debouncedSearchQuery.trim()) return true;
-    
-    const searchLower = debouncedSearchQuery.toLowerCase().trim();
-    const matchDog = match.dog;
-    
-    const ownerName = typeof matchDog.owner === 'object'
-      ? `${matchDog.owner.firstName} ${matchDog.owner.lastName}`.toLowerCase()
-      : '';
-    
-    const location = `${matchDog.city || ''} ${matchDog.county || ''} ${matchDog.location?.city || ''} ${matchDog.location?.state || ''}`.toLowerCase();
-    
-    return (
-      matchDog.name.toLowerCase().includes(searchLower) ||
-      matchDog.breed.toLowerCase().includes(searchLower) ||
-      ownerName.includes(searchLower) ||
-      location.includes(searchLower)
-    );
-  });
+  const filteredMatches = useMemo(() => {
+    if (!debouncedSearchQuery.trim()) return matches;
 
-  // Show loading while checking auth
+    const searchLower = debouncedSearchQuery.toLowerCase().trim();
+
+    return matches.filter((match) => {
+      const matchDog = match.dog;
+
+      const ownerName =
+        typeof matchDog.owner === 'object'
+          ? `${matchDog.owner.firstName} ${matchDog.owner.lastName}`.toLowerCase()
+          : '';
+
+      const location =
+        `${matchDog.city || ''} ${matchDog.county || ''} ${matchDog.location?.city || ''} ${matchDog.location?.state || ''}`.toLowerCase();
+
+      return (
+        matchDog.name.toLowerCase().includes(searchLower) ||
+        matchDog.breed.toLowerCase().includes(searchLower) ||
+        ownerName.includes(searchLower) ||
+        location.includes(searchLower)
+      );
+    });
+  }, [matches, debouncedSearchQuery]);
+
+  // Combined refetch function
+  const refetchAll = () => {
+    refetchDog();
+    if (isAvailableForBreeding) {
+      refetchMatches();
+      refetchStats();
+    }
+  };
+
+  // Loading: Auth check
   if (authLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-50">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary-600 mx-auto mb-4" />
-          <p className="text-gray-600">Checking authentication...</p>
-        </div>
-      </div>
+      <LoadingScreen message="Checking authentication..." />
     );
   }
 
-  // Redirect if not authorized
+  // Not authorized - redirect handled by useRequireAuth
   if (!isAuthorized) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-50">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary-600 mx-auto mb-4" />
-          <p className="text-gray-600">Redirecting to login...</p>
-        </div>
-      </div>
+      <LoadingScreen message="Redirecting to login..." />
     );
   }
 
-  if (loading) {
+  // Loading: Dog data
+  if (dogLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-50">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary-600 mx-auto mb-4" />
-          <p className="text-gray-600">Finding perfect matches...</p>
-        </div>
-      </div>
+      <LoadingScreen message="Loading dog profile..." />
     );
   }
 
+  // Error: Failed to load dog
+  if (dogError) {
+    const is404 = dogError.response?.status === 404;
+
+    return (
+      <ErrorScreen
+        title={is404 ? 'Dog Not Found' : 'Failed to Load'}
+        message={
+          is404
+            ? "The dog you're looking for doesn't exist or has been removed."
+            : 'There was an error loading the dog profile. Please try again.'
+        }
+        onRetry={!is404 ? refetchDog : undefined}
+        backLink="/browse"
+        backLabel="Browse Dogs"
+      />
+    );
+  }
+
+  // No dog data
   if (!dog) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-50">
-        <div className="text-center">
-          <p className="text-gray-600 mb-4">Dog not found</p>
-          <Link href="/browse" className="btn-primary">
-            Browse Dogs
-          </Link>
-        </div>
-      </div>
+      <ErrorScreen
+        title="Dog Not Found"
+        message="Unable to find the requested dog."
+        backLink="/browse"
+        backLabel="Browse Dogs"
+      />
     );
   }
 
-  // Check if dog is available for breeding
-  const isAvailableForBreeding = dog.breeding?.available ?? dog.available ?? false;
-  
+  // Dog not available for breeding
   if (!isAvailableForBreeding) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50">
-        <div className="text-center">
+        <Card className="text-center py-12 px-8 max-w-md">
           <Heart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Not Available</h2>
-          <p className="text-gray-600 mb-4">This dog is not available for breeding</p>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
+            Not Available for Breeding
+          </h2>
+          <p className="text-gray-600 mb-6">
+            {dog.name} is not currently available for breeding matches.
+          </p>
           <Link href={`/dogs/${dogId}`} className="btn-primary">
             Back to Profile
           </Link>
+        </Card>
+      </div>
+    );
+  }
+
+  // Error: Failed to load matches
+  if (matchesError) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <MatchesHeader dog={dog} dogId={dogId} onRefresh={refetchAll} />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Card className="text-center py-12">
+            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              Failed to Load Matches
+            </h3>
+            <p className="text-gray-600 mb-6">
+              There was an error loading potential matches. Please try again.
+            </p>
+            <button onClick={refetchMatches} className="btn-primary">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Try Again
+            </button>
+          </Card>
         </div>
       </div>
     );
@@ -197,48 +250,23 @@ export default function MatchesPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-primary-600 to-primary-700 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Link
-            href={`/dogs/${dogId}`}
-            className="text-white/80 hover:text-white mb-4 inline-flex items-center gap-2 transition-colors"
-          >
-            ← Back to Profile
-          </Link>
-          
-          <div className="flex items-center gap-6">
-            {/* Dog Image */}
-            <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg flex-shrink-0">
-              {dog.mainImage || dog.images?.[0] ? (
-                <Image
-                  src={getImageUrl(dog.mainImage || dog.images?.[0] || '')}
-                  alt={dog.name}
-                  fill
-                  className="object-cover"
-                  unoptimized
-                />
-              ) : (
-                <div className="w-full h-full bg-white/20 flex items-center justify-center">
-                  <Heart className="w-8 h-8" />
-                </div>
-              )}
-            </div>
-
-            <div>
-              <h1 className="text-3xl font-bold mb-2">
-                Find Matches for {dog.name}
-              </h1>
-              <p className="text-primary-100">
-                {dog.breed} • {dog.gender === 'male' ? 'Male' : 'Female'} • {dog.age} years old
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <MatchesHeader dog={dog} dogId={dogId} onRefresh={refetchAll} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
-        {stats && (
+        {statsLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            {[...Array(4)].map((_, i) => (
+              <div
+                key={i}
+                className="bg-white rounded-lg shadow-md p-6 animate-pulse"
+              >
+                <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+                <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+              </div>
+            ))}
+          </div>
+        ) : stats && !statsError ? (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
             <StatCard
               icon={<Heart className="w-6 h-6" />}
@@ -265,7 +293,7 @@ export default function MatchesPage() {
               color="bg-purple-500"
             />
           </div>
-        )}
+        ) : null}
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-md p-4 mb-6 space-y-4">
@@ -325,58 +353,185 @@ export default function MatchesPage() {
           </div>
         </div>
 
-        {/* Results count */}
-        {(debouncedSearchQuery || matches.length !== filteredMatches.length) && (
-          <p className="text-sm text-gray-500 mb-4">
-            Showing {filteredMatches.length} of {matches.length} matches
-          </p>
-        )}
-
-        {/* Matches */}
-        {filteredMatches.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-md p-12 text-center">
-            <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-gray-900 mb-2">No matches found</h3>
-            <p className="text-gray-600 mb-4">
-              {debouncedSearchQuery 
-                ? 'Try a different search term or clear your search.'
-                : 'Try lowering the minimum match score or check back later for new listings.'
-              }
-            </p>
-            <div className="flex flex-wrap gap-2 justify-center">
-              {debouncedSearchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="btn-secondary"
-                >
-                  Clear Search
-                </button>
-              )}
-              {minScore > 0 && (
-                <button
-                  onClick={() => setMinScore(0)}
-                  className="btn-primary"
-                >
-                  Show All Potential Matches
-                </button>
-              )}
+        {/* Loading matches */}
+        {matchesLoading ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="text-center">
+              <Loader2 className="h-12 w-12 animate-spin text-primary-600 mx-auto mb-4" />
+              <p className="text-gray-600">Finding perfect matches...</p>
             </div>
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">
-                {filteredMatches.length} {filteredMatches.length === 1 ? 'Match' : 'Matches'} Found
-              </h2>
-            </div>
+            {/* Results count */}
+            {(debouncedSearchQuery ||
+              matches.length !== filteredMatches.length) && (
+              <p className="text-sm text-gray-500 mb-4">
+                Showing {filteredMatches.length} of {matches.length} matches
+              </p>
+            )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredMatches.map((match) => (
-                <MatchCard key={match.dog.id || match.dog._id} match={match} />
-              ))}
-            </div>
+            {/* Matches Grid */}
+            {filteredMatches.length === 0 ? (
+              <Card hover={false} className="text-center py-12">
+                <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  No matches found
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  {debouncedSearchQuery
+                    ? 'Try a different search term or clear your search.'
+                    : 'Try lowering the minimum match score or check back later for new listings.'}
+                </p>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {debouncedSearchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="btn-secondary"
+                    >
+                      Clear Search
+                    </button>
+                  )}
+                  {minScore > 0 && (
+                    <button
+                      onClick={() => setMinScore(0)}
+                      className="btn-primary"
+                    >
+                      Show All Potential Matches
+                    </button>
+                  )}
+                </div>
+              </Card>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {filteredMatches.length}{' '}
+                    {filteredMatches.length === 1 ? 'Match' : 'Matches'} Found
+                  </h2>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredMatches.map((match) => (
+                    <MatchCard
+                      key={match.dog.id || match.dog._id}
+                      match={match}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
           </>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ============ Helper Components ============
+
+function LoadingScreen({ message }: { message: string }) {
+  return (
+    <div className="flex justify-center items-center min-h-screen bg-gray-50">
+      <div className="text-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary-600 mx-auto mb-4" />
+        <p className="text-gray-600">{message}</p>
+      </div>
+    </div>
+  );
+}
+
+function ErrorScreen({
+  title,
+  message,
+  onRetry,
+  backLink,
+  backLabel,
+}: {
+  title: string;
+  message: string;
+  onRetry?: () => void;
+  backLink: string;
+  backLabel: string;
+}) {
+  return (
+    <div className="flex justify-center items-center min-h-screen bg-gray-50 px-4">
+      <Card className="text-center py-12 px-8 max-w-md">
+        <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+        <h2 className="text-xl font-bold text-gray-900 mb-2">{title}</h2>
+        <p className="text-gray-600 mb-6">{message}</p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          {onRetry && (
+            <button onClick={onRetry} className="btn-primary">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Try Again
+            </button>
+          )}
+          <Link href={backLink} className="btn-secondary">
+            {backLabel}
+          </Link>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function MatchesHeader({
+  dog,
+  dogId,
+  onRefresh,
+}: {
+  dog: Dog;
+  dogId: string;
+  onRefresh: () => void;
+}) {
+    
+  return (
+    <div className="bg-gradient-to-r from-primary-600 to-primary-700 text-white py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between mb-4">
+          <Link
+            href={`/dogs/${dogId}`}
+            className="text-white/80 hover:text-white inline-flex items-center gap-2 transition-colors"
+          >
+            ← Back to Profile
+          </Link>
+          <button
+            onClick={onRefresh}
+            className="text-white/80 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-colors"
+            title="Refresh matches"
+          >
+            <RefreshCw className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="flex items-center gap-6">
+          <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg flex-shrink-0">
+            {dog.mainImage || dog.images?.[0] ? (
+              <Image
+                src={getImageUrl(dog.mainImage || dog.images?.[0] || '')}
+                alt={dog.name}
+                fill
+                className="object-cover"
+                unoptimized
+              />
+            ) : (
+              <div className="w-full h-full bg-white/20 flex items-center justify-center">
+                <Heart className="w-8 h-8" />
+              </div>
+            )}
+          </div>
+
+          <div>
+            <h1 className="text-3xl font-bold mb-2">
+              Find Matches for {dog.name}
+            </h1>
+            <p className="text-primary-100">
+              {dog.breed} • {dog.gender === 'male' ? 'Male' : 'Female'} •{' '}
+              {formatDogAge(dog)}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
