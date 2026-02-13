@@ -6,25 +6,26 @@ A modern, responsive web application for connecting dog owners and breeders. Bui
 
 ## 📋 Table of Contents
 
-- [Features](#-features)
-- [Tech Stack](#-tech-stack)
-- [Prerequisites](#-prerequisites)
-- [Getting Started](#-getting-started)
-- [Project Structure](#-project-structure)
-- [Environment Variables](#-environment-variables)
-- [Available Scripts](#-available-scripts)
-- [Key Components](#-key-components)
-- [State Management](#-state-management)
-- [API Integration](#-api-integration)
-- [Styling](#-styling)
-- [Testing](#-testing)
-- [Deployment](#-deployment)
-- [Contributing](#-contributing)
-- [License](#-license)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
+- [Getting Started](#getting-started)
+- [Project Structure](#project-structure)
+- [Environment Variables](#environment-variables)
+- [Available Scripts](#available-scripts)
+- [Key Components](#key-components)
+- [State Management](#state-management)
+- [API Integration](#api-integration)
+- [Styling](#styling)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Contributing](#contributing)
+- [License](#license)
 
-## ✨ Features
+## Features
 
 ### User Features
+
 - 🔐 **Authentication** - Register, login, and secure session management
 - 🐕 **Dog Profiles** - Create and manage detailed dog listings
 - 🔍 **Advanced Search** - Filter dogs by breed, gender, age, location
@@ -34,6 +35,7 @@ A modern, responsive web application for connecting dog owners and breeders. Bui
 - 📱 **Responsive Design** - Works on all devices
 
 ### Technical Features
+
 - ⚡ **Server-Side Rendering** - Fast initial page loads
 - 🔄 **Real-time Updates** - Socket.io integration for live messaging
 - 📍 **Geolocation** - Location-based search and mapping
@@ -41,134 +43,93 @@ A modern, responsive web application for connecting dog owners and breeders. Bui
 - 🎨 **Modern UI** - Beautiful, accessible components
 - 🔒 **Type Safety** - Full TypeScript support
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 |
- Technology 
+
+ Technology
+
 |
- Purpose 
+
+ Purpose
+
 |
+
 |
+
 ------------
 |
----------
+
+------------
 |
 |
-[
-Next.js 14
-](
-https://nextjs.org/
-)
+ Next.js 14
 |
- React framework with App Router 
+ React framework with App Router
 |
 |
-[
-TypeScript
-](
-https://www.typescriptlang.org/
-)
+ TypeScript
 |
- Type-safe JavaScript 
+ Type-safe JavaScript
 |
 |
-[
-Tailwind CSS
-](
-https://tailwindcss.com/
-)
+ Tailwind CSS
 |
- Utility-first CSS framework 
+ Utility-first CSS framework
 |
 |
-[
-Zustand
-](
-https://zustand-demo.pmnd.rs/
-)
+ Zustand
 |
- Lightweight state management 
+ Lightweight state management
 |
 |
-[
-React Hook Form
-](
-https://react-hook-form.com/
-)
+ React Hook Form
 |
- Form handling 
+ Form handling
 |
 |
-[
-Zod
-](
-https://zod.dev/
-)
+ Zod
 |
- Schema validation 
+ Schema validation
 |
 |
-[
-Axios
-](
-https://axios-http.com/
-)
+ Axios
 |
- HTTP client 
+ HTTP client
 |
 |
-[
-Socket.io Client
-](
-https://socket.io/
-)
+ Socket.io Client
 |
- Real-time communication 
+ Real-time communication
 |
 |
-[
-Leaflet
-](
-https://leafletjs.com/
-)
+ Leaflet
 |
- Interactive maps 
+ Interactive maps
 |
 |
-[
-Lucide React
-](
-https://lucide.dev/
-)
+ Lucide React
 |
- Icon library 
+ Icon library
 |
 |
-[
-React Hot Toast
-](
-https://react-hot-toast.com/
-)
+ React Hot Toast
 |
- Toast notifications 
+ Toast notifications
 |
 |
-[
-date-fns
-](
-https://date-fns.org/
-)
+ date-fns
 |
- Date formatting 
+ Date formatting
 |
 
-## 📦 Prerequisites
+## Prerequisites
 
 - **Node.js** >= 18.0.0
 - **npm** >= 9.0.0 or **yarn** >= 1.22.0 or **pnpm** >= 8.0.0
 - **Backend API** running (see backend README)
 
-## 🚀 Getting Started
+## Getting Started
 
 ### 1. Clone the repository
 
@@ -195,9 +156,11 @@ yarn dev
 # or
 pnpm dev
 Open http://localhost:3000 in your browser.
+```
 
-📁 Project Structure
-text
+## Project Structure
+
+```text
 pawmatch-frontend/
 ├── app/                          # Next.js App Router
 │   ├── (auth)/                   # Authentication routes (login, register)
@@ -232,73 +195,40 @@ pawmatch-frontend/
 │   └── page.tsx                  # Home page
 ├── components/                   # React components
 │   ├── auth/                     # Authentication components
-│   │   ├── LoginForm.tsx
-│   │   └── RegisterForm.tsx
 │   ├── dog/                      # Dog-related components
-│   │   ├── DogCard.tsx
-│   │   ├── DogFilters.tsx
-│   │   ├── DogForm.tsx
-│   │   └── DogGallery.tsx
 │   ├── layout/                   # Layout components
-│   │   ├── Header.tsx
-│   │   ├── Footer.tsx
-│   │   ├── Sidebar.tsx
-│   │   └── MobileMenu.tsx
 │   ├── map/                      # Map components
-│   │   └── DogMap.tsx
 │   ├── matching/                 # Matching components
-│   │   └── MatchCard.tsx
 │   ├── messages/                 # Messaging components
-│   │   ├── ConversationList.tsx
-│   │   └── MessageBubble.tsx
 │   └── ui/                       # Reusable UI components
-│       ├── Button.tsx
-│       ├── Card.tsx
-│       ├── Input.tsx
-│       ├── Modal.tsx
-│       ├── Section.tsx
-│       └── Spinner.tsx
 ├── hooks/                        # Custom React hooks
 │   └── useFetch.ts               # Data fetching hook
 ├── lib/                          # Library code
 │   ├── api/                      # API client modules
-│   │   ├── auth.ts               # Auth API
-│   │   ├── client.ts             # Axios instance
-│   │   ├── dogs.ts               # Dogs API
-│   │   ├── matching.ts           # Matching API
-│   │   └── messages.ts           # Messages API
 │   ├── hooks/                    # Custom hooks
-│   │   ├── index.ts              # Hook exports
-│   │   ├── useDebounce.ts        # Debounce hook
-│   │   └── useRequireAuth.ts     # Auth protection hook
 │   ├── store/                    # Zustand stores
-│   │   └── authStore.ts          # Authentication store
 │   ├── utils/                    # Utility functions
-│   │   ├── formatters.ts         # Date, currency formatters
-│   │   └── validators.ts         # Validation schemas
 │   └── validations/              # Zod schemas
-│       └── dogSchema.ts
 ├── public/                       # Static assets
-│   ├── images/
-│   ├── leaflet/                  # Leaflet marker images
-│   └── favicon.ico
 ├── types/                        # TypeScript types
-│   ├── index.ts                  # Main type definitions
-│   └── auth.ts                   # Auth types
 ├── .env.example                  # Example environment variables
-├── .env.local                    # Local environment variables (git ignored)
 ├── .eslintrc.json                # ESLint configuration
-├── .gitignore                    # Git ignore rules
 ├── next.config.js                # Next.js configuration
 ├── package.json                  # Dependencies and scripts
-├── postcss.config.js             # PostCSS configuration
 ├── tailwind.config.ts            # Tailwind CSS configuration
 └── tsconfig.json                 # TypeScript configuration
-🔐 Environment Variables
+```
+
+## Environment Variables
+
 Create a .env.local file in the root directory:
 
+```bash
+
 env
+
 # API Configuration
+
 NEXT_PUBLIC_API_URL=http://localhost:5000/api
 NEXT_PUBLIC_SOCKET_URL=http://localhost:5000
 
@@ -312,16 +242,23 @@ NEXT_PUBLIC_ENABLE_MATCHING=true
 
 # Analytics (optional)
 NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
-Variable	Description	Required
-NEXT_PUBLIC_API_URL	Backend API base URL	Yes
-NEXT_PUBLIC_SOCKET_URL	Socket.io server URL	Yes
-NEXT_PUBLIC_APP_NAME	Application name	No
-NEXT_PUBLIC_APP_URL	Frontend URL	No
-NEXT_PUBLIC_ENABLE_MAP	Enable map feature	No
-NEXT_PUBLIC_ENABLE_MATCHING	Enable matching feature	No
-NEXT_PUBLIC_GA_ID	Google Analytics ID	No
-📜 Available Scripts
-bash
+```
+
+```text
+
+Variable                    Description               Required
+NEXT_PUBLIC_API_URL         Backend API base URL      Yes
+NEXT_PUBLIC_SOCKET_URL      Socket.io server URL      Yes
+NEXT_PUBLIC_APP_NAME        Application name          No
+NEXT_PUBLIC_APP_URL         Frontend URL              No
+NEXT_PUBLIC_ENABLE_MAP      Enable map feature        No
+NEXT_PUBLIC_ENABLE_MATCHING Enable matching feature   No
+NEXT_PUBLIC_GA_ID           Google Analytics ID       No
+```
+
+## Available Scripts
+
+```bash
 # Development
 npm run dev           # Start development server (port 3000)
 
@@ -335,15 +272,23 @@ npm run lint:fix      # Fix ESLint errors
 npm run type-check    # Run TypeScript compiler check
 
 # Testing
+
 npm run test          # Run tests
 npm run test:watch    # Run tests in watch mode
 npm run test:coverage # Run tests with coverage
 
 # Utilities
+
 npm run analyze       # Analyze bundle size
 npm run clean         # Clean build artifacts
-🧩 Key Components
-Authentication
+```
+
+## Key Components
+
+### Authentication
+
+```bash
+
 tsx
 // Using the auth hook
 import { useRequireAuth } from '@/lib/hooks/useRequireAuth';
@@ -356,7 +301,12 @@ export default function ProtectedPage() {
   
   return <div>Welcome, {user.firstName}!</div>;
 }
-Data Fetching
+```
+
+### Data Fetching
+
+```bash
+
 tsx
 // Using the useFetch hook
 import { useFetch } from '@/hooks/useFetch';
@@ -378,7 +328,12 @@ export default function DogList() {
     </div>
   );
 }
-Debounced Filters
+```
+
+### Debounced Filters
+
+```bash
+
 tsx
 // Using the useDebounce hook
 import { useDebounce } from '@/lib/hooks/useDebounce';
@@ -388,15 +343,19 @@ export default function SearchPage() {
   const debouncedSearch = useDebounce(search, 300);
   
   useEffect(() => {
-    // API call only happens after 300ms of no typing
     fetchResults(debouncedSearch);
   }, [debouncedSearch]);
   
   return <input value={search} onChange={e => setSearch(e.target.value)} />;
 }
-🗄️ State Management
-Auth Store (Zustand)
-tsx
+```
+
+## State Management
+
+### Auth Store (Zustand)
+
+```bash
+
 // lib/store/authStore.ts
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
@@ -421,7 +380,11 @@ export const useAuthStore = create<AuthState>()(
     { name: 'auth-storage' }
   )
 );
-Usage
+```
+
+## Usage
+
+```bash
 tsx
 import { useAuthStore } from '@/lib/store/authStore';
 
@@ -441,8 +404,14 @@ function Component() {
     </div>
   );
 }
-🌐 API Integration
-API Client Setup
+```
+
+## API Integration
+
+### API Client Setup
+
+```bash
+
 typescript
 // lib/api/client.ts
 import axios from 'axios';
@@ -468,20 +437,24 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Handle unauthorized
       localStorage.removeItem('token');
       window.location.href = '/login';
     }
     return Promise.reject(error);
   }
 );
-API Modules
+```
+
+### API Modules
+
+```bash
+
 typescript
 // lib/api/dogs.ts
 import { apiClient } from './client';
 
 export const dogsApi = {
-  getAll: (params?: Record<string, any>) => 
+  getAll: (params?: Record<string, unknown>) => 
     apiClient.get('/dogs', { params }).then(res => res.data),
   
   getById: (id: string) => 
@@ -499,8 +472,14 @@ export const dogsApi = {
   delete: (id: string) => 
     apiClient.delete(`/dogs/${id}`).then(res => res.data),
 };
-🎨 Styling
-Tailwind CSS Configuration
+```
+
+## Styling
+
+### Tailwind CSS Configuration
+
+```bash
+
 typescript
 // tailwind.config.ts
 import type { Config } from 'tailwindcss';
@@ -517,25 +496,14 @@ const config: Config = {
         primary: {
           50: '#f0f9ff',
           100: '#e0f2fe',
-          200: '#bae6fd',
-          300: '#7dd3fc',
-          400: '#38bdf8',
           500: '#0ea5e9',
           600: '#0284c7',
           700: '#0369a1',
-          800: '#075985',
-          900: '#0c4a6e',
         },
-      },
-      fontFamily: {
-        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
       },
     },
   },
-  plugins: [
-    require('@tailwindcss/forms'),
-    require('@tailwindcss/typography'),
-  ],
+  plugins: [],
 };
 
 export default config;
@@ -550,15 +518,12 @@ css
   .btn-primary {
     @apply bg-primary-600 text-white px-4 py-2 rounded-lg 
            font-semibold hover:bg-primary-700 transition-colors
-           disabled:opacity-50 disabled:cursor-not-allowed
-           flex items-center justify-center;
+           disabled:opacity-50 disabled:cursor-not-allowed;
   }
   
   .btn-secondary {
     @apply bg-gray-100 text-gray-700 px-4 py-2 rounded-lg 
-           font-semibold hover:bg-gray-200 transition-colors
-           disabled:opacity-50 disabled:cursor-not-allowed
-           flex items-center justify-center;
+           font-semibold hover:bg-gray-200 transition-colors;
   }
   
   .input-field {
@@ -566,22 +531,17 @@ css
            focus:border-primary-500 focus:ring-2 focus:ring-primary-200
            outline-none transition-all;
   }
-  
-  .card {
-    @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6;
-  }
 }
-🧪 Testing
-Running Tests
-bash
-# Run all tests
-npm run test
+```
 
-# Run tests in watch mode
-npm run test:watch
+## Testing
 
-# Run tests with coverage
-npm run test:coverage
+### Running Tests
+
+```bash
+npm run test          # Run all tests
+npm run test:watch    # Run tests in watch mode
+npm run test:coverage # Run tests with coverage
 Example Test
 typescript
 // __tests__/components/DogCard.test.tsx
@@ -604,22 +564,28 @@ describe('DogCard', () => {
     
     expect(screen.getByText('Max')).toBeInTheDocument();
     expect(screen.getByText('Golden Retriever')).toBeInTheDocument();
-    expect(screen.getByText(/3 years/)).toBeInTheDocument();
   });
 });
-🚀 Deployment
-Vercel (Recommended)
-Push your code to GitHub
-Import project in Vercel
-Configure environment variables
-Deploy
-bash
-# Or deploy via CLI
+```
+
+## Deployment
+
+### Vercel (Recommended)
+
+1. Push your code to GitHub
+2. Import project in Vercel
+3. Configure environment variables
+4. Deploy
+
+```bash
 npm i -g vercel
 vercel
-Docker
+```
+
+### Docker
+
+```bash
 dockerfile
-# Dockerfile
 FROM node:18-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
@@ -635,36 +601,38 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
 EXPOSE 3000
-ENV PORT 3000
 CMD ["node", "server.js"]
-bash
-# Build and run
+```
+
+```bash
 docker build -t pawmatch-frontend .
 docker run -p 3000:3000 pawmatch-frontend
-Environment-Specific Builds
-bash
-# Production build
-NODE_ENV=production npm run build
+```
 
-# Staging build
-NEXT_PUBLIC_API_URL=https://staging-api.example.com npm run build
-🤝 Contributing
-Fork the repository
-Create your feature branch (git checkout -b feature/AmazingFeature)
-Commit your changes (git commit -m 'Add some AmazingFeature')
-Push to the branch (git push origin feature/AmazingFeature)
-Open a Pull Request
-Code Style
+## Contributing
+
+### Fork the repository
+
+1. Create your feature branch (git checkout -b feature/AmazingFeature)
+2. Commit your changes (git commit -m 'Add some AmazingFeature')
+3. Push to the branch (git push origin feature/AmazingFeature)
+4. Open a Pull Request
+
+### Code Style
+
 Use TypeScript for all new files
 Follow the existing code style
 Write meaningful commit messages
 Add tests for new features
 Update documentation as needed
-📄 License
+
+## License
+
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-📞 Support
+## Support
+
 📧 Email: support@pawmatch.com
-💬 Discord: Join our community
-📖 Documentation: docs.pawmatch.com
+📖 Documentation: https://docs.pawmatch.com
+
 Made with ❤️ by the PawMatch Team
