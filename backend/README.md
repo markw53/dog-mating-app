@@ -75,7 +75,7 @@ npm install
 cp .env.example .env
 ```
 
-Edit .env with your configuration (see Environment Variables).
+### Edit .env with your configuration (see Environment Variables)
 
 ## 4. Set up the database
 
@@ -96,7 +96,7 @@ npx prisma db seed
 npm run dev
 ```
 
-Server will start at http://localhost:5000
+Server will start at <http://localhost:5000>
 
 ## 📁 Project Structure
 
@@ -208,16 +208,18 @@ GEOCODING_RATE_LIMIT=1000  # ms between requests
 LOG_LEVEL=debug
 ```
 
-### Variable            Description                       Required        Default
+## Variables
 
-NODE_ENV                Environment mode                  No              development
-PORT                    Server port                       No              5000
-DATABASE_URL            PostgreSQL connection string      Yes             -
-JWT_SECRET              JWT signing secret                Yes             -
-JWT_EXPIRES_IN          JWT expiration time               No              7d
-CORS_ORIGIN             Allowed CORS origin               No              *
-UPLOAD_DIR              File upload directory             No              uploads
-MAX_FILE_SIZE           Max upload size in bytes          No              5242880
+| Variable | Description | Required | Default |
+| ------------ | ------------ | ------------ | ------------ |
+| NODE_ENV | Environment mode | No | development |
+| PORT | Server port | No | 5000 |
+| DATABASE_URL | PostgreSQL connection string | Yes | - |
+| JWT_SECRET | JWT signing secret | Yes | - |
+| JWT_EXPIRES_IN | JWT expiration time | No | 7d |
+| CORS_ORIGIN | Allowed CORS origin | No | * |
+| UPLOAD_DIR | File upload directory | No | uploads |
+| MAX_FILE_SIZE | Max upload size in bytes | No | 5242880 |
 
 ## 🗄️ Database Setup
 
@@ -368,21 +370,19 @@ npx prisma db seed
 
 ### Base URL
 
-```text
-http://localhost:5000/api
-```
+<http://localhost:5000/api>
 
-### Authentication Endpoints
+## Authentication Endpoints
 
-### Method                Endpoint                Description               Auth Required
-
-POST                      /auth/register          Register new user         No
-POST                      /auth/login             User login                No
-GET                       /auth/me                Get current user          Yes
-PUT                       /auth/profile           Update profile            Yes
-POST                      /auth/upload-avatar     Upload avatar             Yes
-POST                      /auth/refresh-token     Refresh JWT               No
-POST                      /auth/logout            Logout user               Yes
+| Method | Endpoint | Description | Auth Required |
+| ------------ | ------------ | ------------ | ------------ |
+| POST | /auth/register | Register new user | No |
+| POST | /auth/login | User login | No |
+| GET | /auth/me | Get current user | Yes |
+| PUT | /auth/profile | Update profile | Yes |
+| POST | /auth/upload-avatar | Upload avatar | Yes |
+| POST | /auth/refresh-token | Refresh JWT | No |
+| POST | /auth/logout | Logout user | Yes |
 
 ## Register User
 
@@ -403,7 +403,6 @@ Content-Type: application/json
 Response:
 
 ```bash
-
 json
 {
   "success": true,
@@ -419,14 +418,14 @@ json
 
 ## Dog Endpoints
 
-### Method        Endpoint            Description           Auth
-
-GET         /dogs             Get all dogs          No
-GET         /dogs/my-dogs     Get user's dogs       Yes
-GET         /dogs/:id         Get dog by ID         No
-POST        /dogs             Create new dog        Yes
-PUT         /dogs/:id         Update dog            Yes
-DELETE      /dogs/:id         Delete dog            Yes
+| Method | Endpoint | Description | Auth |
+| ----------- | ----------- | ----------- | ----------- |
+| GET | /dogs | Get all dogs | No |
+| GET | /dogs/my-dogs | Get user's dogs | Yes |
+| GET | /dogs/:id | Get dog by ID | No |
+| POST | /dogs | Create new dog | Yes |
+| PUT | /dogs/:id | Update dog | Yes |
+| DELETE | /dogs/:id | Delete dog | Yes |
 
 ## Get All Dogs
 
@@ -435,18 +434,18 @@ http
 GET /api/dogs?page=1&limit=12&breed=labrador&gender=male
 ```
 
-Query Parameters:
+## Query Parameters
 
-### Parameter               Type                  Description
-
-page                    number                Page number (default: 1)
-limit                   number                Items per page (default: 12)
-breed                   string                Filter by breed
-gender                  string                Filter by gender
-minAge                  number                Minimum age
-maxAge                  number                Maximum age
-city                    string                Filter by city
-available               boolean               Breeding availability
+| Parameter | Type | Description |
+| ----------- | ----------- | ----------- |
+| page | number | Page number (default: 1) |
+| limit | number | Items per page (default: 12) |
+| breed | string | Filter by breed |
+| gender | string | Filter by gender |
+| minAge | number | Minimum age |
+| maxAge | number | Maximum age |
+| city | string | Filter by city |
+| available | boolean | Breeding availability |
 
 Response:
 
@@ -464,10 +463,10 @@ json
 
 ## Matching Endpoints
 
-### Method      Endpoint                    Description       Auth
-
-  GET           /matching/:dogId/matches    Get matches       Yes
-  GET           /matching/:dogId/stats      Get stats         Yes
+| Method | Endpoint | Description | Auth |
+| ------------ | ------------ | ------------ | ------------ |
+| GET | /matching/:dogId/matches | Get matches | Yes |
+| GET | /matching/:dogId/stats | Get stats | Yes |
 
 ## Error Responses
 
@@ -485,17 +484,17 @@ json
 }
 ```
 
-Common HTTP Status Codes:
+## Common HTTP Status Codes
 
-### Code      Description
-
-200     Success
-201     Created
-400     Bad Request
-401     Unauthorized
-403     Forbidden
-404     Not Found
-500     Internal Server Error
+| Code | Description |
+| ---------- | ---------- |
+| 200 | Success |
+| 201 | Created |
+| 400 | Bad Request |
+| 401 | Unauthorized |
+| 403 | Forbidden |
+| 404 | Not Found |
+| 500 | Internal Server Error |
 
 ## Authentication
 
@@ -712,6 +711,6 @@ docker-compose exec api npx prisma migrate deploy
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 Support
-📧 Email: api-support@pawmatch.com
+📧 Email: <api-support@dogmate.com>
 
-Made with ❤️ by the PawMatch Team
+Made with ❤️ by the DogMate Team
