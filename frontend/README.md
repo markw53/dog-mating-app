@@ -181,6 +181,8 @@ NEXT_PUBLIC_ENABLE_MATCHING=true
 NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
 ```
 
+## Variables
+
 | Variable | Description | Required |
 | ------------ | ------------ | ------------ |
 | NEXT_PUBLIC_API_URL | Backend API base URL | Yes |
