@@ -1,8 +1,8 @@
-# 🐕 PawMatch - Dog Breeding Platform (Frontend)
+# 🐕 DogMate - Dog Breeding Platform (Frontend)
 
 A modern, responsive web application for connecting dog owners and breeders. Built with Next.js 14, TypeScript, and Tailwind CSS.
 
-![PawMatch Screenshot](./public/screenshot.png)
+![DogMate Screenshot](./public/screenshot.png)
 
 ## 📋 Table of Contents
 
@@ -578,7 +578,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Support
 
-📧 Email: <support@pawmatch.com>
-📖 Documentation: <https://docs.pawmatch.com>
+📧 Email: <support@dogmate.com>
+📖 Documentation: <https://docs.dogmate.com>
 
-Made with ❤️ by the PawMatch Team
+Made with ❤️ by the DogMate Team
