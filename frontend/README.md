@@ -181,17 +181,15 @@ NEXT_PUBLIC_ENABLE_MATCHING=true
 NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
 ```
 
-```text
-
-Variable                    Description               Required
-NEXT_PUBLIC_API_URL         Backend API base URL      Yes
-NEXT_PUBLIC_SOCKET_URL      Socket.io server URL      Yes
-NEXT_PUBLIC_APP_NAME        Application name          No
-NEXT_PUBLIC_APP_URL         Frontend URL              No
-NEXT_PUBLIC_ENABLE_MAP      Enable map feature        No
-NEXT_PUBLIC_ENABLE_MATCHING Enable matching feature   No
-NEXT_PUBLIC_GA_ID           Google Analytics ID       No
-```
+| Variable | Description | Required |
+| ------------ | ------------ | ------------ |
+| NEXT_PUBLIC_API_URL | Backend API base URL | Yes |
+| NEXT_PUBLIC_SOCKET_URL | Socket.io server URL | Yes |
+| NEXT_PUBLIC_APP_NAME | Application name | No |
+| NEXT_PUBLIC_APP_URL | Frontend URL | No |
+| NEXT_PUBLIC_ENABLE_MAP | Enable map feature | No |
+| NEXT_PUBLIC_ENABLE_MATCHING | Enable matching feature | No |
+| NEXT_PUBLIC_GA_ID | Google Analytics ID | No |
 
 ## Available Scripts
 
