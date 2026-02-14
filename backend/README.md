@@ -1,7 +1,3 @@
-text
-
----
-
 # Backend README.md
 
 ```markdown
@@ -68,16 +64,25 @@ RESTful API backend for PawMatch - a platform connecting dog owners and breeders
 ```bash
 git clone https://github.com/yourusername/pawmatch-backend.git
 cd pawmatch-backend
-2. Install dependencies
-bash
+```
+
+## 2. Install dependencies
+
+```bash
 npm install
-3. Set up environment variables
-bash
+```
+
+## 3. Set up environment variables
+
+```bash
 cp .env.example .env
+```
+
 Edit .env with your configuration (see Environment Variables).
 
-4. Set up the database
-bash
+## 4. Set up the database
+
+```bash
 # Generate Prisma client
 npx prisma generate
 
@@ -86,13 +91,20 @@ npx prisma migrate dev --name init
 
 # (Optional) Seed the database
 npx prisma db seed
-5. Run the development server
-bash
+```
+
+## 5. Run the development server
+
+```bash
 npm run dev
+```
+
 Server will start at http://localhost:5000.
 
 📁 Project Structure
-text
+
+```text
+
 pawmatch-backend/
 ├── prisma/                       # Prisma ORM
 │   ├── migrations/               # Database migrations
@@ -151,8 +163,13 @@ pawmatch-backend/
 ├── package.json                  # Dependencies and scripts
 ├── tsconfig.json                 # TypeScript configuration
 └── README.md                     # This file
-🔐 Environment Variables
+```
+
+## 🔐 Environment Variables
+
 Create a .env file in the root directory:
+
+```bash
 
 env
 # Server Configuration
@@ -192,18 +209,25 @@ GEOCODING_RATE_LIMIT=1000  # ms between requests
 
 # Logging
 LOG_LEVEL=debug
-LOG_FILE=logs/app.log
-Variable	Description	Required	Default
-NODE_ENV	Environment mode	No	development
-PORT	Server port	No	5000
-DATABASE_URL	PostgreSQL connection string	Yes	-
-JWT_SECRET	JWT signing secret	Yes	-
-JWT_EXPIRES_IN	JWT expiration time	No	7d
-CORS_ORIGIN	Allowed CORS origin	No	*
-UPLOAD_DIR	File upload directory	No	uploads
-MAX_FILE_SIZE	Max upload size in bytes	No	5242880
-🗄️ Database Setup
-Prisma Schema
+```
+
+### Variable            Description                       Required        Default
+
+NODE_ENV                Environment mode                  No              development
+PORT                    Server port                       No              5000
+DATABASE_URL            PostgreSQL connection string      Yes             -
+JWT_SECRET              JWT signing secret                Yes             -
+JWT_EXPIRES_IN          JWT expiration time               No              7d
+CORS_ORIGIN             Allowed CORS origin               No              *
+UPLOAD_DIR              File upload directory             No              uploads
+MAX_FILE_SIZE           Max upload size in bytes          No              5242880
+
+## 🗄️ Database Setup
+
+### Prisma Schema
+
+```bash
+
 prisma
 // prisma/schema.prisma
 
@@ -319,8 +343,11 @@ enum Status {
   INACTIVE
   PENDING
 }
-Database Commands
-bash
+```
+
+## Database Commands
+
+```bash
 # Generate Prisma Client
 npx prisma generate
 
@@ -338,20 +365,31 @@ npx prisma studio
 
 # Seed database
 npx prisma db seed
-📚 API Documentation
-Base URL
-text
+```
+
+## 📚 API Documentation
+
+### Base URL
+
+```text
 http://localhost:5000/api
-Authentication Endpoints
-Method	Endpoint	Description	Auth Required
-POST	/auth/register	Register new user	No
-POST	/auth/login	User login	No
-GET	/auth/me	Get current user	Yes
-PUT	/auth/profile	Update profile	Yes
-POST	/auth/upload-avatar	Upload avatar	Yes
-POST	/auth/refresh-token	Refresh JWT	No
-POST	/auth/logout	Logout user	Yes
-Register User
+```
+
+## Authentication Endpoints
+
+### Method                Endpoint                Description               Auth Required
+
+POST                      /auth/register          Register new user         No
+POST                      /auth/login             User login                No
+GET                       /auth/me                Get current user          Yes
+PUT                       /auth/profile           Update profile            Yes
+POST                      /auth/upload-avatar     Upload avatar             Yes
+POST                      /auth/refresh-token     Refresh JWT               No
+POST                      /auth/logout            Logout user               Yes
+
+## Register User
+
+```bash
 http
 POST /api/auth/register
 Content-Type: application/json
@@ -363,7 +401,11 @@ Content-Type: application/json
   "lastName": "Doe",
   "phone": "+44 20 1234 5678"
 }
+```
+
 Response:
+
+```bash
 
 json
 {
@@ -376,128 +418,63 @@ json
   },
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
-Login
-http
-POST /api/auth/login
-Content-Type: application/json
+```
 
-{
-  "email": "user@example.com",
-  "password": "securePassword123"
-}
-Dog Endpoints
-Method	Endpoint	Description	Auth Required
-GET	/dogs	Get all dogs (paginated)	No
-GET	/dogs/my-dogs	Get user's dogs	Yes
-GET	/dogs/:id	Get dog by ID	No
-POST	/dogs	Create new dog	Yes
-PUT	/dogs/:id	Update dog	Yes
-DELETE	/dogs/:id	Delete dog	Yes
-POST	/dogs/:id/images	Upload images	Yes
-Get All Dogs
+## Dog Endpoints
+
+### Method        Endpoint            Description           Auth
+
+GET         /dogs             Get all dogs          No
+GET         /dogs/my-dogs     Get user's dogs       Yes
+GET         /dogs/:id         Get dog by ID         No
+POST        /dogs             Create new dog        Yes
+PUT         /dogs/:id         Update dog            Yes
+DELETE      /dogs/:id         Delete dog            Yes
+
+## Get All Dogs
+
+```bash
 http
-GET /api/dogs?page=1&limit=12&breed=labrador&gender=male&city=london
+GET /api/dogs?page=1&limit=12&breed=labrador&gender=male
+```
+
 Query Parameters:
 
-Parameter	Type	Description
-page	number	Page number (default: 1)
-limit	number	Items per page (default: 12)
-breed	string	Filter by breed
-gender	string	Filter by gender (male/female)
-minAge	number	Minimum age
-maxAge	number	Maximum age
-city	string	Filter by city
-county	string	Filter by county
-available	boolean	Filter by breeding availability
+### Parameter               Type                  Description
+
+page                    number                Page number (default: 1)
+limit                   number                Items per page (default: 12)
+breed                   string                Filter by breed
+gender                  string                Filter by gender
+minAge                  number                Minimum age
+maxAge                  number                Maximum age
+city                    string                Filter by city
+available               boolean               Breeding availability
+
 Response:
 
+```bash
 json
 {
   "success": true,
-  "dogs": [
-    {
-      "id": "clj1234567890",
-      "name": "Max",
-      "breed": "Golden Retriever",
-      "gender": "MALE",
-      "age": 3,
-      "city": "London",
-      "county": "Greater London",
-      "available": true,
-      "owner": {
-        "id": "clj0987654321",
-        "firstName": "John",
-        "lastName": "Doe"
-      }
-    }
-  ],
+  "dogs": [...],
   "total": 50,
   "page": 1,
-  "totalPages": 5
+  "totalP
+  ages": 5
 }
-Create Dog
-http
-POST /api/dogs
-Authorization: Bearer <token>
-Content-Type: application/json
+```
 
-{
-  "name": "Max",
-  "breed": "Golden Retriever",
-  "gender": "male",
-  "dateOfBirth": "2021-06-15",
-  "age": 3,
-  "weight": 30.5,
-  "color": "Golden",
-  "description": "Friendly and well-trained golden retriever...",
-  "city": "London",
-  "county": "Greater London",
-  "vaccinated": true,
-  "neutered": false,
-  "available": true,
-  "studFee": 500,
-  "temperament": ["Friendly", "Playful", "Good with kids"]
-}
-Matching Endpoints
-Method	Endpoint	Description	Auth Required
-GET	/matching/:dogId/matches	Get matches for dog	Yes
-GET	/matching/:dogId/stats	Get matching stats	Yes
-Get Matches
-http
-GET /api/matching/clj1234567890/matches?limit=20&minScore=50
-Authorization: Bearer <token>
-Response:
+## Matching Endpoints
 
-json
-{
-  "success": true,
-  "matches": [
-    {
-      "dog": {
-        "id": "clj0987654321",
-        "name": "Bella",
-        "breed": "Golden Retriever"
-      },
-      "score": 85,
-      "breakdown": {
-        "breedScore": 100,
-        "ageScore": 80,
-        "locationScore": 75,
-        "healthScore": 85
-      }
-    }
-  ],
-  "total": 15
-}
-Message Endpoints
-Method	Endpoint	Description	Auth Required
-GET	/messages/conversations	Get all conversations	Yes
-GET	/messages/conversations/:id	Get conversation messages	Yes
-POST	/messages/conversations/:id	Send message	Yes
-POST	/messages/conversations	Start new conversation	Yes
-Error Responses
-All endpoints return consistent error responses:
+### Method      Endpoint                    Description       Auth
 
+  GET           /matching/:dogId/matches    Get matches       Yes
+  GET           /matching/:dogId/stats      Get stats         Yes
+
+## Error Responses
+
+```bash
 json
 {
   "success": false,
@@ -509,38 +486,39 @@ json
     }
   ]
 }
+```
+
 Common HTTP Status Codes:
 
-Code	Description
-200	Success
-201	Created
-400	Bad Request
-401	Unauthorized
-403	Forbidden
-404	Not Found
-422	Validation Error
-429	Too Many Requests
-500	Internal Server Error
-🔐 Authentication
-JWT Token Flow
-User logs in with credentials
-Server validates and returns JWT token
-Client stores token (localStorage/cookie)
-Client sends token in Authorization header
-Server validates token on protected routes
-Middleware Usage
+### Code      Description
+
+200     Success
+201     Created
+400     Bad Request
+401     Unauthorized
+403     Forbidden
+404     Not Found
+500     Internal Server Error
+
+## Authentication
+
+### JWT Token Flow
+
+1. User logs in with credentials
+2. Server validates and returns JWT token
+3. Client stores token
+4. Client sends token in Authorization header
+5. Server validates token on protected routes
+
+## Middleware Usage
+
+```bash
 typescript
-// middleware/auth.ts
 import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
-import prisma from '../config/database';
 
 export interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    email: string;
-    role: string;
-  };
+  user?: { id: string; email: string; role: string };
 }
 
 export const protect = async (
@@ -548,46 +526,26 @@ export const protect = async (
   res: Response,
   next: NextFunction
 ) => {
-  try {
-    const authHeader = req.headers.authorization;
-    
-    if (!authHeader?.startsWith('Bearer ')) {
-      return res.status(401).json({ message: 'No token provided' });
-    }
-    
-    const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: string };
-    
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.id },
-      select: { id: true, email: true, role: true },
-    });
-    
-    if (!user) {
-      return res.status(401).json({ message: 'User not found' });
-    }
-    
-    req.user = user;
-    next();
-  } catch (error) {
-    return res.status(401).json({ message: 'Invalid token' });
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader?.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'No token provided' });
   }
-};
-
-export const adminOnly = (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
-) => {
-  if (req.user?.role !== 'ADMIN') {
-    return res.status(403).json({ message: 'Admin access required' });
-  }
+  
+  const token = authHeader.split(' ')[1];
+  const decoded = jwt.verify(token, process.env.JWT_SECRET!);
+  
+  req.user = decoded;
   next();
 };
-📁 File Uploads
-Multer Configuration
+```
+
+## File Uploads
+
+### Multer Configuration
+
+```bash
 typescript
-// middleware/upload.ts
 import multer from 'multer';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -602,42 +560,22 @@ const storage = multer.diskStorage({
   },
 });
 
-const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-  
-  if (allowedTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('Invalid file type. Only JPEG, PNG and WebP allowed.'));
-  }
-};
-
 const upload = multer({
   storage,
-  fileFilter,
-  limits: {
-    fileSize: parseInt(process.env.MAX_FILE_SIZE || '5242880'), // 5MB
-  },
+  limits: { fileSize: 5 * 1024 * 1024 },
 });
 
 export default upload;
-Usage in Routes
-typescript
-// routes/dogRoutes.ts
-import upload from '../middleware/upload';
+```
 
-router.post(
-  '/:id/images',
-  protect,
-  upload.array('images', 10),
-  uploadDogImages
-);
-🔌 Real-time Features
-Socket.io Setup
+## Real-time Features
+
+### Socket.io Setup
+
+```bash
 typescript
-// config/socket.ts
 import { Server as HttpServer } from 'http';
-import { Server, Socket } from 'socket.io';
+import { Server } from 'socket.io';
 
 export const setupSocket = (httpServer: HttpServer) => {
   const io = new Server(httpServer, {
@@ -647,143 +585,70 @@ export const setupSocket = (httpServer: HttpServer) => {
     },
   });
 
-  io.on('connection', (socket: Socket) => {
-    console.log('User connected:', socket.id);
-
-    // Join user's room
+  io.on('connection', (socket) => {
     socket.on('join', (userId: string) => {
       socket.join(userId);
-      console.log(`User ${userId} joined their room`);
     });
 
-    // Handle new message
-    socket.on('sendMessage', (data: { receiverId: string; message: any }) => {
+    socket.on('sendMessage', (data) => {
       io.to(data.receiverId).emit('newMessage', data.message);
-    });
-
-    // Handle typing indicator
-    socket.on('typing', (data: { conversationId: string; userId: string }) => {
-      socket.to(data.conversationId).emit('userTyping', data.userId);
-    });
-
-    socket.on('disconnect', () => {
-      console.log('User disconnected:', socket.id);
     });
   });
 
   return io;
 };
-Server Integration
-typescript
-// server.ts
-import express from 'express';
-import { createServer } from 'http';
-import { setupSocket } from './config/socket';
+```
 
-const app = express();
-const httpServer = createServer(app);
-const io = setupSocket(httpServer);
+## Available Scripts
 
-// Make io available in routes
-app.set('io', io);
-
-httpServer.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
-📜 Available Scripts
-bash
-# Development
-npm run dev           # Start with nodemon (hot reload)
-npm run dev:debug     # Start with debug mode
-
-# Building
+```bash
+npm run dev           # Start with hot reload
 npm run build         # Compile TypeScript
 npm run start         # Run compiled code
-
-# Database
+npm run lint          # Run ESLint
+npm run test          # Run tests
 npm run db:generate   # Generate Prisma client
 npm run db:migrate    # Run migrations
-npm run db:push       # Push schema changes
-npm run db:seed       # Seed database
 npm run db:studio     # Open Prisma Studio
-npm run db:reset      # Reset database
+```
 
-# Code Quality
-npm run lint          # Run ESLint
-npm run lint:fix      # Fix ESLint errors
-npm run type-check    # Run TypeScript compiler
-npm run format        # Format with Prettier
+## Testing
 
-# Testing
-npm run test          # Run tests
-npm run test:watch    # Run tests in watch mode
+```bash
+npm run test          # Run all tests
 npm run test:coverage # Run with coverage
+```
 
-# Utilities
-npm run clean         # Clean build artifacts
-npm run backfill:coords # Backfill dog coordinates
-🧪 Testing
-Running Tests
-bash
-# Run all tests
-npm run test
+Example Test:
 
-# Run with coverage
-npm run test:coverage
-
-# Run specific test file
-npm run test -- --grep "Auth"
-Example Test
+```bash
 typescript
-// tests/integration/auth.test.ts
 import request from 'supertest';
-import app from '../../src/app';
-import prisma from '../../src/config/database';
+import app from '../src/app';
 
 describe('Auth Endpoints', () => {
-  beforeAll(async () => {
-    await prisma.$connect();
-  });
+  it('should register a new user', async () => {
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send({
+        email: 'test@example.com',
+        password: 'password123',
+        firstName: 'Test',
+        lastName: 'User',
+      });
 
-  afterAll(async () => {
-    await prisma.$disconnect();
-  });
-
-  describe('POST /api/auth/register', () => {
-    it('should register a new user', async () => {
-      const res = await request(app)
-        .post('/api/auth/register')
-        .send({
-          email: 'test@example.com',
-          password: 'password123',
-          firstName: 'Test',
-          lastName: 'User',
-        });
-
-      expect(res.status).toBe(201);
-      expect(res.body.success).toBe(true);
-      expect(res.body.token).toBeDefined();
-    });
-
-    it('should reject duplicate email', async () => {
-      const res = await request(app)
-        .post('/api/auth/register')
-        .send({
-          email: 'test@example.com',
-          password: 'password123',
-          firstName: 'Test',
-          lastName: 'User',
-        });
-
-      expect(res.status).toBe(400);
-      expect(res.body.message).toContain('already exists');
-    });
+    expect(res.status).toBe(201);
+    expect(res.body.success).toBe(true);
   });
 });
-🚀 Deployment
-Docker
+```
+
+## Deployment
+
+### Docker
+
+```bash
 dockerfile
-# Dockerfile
 FROM node:18-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
@@ -796,19 +661,18 @@ RUN npx prisma generate
 FROM node:18-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV production
-
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/package*.json ./
-
 RUN mkdir -p uploads logs
-
 EXPOSE 5000
 CMD ["npm", "start"]
-Docker Compose
+```
+
+## Docker Compose
+
+```bash
 yaml
-# docker-compose.yml
 version: '3.8'
 
 services:
@@ -819,12 +683,8 @@ services:
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://postgres:password@db:5432/pawmatch
-      - JWT_SECRET=${JWT_SECRET}
     depends_on:
       - db
-    volumes:
-      - ./uploads:/app/uploads
-      - ./logs:/app/logs
 
   db:
     image: postgres:14-alpine
@@ -834,67 +694,26 @@ services:
       - POSTGRES_DB=pawmatch
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
 
 volumes:
   postgres_data:
-Production Deployment
 bash
-# Build and deploy
-docker-compose -f docker-compose.prod.yml up -d
-
-# Run migrations
+docker-compose up -d
 docker-compose exec api npx prisma migrate deploy
+```
 
-# View logs
-docker-compose logs -f api
-Railway/Render Deployment
-Connect your GitHub repository
-Set environment variables
-Set build command: npm run build && npx prisma migrate deploy
-Set start command: npm start
-📊 Monitoring & Logging
-Winston Logger Setup
-typescript
-// utils/logger.ts
-import winston from 'winston';
+## Contributing
 
-const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json()
-  ),
-  transports: [
-    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'logs/combined.log' }),
-  ],
-});
+1. Fork the repository
+2. Create feature branch (git checkout -b feature/AmazingFeature)
+3. Commit changes (git commit -m 'Add AmazingFeature')
+4. Push to branch (git push origin feature/AmazingFeature)
+5. Open Pull Request
 
-if (process.env.NODE_ENV !== 'production') {
-  logger.add(new winston.transports.Console({
-    format: winston.format.simple(),
-  }));
-}
+## License
 
-export default logger;
-🤝 Contributing
-Fork the repository
-Create your feature branch (git checkout -b feature/AmazingFeature)
-Commit your changes (git commit -m 'Add some AmazingFeature')
-Push to the branch (git push origin feature/AmazingFeature)
-Open a Pull Request
-Code Style
-Use TypeScript for all files
-Follow ESLint configuration
-Write tests for new features
-Document API changes
-📄 License
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-📞 Support
+Support
 📧 Email: api-support@pawmatch.com
-📖 API Docs: api.pawmatch.com/docs
-💬 Discord: Join our community
 Made with ❤️ by the PawMatch Team
