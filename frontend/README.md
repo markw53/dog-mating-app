@@ -45,83 +45,20 @@ A modern, responsive web application for connecting dog owners and breeders. Bui
 
 ## Tech Stack
 
-|
-
- Technology
-
-|
-
- Purpose
-
-|
-
-|
-
-------------
-|
-
-------------
-|
-|
- Next.js 14
-|
- React framework with App Router
-|
-|
- TypeScript
-|
- Type-safe JavaScript
-|
-|
- Tailwind CSS
-|
- Utility-first CSS framework
-|
-|
- Zustand
-|
- Lightweight state management
-|
-|
- React Hook Form
-|
- Form handling
-|
-|
- Zod
-|
- Schema validation
-|
-|
- Axios
-|
- HTTP client
-|
-|
- Socket.io Client
-|
- Real-time communication
-|
-|
- Leaflet
-|
- Interactive maps
-|
-|
- Lucide React
-|
- Icon library
-|
-|
- React Hot Toast
-|
- Toast notifications
-|
-|
- date-fns
-|
- Date formatting
-|
+| Technology | Purpose |
+| ------------ | ------------ |
+| Next.js 14 | React framework with App Router |
+| TypeScript | Type-safe JavaScript |
+| Tailwind CSS | Utility-first CSS framework |
+| Zustand | Lightweight state management |
+| React Hook Form | Form handling |
+| Zod | Schema validation |
+| Axios | HTTP client |
+| Socket.io Client | Real-time communication |
+| Leaflet | Interactive maps |
+| Lucide React | Icon library |
+| React Hot Toast | Toast notifications |
+| date-fns | Date formatting |
 
 ## Prerequisites
 
@@ -507,8 +444,13 @@ const config: Config = {
 };
 
 export default config;
-Global Styles
+```
+
+## Global Styles
+
 css
+
+```bash
 /* app/globals.css */
 @tailwind base;
 @tailwind components;
@@ -542,7 +484,11 @@ css
 npm run test          # Run all tests
 npm run test:watch    # Run tests in watch mode
 npm run test:coverage # Run tests with coverage
+```
+
 Example Test
+
+```bash
 typescript
 // __tests__/components/DogCard.test.tsx
 import { render, screen } from '@testing-library/react';
@@ -632,7 +578,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Support
 
-📧 Email: support@pawmatch.com
-📖 Documentation: https://docs.pawmatch.com
+📧 Email: <support@pawmatch.com>
+📖 Documentation: <https://docs.pawmatch.com>
 
 Made with ❤️ by the PawMatch Team
