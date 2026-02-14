@@ -1,6 +1,6 @@
-# 🐕 PawMatch - Dog Breeding Platform (Backend)
+# 🐕 DogMate - Dog Breeding Platform (Backend)
 
-RESTful API backend for PawMatch - a platform connecting dog owners and breeders. Built with Node.js, Express, TypeScript, and Prisma.
+RESTful API backend for DogMate - a platform connecting dog owners and breeders. Built with Node.js, Express, TypeScript, and Prisma.
 
 ## 📋 Table of Contents
 
