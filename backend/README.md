@@ -59,7 +59,7 @@ RESTful API backend for PawMatch - a platform connecting dog owners and breeders
 
 ## 🚀 Getting Started
 
-### 1. Clone the repository
+## 1. Clone the repository
 
 ```bash
 git clone https://github.com/yourusername/pawmatch-backend.git
