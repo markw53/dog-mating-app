@@ -1,6 +1,3 @@
-# Backend README.md
-
-```markdown
 # 🐕 PawMatch - Dog Breeding Platform (Backend)
 
 RESTful API backend for PawMatch - a platform connecting dog owners and breeders. Built with Node.js, Express, TypeScript, and Prisma.
@@ -717,3 +714,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 Support
 📧 Email: api-support@pawmatch.com
 Made with ❤️ by the PawMatch Team
+
+
