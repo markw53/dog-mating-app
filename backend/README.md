@@ -35,7 +35,7 @@ RESTful API backend for PawMatch - a platform connecting dog owners and breeders
 ## 🛠️ Tech Stack
 
 | Technology | Purpose |
-|------------|---------|
+| ------------ | --------- |
 | [Node.js](https://nodejs.org/) | JavaScript runtime |
 | [Express](https://expressjs.com/) | Web framework |
 | [TypeScript](https://www.typescriptlang.org/) | Type-safe JavaScript |
@@ -96,9 +96,9 @@ npx prisma db seed
 npm run dev
 ```
 
-Server will start at http://localhost:5000.
+Server will start at http://localhost:5000
 
-📁 Project Structure
+## 📁 Project Structure
 
 ```text
 
@@ -372,7 +372,7 @@ npx prisma db seed
 http://localhost:5000/api
 ```
 
-## Authentication Endpoints
+### Authentication Endpoints
 
 ### Method                Endpoint                Description               Auth Required
 
@@ -616,7 +616,7 @@ npm run test          # Run all tests
 npm run test:coverage # Run with coverage
 ```
 
-Example Test:
+### Example Test
 
 ```bash
 typescript
@@ -713,6 +713,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 Support
 📧 Email: api-support@pawmatch.com
+
 Made with ❤️ by the PawMatch Team
-
-
