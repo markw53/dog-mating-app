@@ -448,7 +448,7 @@ export default config;
 
 ## Global Styles
 
-css
+### css
 
 ```bash
 /* app/globals.css */
