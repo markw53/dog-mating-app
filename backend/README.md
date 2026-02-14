@@ -57,7 +57,7 @@ RESTful API backend for PawMatch - a platform connecting dog owners and breeders
 - **PostgreSQL** >= 14.0
 - **Redis** (optional, for caching)
 
-## 🚀 Getting Started
+### 🚀 Getting Started
 
 ## 1. Clone the repository
 
