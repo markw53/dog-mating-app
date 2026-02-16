@@ -44,38 +44,38 @@ dogMate/
 
 ### Frontend
 
-+ Next.js 14 (App Router)  
-+ TypeScript  
-+ Tailwind CSS  
-+ Zustand (State Management)  
-+ Socket.io Client  
-+ Leaflet (Maps)  
-+ React Hook Form + Zod  
+- Next.js 14 (App Router)  
+- TypeScript  
+- Tailwind CSS  
+- Zustand (State Management)  
+- Socket.io Client  
+- Leaflet (Maps)  
+- React Hook Form - Zod  
 
 ### Backend
 
-+ Node.js + Express  
-+ TypeScript  
-+ Prisma ORM  
-+ PostgreSQL  
-+ Socket.io  
-+ JWT Authentication  
-+ Multer (File Uploads)  
+- Node.js - Express  
+- TypeScript  
+- Prisma ORM  
+- PostgreSQL  
+- Socket.io  
+- JWT Authentication  
+- Multer (File Uploads)  
 
 ### Infrastructure
 
-+ Docker + Docker Compose  
-+ Nginx (Production)  
-+ GitHub Actions (CI/CD)  
+- Docker - Docker Compose  
+- Nginx (Production)  
+- GitHub Actions (CI/CD)  
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-+ Node.js >= 18.0.0  
-+ npm >= 9.0.0  
-+ PostgreSQL >= 14.0  
-+ Docker (optional)  
+- Node.js >= 18.0.0  
+- npm >= 9.0.0  
+- PostgreSQL >= 14.0  
+- Docker (optional)  
 
 ## Option 1: Using Docker (Recommended)
 
@@ -100,9 +100,9 @@ docker-compose exec backend npx prisma db seed
 
 The application will be available at:
 
-+ Frontend: <http://localhost:3000>  
-+ Backend API: <http://localhost:5000>  
-+ API Documentation: <http://localhost:5000/api/docs>  
+- Frontend: <http://localhost:3000>  
+- Backend API: <http://localhost:5000>  
+- API Documentation: <http://localhost:5000/api/docs>  
 
 ## Option 2: Manual Setup
 
@@ -341,12 +341,13 @@ NEXT_PUBLIC_SOCKET_URL=https://api.yourdomain.com
 ## Deployment Options
 
 | Platform | Frontend | Backend |
+| ---------- | ------------ | ---------- |
 | Vercel | ✅ Recommended | ❌ |
-| Railway | ✅| ✅ Recommended |
-| Render | ✅| ✅ |
-| AWS | ✅| ✅ |
+| Railway | ✅ | ✅ Recommended |
+| Render | ✅ | ✅ |
+| AWS | ✅ | ✅ |
 | DigitalOcean | ✅ | ✅ |
-| Docker | ✅| ✅ |
+| Docker | ✅ | ✅ |
 
 ## 🤝 Contributing
 
