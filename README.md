@@ -377,11 +377,11 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🙏 Acknowledgments
 
-Next.js - React framework
-Tailwind CSS - CSS framework
-Prisma - Database ORM
-Socket.io - Real-time communication
-Leaflet - Interactive maps
+- Next.js - React framework  
+- Tailwind CSS - CSS framework  
+- Prisma - Database ORM  
+- Socket.io - Real-time communication  
+- Leaflet - Interactive maps  
 
 ## 📞 Support
 
