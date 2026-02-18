@@ -15,6 +15,7 @@ import messageRoutes from './routes/messageRoutes';
 import reviewRoutes from './routes/reviewRoutes';
 import adminRoutes from './routes/adminRoutes';
 import matchingRoutes from './routes/matchingRoutes';
+import breedRoutes from './routes/breedRoutes';
 
 dotenv.config();
 
@@ -81,7 +82,7 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/matching', matchingRoutes);
-
+app.use('/api/breeds', breedRoutes);
 // ADD 404 HANDLER BEFORE ERROR HANDLER
 app.use((req, res, next) => {
   console.log('⚠️  404 - Route not found:', req.method, req.path);
@@ -136,6 +137,7 @@ server.listen(PORT, async () => {
   console.log(`   - /api/reviews`);
   console.log(`   - /api/admin`);
   console.log(`   - /api/matching`);
+  console.log(`   - /api/breeds`);
 });
 
 export { io };

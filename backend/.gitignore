@@ -5,3 +5,11 @@ uploads/
 *.log
 .DS_Store
 /src/generated/prisma
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Scraped data (optional - you may want to commit the JSON)
+kennel_club_breeds.csv

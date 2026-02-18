@@ -1,4 +1,3 @@
-// app/(dashboard)/dashboard/add-dog/page.tsx
 'use client';
 
 import { useState } from 'react';
@@ -6,33 +5,27 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useRequireAuth } from '@/lib/hooks/useRequireAuth';
 import { dogsApi } from '@/lib/api/dogs';
+import { Breed } from '@/lib/api/breeds';
 import { UpdateDogData } from '@/types';
-import { 
-  Upload, X, Dog as DogIcon, Heart, Shield, 
-  MapPin, Loader2, Image as ImageIcon, Check, Info
+import BreedSelector from '@/components/breed/BreedSelector';
+import {
+  Upload, X, Dog as DogIcon, Heart, Shield,
+  MapPin, Loader2, Image as ImageIcon, Check, Info,
 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Section } from '@/components/ui/Section';
 import toast from 'react-hot-toast';
 import { AxiosError } from 'axios';
 
-const POPULAR_BREEDS = [
-  'Labrador Retriever', 'German Shepherd', 'Golden Retriever', 'French Bulldog',
-  'Bulldog', 'Poodle', 'Beagle', 'Rottweiler', 'Yorkshire Terrier', 
-  'Cocker Spaniel', 'Border Collie', 'Staffordshire Bull Terrier', 'Other'
-];
-
 const TEMPERAMENT_OPTIONS = [
   'Friendly', 'Gentle', 'Energetic', 'Calm', 'Loyal', 'Intelligent',
-  'Protective', 'Playful', 'Independent', 'Affectionate'
+  'Protective', 'Playful', 'Independent', 'Affectionate',
 ];
 
 export default function AddDogPage() {
   const router = useRouter();
-  
-  // Use the auth hook - handles redirect automatically if not authenticated
   const { user, loading: authLoading, isAuthorized } = useRequireAuth();
-  
+
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -46,26 +39,25 @@ export default function AddDogPage() {
     weight: '',
     color: '',
     description: '',
-    
+
     vaccinated: false,
     neutered: false,
     vetName: '',
     vetContact: '',
     medicalHistory: '',
-    
+
     registered: false,
     registrationNumber: '',
     registry: '',
     sire: '',
     dam: '',
-    
+
     available: true,
     studFee: '',
     studFeeNegotiable: false,
     previousLitters: '0',
     temperament: [] as string[],
-    
-    // Initialize with empty strings - will be populated when user is available
+
     address: '',
     city: '',
     county: '',
@@ -75,7 +67,7 @@ export default function AddDogPage() {
   // Update form data when user becomes available
   useState(() => {
     if (user) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         address: user.address || user.location?.address || '',
         city: user.city || user.location?.city || '',
@@ -85,25 +77,34 @@ export default function AddDogPage() {
     }
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value, type } = e.target;
-    
-    console.log('🔄 Field change:', { name, value, type });
-    
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
-      setFormData(prev => ({ ...prev, [name]: checked }));
+      setFormData((prev) => ({ ...prev, [name]: checked }));
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  // *** NEW: Breed selection handler ***
+  const handleBreedChange = (breedName: string, breedData?: Breed) => {
+    setFormData((prev) => ({ ...prev, breed: breedName }));
+    
+    // Auto-fill color from breed data if color field is empty
+    if (breedData?.color && breedData.color !== 'Various' && !formData.color) {
+      setFormData((prev) => ({ ...prev, color: breedData.color }));
     }
   };
 
   const handleTemperamentToggle = (trait: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       temperament: prev.temperament.includes(trait)
-        ? prev.temperament.filter(t => t !== trait)
-        : [...prev.temperament, trait]
+        ? prev.temperament.filter((t) => t !== trait)
+        : [...prev.temperament, trait],
     }));
   };
 
@@ -114,20 +115,20 @@ export default function AddDogPage() {
       return;
     }
 
-    setImages(prev => [...prev, ...files]);
+    setImages((prev) => [...prev, ...files]);
 
-    files.forEach(file => {
+    files.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreviews(prev => [...prev, reader.result as string]);
+        setPreviews((prev) => [...prev, reader.result as string]);
       };
       reader.readAsDataURL(file);
     });
   };
 
   const removeImage = (index: number) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
-    setPreviews(prev => prev.filter((_, i) => i !== index));
+    setImages((prev) => prev.filter((_, i) => i !== index));
+    setPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -138,14 +139,17 @@ export default function AddDogPage() {
       return;
     }
 
+    if (!formData.breed) {
+      toast.error('Please select a breed');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // Calculate age
       const birthDate = new Date(formData.dateOfBirth);
       const age = new Date().getFullYear() - birthDate.getFullYear();
 
-      // Create dog data object
       const dogData: UpdateDogData = {
         name: formData.name,
         breed: formData.breed,
@@ -155,29 +159,25 @@ export default function AddDogPage() {
         weight: parseFloat(formData.weight),
         color: formData.color,
         description: formData.description,
-        
-        // Health
+
         vaccinated: formData.vaccinated,
         neutered: formData.neutered,
         vetName: formData.vetName || undefined,
         vetContact: formData.vetContact || undefined,
         medicalHistory: formData.medicalHistory || undefined,
-        
-        // Pedigree
+
         registered: formData.registered,
         registrationNumber: formData.registrationNumber || undefined,
         registry: formData.registry || undefined,
         sire: formData.sire || undefined,
         dam: formData.dam || undefined,
-        
-        // Breeding
+
         available: formData.available,
         studFee: formData.studFee ? parseFloat(formData.studFee) : undefined,
         studFeeNegotiable: formData.studFeeNegotiable,
         previousLitters: parseInt(formData.previousLitters) || 0,
         temperament: formData.temperament,
-        
-        // Location
+
         address: formData.address || undefined,
         city: formData.city,
         county: formData.county,
@@ -187,12 +187,9 @@ export default function AddDogPage() {
 
       console.log('📤 Creating dog with data:', dogData);
 
-      // Create the dog first
       const response = await dogsApi.create(dogData);
-      
       console.log('✅ Dog created:', response.dog.id);
 
-      // Upload images if dog was created successfully
       if (images.length > 0 && response.dog.id) {
         console.log('📸 Uploading images...');
         await dogsApi.uploadImages(response.dog.id, images);
@@ -210,7 +207,6 @@ export default function AddDogPage() {
     }
   };
 
-  // Show loading while checking auth
   if (authLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -222,7 +218,6 @@ export default function AddDogPage() {
     );
   }
 
-  // Show nothing if not authorized (hook will redirect)
   if (!isAuthorized) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -248,9 +243,7 @@ export default function AddDogPage() {
           <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-4">
             <span className="text-white font-semibold text-sm">📝 New Listing</span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-3">
-            Add Your Dog
-          </h1>
+          <h1 className="text-3xl md:text-4xl font-bold mb-3">Add Your Dog</h1>
           <p className="text-lg text-primary-100 max-w-2xl mx-auto">
             Create a detailed profile to connect with potential breeding partners
           </p>
@@ -265,27 +258,33 @@ export default function AddDogPage() {
               {steps.map((step, index) => (
                 <div key={step.number} className="flex items-center flex-1">
                   <div className="flex flex-col items-center flex-1">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold mb-2 transition-all ${
-                      currentStep >= step.number
-                        ? 'bg-gradient-to-br from-primary-600 to-primary-700 text-white shadow-lg scale-110'
-                        : 'bg-gray-200 text-gray-600'
-                    }`}>
+                    <div
+                      className={`w-12 h-12 rounded-full flex items-center justify-center font-bold mb-2 transition-all ${
+                        currentStep >= step.number
+                          ? 'bg-gradient-to-br from-primary-600 to-primary-700 text-white shadow-lg scale-110'
+                          : 'bg-gray-200 text-gray-600'
+                      }`}
+                    >
                       {currentStep > step.number ? (
                         <Check className="h-6 w-6" />
                       ) : (
                         <step.icon className="h-6 w-6" />
                       )}
                     </div>
-                    <span className={`text-xs md:text-sm font-medium text-center ${
-                      currentStep >= step.number ? 'text-primary-600' : 'text-gray-500'
-                    }`}>
+                    <span
+                      className={`text-xs md:text-sm font-medium text-center ${
+                        currentStep >= step.number ? 'text-primary-600' : 'text-gray-500'
+                      }`}
+                    >
                       {step.name}
                     </span>
                   </div>
                   {index < steps.length - 1 && (
-                    <div className={`h-1 flex-1 mx-2 rounded ${
-                      currentStep > step.number ? 'bg-primary-600' : 'bg-gray-200'
-                    }`}></div>
+                    <div
+                      className={`h-1 flex-1 mx-2 rounded ${
+                        currentStep > step.number ? 'bg-primary-600' : 'bg-gray-200'
+                      }`}
+                    ></div>
                   )}
                 </div>
               ))}
@@ -306,10 +305,12 @@ export default function AddDogPage() {
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">Photos</h2>
-                  <p className="text-sm text-gray-600">Upload up to 10 images (first image will be the main photo)</p>
+                  <p className="text-sm text-gray-600">
+                    Upload up to 10 images (first image will be the main photo)
+                  </p>
                 </div>
               </div>
-              
+
               <label className="block w-full cursor-pointer">
                 <div className="border-3 border-dashed border-gray-300 rounded-2xl p-12 text-center hover:border-primary-500 hover:bg-primary-50 transition-all group">
                   <div className="bg-primary-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
@@ -380,7 +381,7 @@ export default function AddDogPage() {
                   <p className="text-sm text-gray-600">Tell us about your dog</p>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -397,22 +398,13 @@ export default function AddDogPage() {
                   />
                 </div>
 
+                {/* *** REPLACED: Old breed select with BreedSelector *** */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Breed <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="breed"
-                    required
+                  <BreedSelector
                     value={formData.breed}
-                    onChange={handleChange}
-                    className="input-field"
-                  >
-                    <option value="">Select breed</option>
-                    {POPULAR_BREEDS.map(breed => (
-                      <option key={breed} value={breed}>{breed}</option>
-                    ))}
-                  </select>
+                    onChange={handleBreedChange}
+                    required
+                  />
                 </div>
 
                 <div>
@@ -476,6 +468,8 @@ export default function AddDogPage() {
                 </div>
               </div>
 
+              {/* Breed info panel appears here naturally since BreedSelector renders it inline */}
+
               <div className="mt-6">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Description <span className="text-red-500">*</span>
@@ -503,7 +497,7 @@ export default function AddDogPage() {
                   <p className="text-sm text-gray-600">Medical history and veterinary details</p>
                 </div>
               </div>
-              
+
               <div className="space-y-6">
                 <div className="flex items-center space-x-6">
                   <label className="flex items-center cursor-pointer group">
@@ -586,11 +580,13 @@ export default function AddDogPage() {
                   <Shield className="h-6 w-6 text-indigo-600" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Pedigree Information</h2>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    Pedigree Information
+                  </h2>
                   <p className="text-sm text-gray-600">Registration and lineage details</p>
                 </div>
               </div>
-              
+
               <div className="space-y-6">
                 <label className="flex items-center cursor-pointer group">
                   <input
@@ -676,11 +672,13 @@ export default function AddDogPage() {
                   <Heart className="h-6 w-6 text-pink-600" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Breeding Information</h2>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    Breeding Information
+                  </h2>
                   <p className="text-sm text-gray-600">Availability and breeding details</p>
                 </div>
               </div>
-              
+
               <div className="space-y-6">
                 <div className="bg-gradient-to-r from-primary-50 to-primary-100 p-4 rounded-xl border border-primary-200">
                   <label className="flex items-center cursor-pointer group">
@@ -748,7 +746,7 @@ export default function AddDogPage() {
                         Temperament Traits
                       </label>
                       <div className="flex flex-wrap gap-2">
-                        {TEMPERAMENT_OPTIONS.map(trait => (
+                        {TEMPERAMENT_OPTIONS.map((trait) => (
                           <button
                             key={trait}
                             type="button"
@@ -759,7 +757,9 @@ export default function AddDogPage() {
                                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                             }`}
                           >
-                            {formData.temperament.includes(trait) && <Check className="inline h-4 w-4 mr-1" />}
+                            {formData.temperament.includes(trait) && (
+                              <Check className="inline h-4 w-4 mr-1" />
+                            )}
                             {trait}
                           </button>
                         ))}
@@ -781,7 +781,7 @@ export default function AddDogPage() {
                   <p className="text-sm text-gray-600">Where is your dog located?</p>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -819,7 +819,7 @@ export default function AddDogPage() {
                   <input
                     type="text"
                     name="county"
-                    value={formData.county}  
+                    value={formData.county}
                     onChange={handleChange}
                     required
                     className="input-field"
@@ -834,7 +834,7 @@ export default function AddDogPage() {
                   <input
                     type="text"
                     name="postcode"
-                    value={formData.postcode}  
+                    value={formData.postcode}
                     onChange={handleChange}
                     className="input-field"
                     placeholder="SW1A 1AA"
@@ -850,9 +850,13 @@ export default function AddDogPage() {
                   <Info className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-blue-900 mb-1">Review Before Submission</h3>
+                  <h3 className="font-bold text-blue-900 mb-1">
+                    Review Before Submission
+                  </h3>
                   <p className="text-sm text-blue-800">
-                    Your listing will be reviewed by our team before going live. This usually takes 24-48 hours. You&apos;ll receive an email notification once it&apos;s approved.
+                    Your listing will be reviewed by our team before going live. This
+                    usually takes 24-48 hours. You&apos;ll receive an email notification
+                    once it&apos;s approved.
                   </p>
                 </div>
               </div>
