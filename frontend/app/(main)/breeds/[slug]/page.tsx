@@ -1,9 +1,9 @@
+/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { breedsApi, Breed } from '@/lib/api/breeds';
 import { Card } from '@/components/ui/Card';
 import {
@@ -21,7 +21,6 @@ import {
   Dog,
 } from 'lucide-react';
 
-// Badge colors by breed type
 const typeColors: Record<string, string> = {
   Sporting: 'bg-green-100 text-green-800',
   Hound: 'bg-amber-100 text-amber-800',
@@ -73,7 +72,6 @@ export default function BreedDetailPage() {
     fetchBreed();
   }, [slug]);
 
-  // Loading
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -85,7 +83,6 @@ export default function BreedDetailPage() {
     );
   }
 
-  // Error / Not found
   if (error || !breed) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -99,7 +96,7 @@ export default function BreedDetailPage() {
           <p className="text-gray-600 mb-6">
             We couldn&apos;t find information for this breed.
           </p>
-          <Link href="/breeds" className="btn-primary">
+          <Link href="/breeds" className="btn-primary inline-flex items-center">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Breeds
           </Link>
@@ -110,7 +107,6 @@ export default function BreedDetailPage() {
 
   const typeColor = typeColors[breed.type] || 'bg-gray-100 text-gray-800';
 
-  // Build info items
   const infoItems = [
     { icon: Ruler, label: 'Height', value: breed.height },
     { icon: Weight, label: 'Weight', value: breed.weight },
@@ -131,7 +127,6 @@ export default function BreedDetailPage() {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          {/* Back button */}
           <div className="pt-6">
             <Link
               href="/breeds"
@@ -144,18 +139,25 @@ export default function BreedDetailPage() {
 
           <div className="py-12 md:py-16 flex flex-col md:flex-row items-center gap-8">
             {/* Breed image */}
-            <div className="relative w-48 h-48 md:w-56 md:h-56 rounded-2xl overflow-hidden shadow-2xl border-4 border-white/20 flex-shrink-0">
+            <div className="w-48 h-48 md:w-56 md:h-56 rounded-2xl overflow-hidden shadow-2xl border-4 border-white/20 flex-shrink-0">
               {breed.imageUrl ? (
-                <Image
+                <img
                   src={breed.imageUrl}
                   alt={breed.name}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                    if (fallback) fallback.style.display = 'flex';
+                  }}
                 />
-              ) : (
-                <div className="w-full h-full bg-primary-500 flex items-center justify-center">
-                  <span className="text-7xl">🐕</span>
-                </div>
-              )}
+              ) : null}
+              <div
+                className="w-full h-full bg-primary-500 flex items-center justify-center"
+                style={{ display: breed.imageUrl ? 'none' : 'flex' }}
+              >
+                <span className="text-7xl">🐕</span>
+              </div>
             </div>
 
             {/* Breed title info */}
@@ -188,7 +190,6 @@ export default function BreedDetailPage() {
                 </p>
               )}
 
-              {/* Official link */}
               {breed.officialLink && (
                 <a
                   href={breed.officialLink}
@@ -208,9 +209,9 @@ export default function BreedDetailPage() {
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Main Info */}
+          {/* Left Column */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Quick Stats Grid */}
+            {/* Quick Stats */}
             <Card hover={false} className="p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                 <Ruler className="h-5 w-5 text-primary-600" />
@@ -265,7 +266,7 @@ export default function BreedDetailPage() {
                 </Card>
               )}
 
-            {/* Available Dogs of this Breed */}
+            {/* Available Dogs */}
             {breed.dogs && breed.dogs.length > 0 && (
               <Card hover={false} className="p-6">
                 <div className="flex items-center justify-between mb-6">
@@ -288,18 +289,25 @@ export default function BreedDetailPage() {
                       href={`/dogs/${dog.id}`}
                       className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors border border-gray-100"
                     >
-                      <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                      <div className="w-14 h-14 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                         {dog.mainImage ? (
-                          <Image
+                          <img
                             src={dog.mainImage}
                             alt={dog.name}
                             className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
                           />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-2xl">
-                            🐕
-                          </div>
-                        )}
+                        ) : null}
+                        <div
+                          className="w-full h-full flex items-center justify-center text-2xl"
+                          style={{ display: dog.mainImage ? 'none' : 'flex' }}
+                        >
+                          🐕
+                        </div>
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-gray-900 truncate">
@@ -324,7 +332,6 @@ export default function BreedDetailPage() {
 
           {/* Right Column - Sidebar */}
           <div className="space-y-6">
-            {/* Quick Actions */}
             <Card hover={false} className="p-6">
               <h3 className="font-bold text-gray-900 mb-4">Quick Actions</h3>
               <div className="space-y-3">
@@ -350,7 +357,6 @@ export default function BreedDetailPage() {
               </div>
             </Card>
 
-            {/* At a Glance */}
             <Card hover={false} className="p-6">
               <h3 className="font-bold text-gray-900 mb-4">At a Glance</h3>
               <dl className="space-y-3">
@@ -403,7 +409,6 @@ export default function BreedDetailPage() {
               </dl>
             </Card>
 
-            {/* Disclaimer */}
             <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
               <p className="text-xs text-amber-800">
                 <strong>⚠️ Disclaimer:</strong> Breed information sourced from

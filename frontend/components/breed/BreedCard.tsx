@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import Link from 'next/link';
@@ -12,13 +13,7 @@ import {
   Baby,
   ExternalLink,
 } from 'lucide-react';
-import Image from 'next/image';
 
-interface BreedCardProps {
-  breed: Breed;
-}
-
-// Badge colors by breed type
 const typeColors: Record<string, string> = {
   Sporting: 'bg-green-100 text-green-800',
   Hound: 'bg-amber-100 text-amber-800',
@@ -29,12 +24,15 @@ const typeColors: Record<string, string> = {
   Working: 'bg-orange-100 text-orange-800',
 };
 
-// Size badge colors
 const sizeColors: Record<string, string> = {
   Small: 'bg-sky-100 text-sky-800',
   Medium: 'bg-teal-100 text-teal-800',
   Large: 'bg-indigo-100 text-indigo-800',
 };
+
+interface BreedCardProps {
+  breed: Breed;
+}
 
 function getSizeLabel(size: string | null): string | null {
   if (!size) return null;
@@ -58,17 +56,24 @@ export default function BreedCard({ breed }: BreedCardProps) {
         {/* Image */}
         <div className="relative h-52 overflow-hidden bg-gray-100">
           {breed.imageUrl ? (
-            <Image
+            <img
               src={breed.imageUrl}
               alt={breed.name}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               loading="lazy"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                if (fallback) fallback.style.display = 'flex';
+              }}
             />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100">
-              <span className="text-6xl">🐕</span>
-            </div>
-          )}
+          ) : null}
+          <div
+            className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100"
+            style={{ display: breed.imageUrl ? 'none' : 'flex' }}
+          >
+            <span className="text-6xl">🐕</span>
+          </div>
 
           {/* Badges overlay */}
           <div className="absolute top-3 left-3 flex flex-wrap gap-2">

@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
         port: '5000',
         pathname: '/uploads/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'www.royalkennelclub.com',
+        pathname: '/media/**',
+      },
     ],
     unoptimized: true, // Add this for development
   },
