@@ -1,0 +1,29 @@
+{
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/dist/**": true,
+    "**/venv/**": true,
+    "**/__pycache__/**": true,
+    "**/.next/**": true,
+    "**/debug_*.html": true,
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true
+  },
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/venv": true,
+    "**/__pycache__": true,
+    "**/dist": true,
+    "**/.next": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/venv": true,
+    "**/dist": true,
+    "**/.next": true,
+    "**/kennel_club_breeds.csv": true
+  },
+  "typescript.tsserver.maxTsServerMemory": 3072,
+  "git.autoRepositoryDetection": "openEditors",
+  "extensions.autoUpdate": false
+}
