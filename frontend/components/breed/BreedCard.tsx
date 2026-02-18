@@ -50,6 +50,12 @@ export default function BreedCard({ breed }: BreedCardProps) {
     ? sizeColors[sizeLabel] || 'bg-gray-100 text-gray-800'
     : '';
 
+  // Only show KC category if it differs from the mapped type
+  // e.g. "Gundog" vs "Sporting", "Pastoral" vs "Herding"
+  const showKcBadge =
+    breed.kennelClubCategory &&
+    breed.kennelClubCategory.toLowerCase() !== breed.type.toLowerCase();
+
   return (
     <Link href={`/breeds/${breed.slug}`}>
       <Card className="group cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 h-full flex flex-col">
@@ -63,7 +69,8 @@ export default function BreedCard({ breed }: BreedCardProps) {
               loading="lazy"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
-                const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                const fallback = e.currentTarget
+                  .nextElementSibling as HTMLElement;
                 if (fallback) fallback.style.display = 'flex';
               }}
             />
@@ -75,30 +82,28 @@ export default function BreedCard({ breed }: BreedCardProps) {
             <span className="text-6xl">🐕</span>
           </div>
 
-          {/* Badges overlay */}
-          <div className="absolute top-3 left-3 flex flex-wrap gap-2">
-            <span
-              className={`px-2.5 py-1 rounded-full text-xs font-semibold ${typeColor}`}
-            >
-              {breed.type}
-            </span>
-            {sizeLabel && (
+          {/* Single row of badges at bottom of image - no overlap possible */}
+          <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/50 to-transparent">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <span
-                className={`px-2.5 py-1 rounded-full text-xs font-semibold ${sizeColor}`}
+                className={`px-2 py-0.5 rounded-full text-xs font-semibold ${typeColor}`}
               >
-                {sizeLabel}
+                {breed.type}
               </span>
-            )}
-          </div>
-
-          {/* KC Group badge */}
-          {breed.kennelClubCategory && (
-            <div className="absolute top-3 right-3">
-              <span className="bg-white/90 backdrop-blur-sm text-gray-700 px-2.5 py-1 rounded-full text-xs font-medium">
-                KC: {breed.kennelClubCategory}
-              </span>
+              {sizeLabel && (
+                <span
+                  className={`px-2 py-0.5 rounded-full text-xs font-semibold ${sizeColor}`}
+                >
+                  {sizeLabel}
+                </span>
+              )}
+              {showKcBadge && (
+                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-white/90 text-gray-700">
+                  KC: {breed.kennelClubCategory}
+                </span>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
         {/* Content */}
