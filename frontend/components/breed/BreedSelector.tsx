@@ -1,9 +1,9 @@
+/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { breedsApi, Breed } from '@/lib/api/breeds';
 import { useDebounce } from '@/lib/hooks/useDebounce';
-import Image from 'next/image';
 import {
   Search,
   Loader2,
@@ -168,7 +168,7 @@ export default function BreedSelector({
               {/* Breed thumbnail */}
               <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                 {selectedBreed.imageUrl ? (
-                  <Image
+                  <img
                     src={selectedBreed.imageUrl}
                     alt={selectedBreed.name}
                     className="w-full h-full object-cover"
@@ -312,7 +312,7 @@ export default function BreedSelector({
                     {/* Thumbnail */}
                     <div className="relative w-9 h-9 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                       {breed.imageUrl ? (
-                        <Image
+                        <img
                           src={breed.imageUrl}
                           alt={breed.name}
                           className="w-full h-full object-cover"

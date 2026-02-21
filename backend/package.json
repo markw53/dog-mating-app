@@ -7,6 +7,7 @@
     "dev": "nodemon --exec ts-node src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
+    "geocode-dogs": "ts-node scripts/geocodeDogs.ts",
     "import-breeds": "ts-node scripts/importBreeds.ts",
     "delete-breeds": "ts-node scripts/deleteBreeds.ts",
     "refresh-breeds": "python scripts/scrape_kennel_club.py && npm run import-breeds",

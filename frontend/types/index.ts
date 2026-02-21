@@ -41,10 +41,19 @@ export interface Dog {
   status: 'pending' | 'active' | 'rejected' | 'inactive';
   views?: number;
   favorites?: number;
-  
+
   // Owner
-  owner: User | string;
-  ownerId?: string;
+  owner?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email?: string;
+    phone?: string;
+    avatar?: string | null;
+    city?: string;
+    county?: string;
+    verified?: boolean;
+  };
   
   // Location
   address?: string | null;
@@ -53,7 +62,8 @@ export interface Dog {
   postcode?: string | null;
   country?: string | null;
   latitude?: number | null;
-  longitude?: number;
+  longitude?: number | null;
+
   location?: {
     address?: string;
     city?: string;

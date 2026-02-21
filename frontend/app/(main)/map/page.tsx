@@ -1,12 +1,25 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { dogsApi } from '@/lib/api/dogs';
 import { Dog } from '@/types';
-import DogMap from '@/components/map/DogMapClient';
 import { Loader2, Map as MapIcon, List } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
+
+// Dynamically import the map component with SSR disabled
+const DogMap = dynamic(() => import('@/components/map/DogMapClient'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[600px] bg-gray-200 rounded-lg flex items-center justify-center">
+      <div className="text-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary-600 mx-auto mb-2" />
+        <p className="text-gray-600">Loading map...</p>
+      </div>
+    </div>
+  ),
+});
 
 export default function MapPage() {
   const [dogs, setDogs] = useState<Dog[]>([]);
@@ -18,13 +31,12 @@ export default function MapPage() {
 
   const fetchDogs = async () => {
     try {
-      // Remove status filter or adjust based on your API
       const response = await dogsApi.getAll({});
-      setDogs(response.dogs || []); // Add fallback to empty array
+      setDogs(response.dogs || []);
     } catch (error) {
       console.error('Failed to fetch dogs:', error);
       toast.error('Failed to load dogs');
-      setDogs([]); // Set empty array on error
+      setDogs([]);
     } finally {
       setLoading(false);
     }
@@ -70,7 +82,7 @@ export default function MapPage() {
       {/* Map */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <DogMap dogs={dogs} />
-        
+
         {/* Info Box */}
         <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex gap-3">
