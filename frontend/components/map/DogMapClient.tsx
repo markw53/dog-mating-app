@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Dog } from '@/types';
@@ -60,12 +60,10 @@ const createCustomIcon = (gender: string) => {
  * and old nested format (location.coordinates.lat/lng)
  */
 function getDogCoordinates(dog: Dog): [number, number] | null {
-  // Prisma format: flat latitude/longitude fields
   if (dog.latitude && dog.longitude) {
     return [dog.latitude, dog.longitude];
   }
 
-  // Legacy format: nested location.coordinates
   if (dog.location?.coordinates?.lat && dog.location?.coordinates?.lng) {
     return [dog.location.coordinates.lat, dog.location.coordinates.lng];
   }
@@ -100,20 +98,9 @@ function MapBounds({ dogs }: { dogs: { coords: [number, number] }[] }) {
   return null;
 }
 
-export default function DogMap({ dogs }: DogMapProps) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return (
-      <div className="w-full h-[600px] bg-gray-200 rounded-lg flex items-center justify-center">
-        <p className="text-gray-600">Loading map...</p>
-      </div>
-    );
-  }
+export default function DogMapClient({ dogs }: DogMapProps) {
+  // No mounted guard needed — next/dynamic with ssr:false
+  // guarantees this component only runs on the client.
 
   // Filter dogs that have valid coordinates
   const dogsWithLocation = dogs
