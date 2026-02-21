@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -5,7 +6,6 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Dog } from '@/types';
 import Link from 'next/link';
-import Image from 'next/image';
 import { getImageUrl } from '@/lib/api/client';
 import 'leaflet/dist/leaflet.css';
 
@@ -24,9 +24,10 @@ L.Icon.Default.mergeOptions({
 });
 
 // Custom markers for male and female dogs
-const createCustomIcon = (gender: 'male' | 'female') => {
-  const color = gender === 'male' ? '#3B82F6' : '#EC4899'; // blue for male, pink for female
-  
+const createCustomIcon = (gender: string) => {
+  const isMale = gender?.toUpperCase() === 'MALE';
+  const color = isMale ? '#3B82F6' : '#EC4899';
+
   return L.divIcon({
     className: 'custom-dog-marker',
     html: `
@@ -42,16 +43,9 @@ const createCustomIcon = (gender: 'male' | 'female') => {
         align-items: center;
         justify-content: center;
       ">
-        <svg 
-          style="transform: rotate(45deg); width: 18px; height: 18px;" 
-          fill="white" 
-          viewBox="0 0 24 24"
-        >
-          ${gender === 'male' 
-            ? '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>'
-            : '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-5h2v2h-2zm0-8h2v6h-2z"/>'
-          }
-        </svg>
+        <span style="transform: rotate(45deg); font-size: 14px;">
+          ${isMale ? '♂' : '♀'}
+        </span>
       </div>
     `,
     iconSize: [32, 32],
@@ -60,25 +54,45 @@ const createCustomIcon = (gender: 'male' | 'female') => {
   });
 };
 
+/**
+ * Helper to get coordinates from a dog object.
+ * Handles both Prisma flat fields (latitude/longitude)
+ * and old nested format (location.coordinates.lat/lng)
+ */
+function getDogCoordinates(dog: Dog): [number, number] | null {
+  // Prisma format: flat latitude/longitude fields
+  if (dog.latitude && dog.longitude) {
+    return [dog.latitude, dog.longitude];
+  }
+
+  // Legacy format: nested location.coordinates
+  if (dog.location?.coordinates?.lat && dog.location?.coordinates?.lng) {
+    return [dog.location.coordinates.lat, dog.location.coordinates.lng];
+  }
+
+  return null;
+}
+
+/**
+ * Get the city from a dog object (handles both formats)
+ */
+function getDogCity(dog: Dog): string {
+  return dog.city || dog.location?.city || 'Unknown';
+}
+
 interface DogMapProps {
   dogs: Dog[];
 }
 
 // Component to handle map bounds
-function MapBounds({ dogs }: { dogs: Dog[] }) {
+function MapBounds({ dogs }: { dogs: { coords: [number, number] }[] }) {
   const map = useMap();
 
   useEffect(() => {
     if (dogs.length > 0) {
-      const bounds = dogs
-        .filter(dog => dog.location?.coordinates?.lat && dog.location?.coordinates?.lng)
-        .map(dog => [
-          dog.location!.coordinates!.lat,
-          dog.location!.coordinates!.lng
-        ] as [number, number]);
-
+      const bounds = dogs.map((d) => d.coords);
       if (bounds.length > 0) {
-        map.fitBounds(bounds, { padding: [50, 50] });
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
       }
     }
   }, [dogs, map]);
@@ -89,12 +103,8 @@ function MapBounds({ dogs }: { dogs: Dog[] }) {
 export default function DogMap({ dogs }: DogMapProps) {
   const [mounted, setMounted] = useState(false);
 
-  // Only render map on client side - using layout effect pattern
   useEffect(() => {
-    // This is intentional for client-side only rendering
-    // The effect runs once to hydrate the component
-    const timer = setTimeout(() => setMounted(true), 0);
-    return () => clearTimeout(timer);
+    setMounted(true);
   }, []);
 
   if (!mounted) {
@@ -106,16 +116,45 @@ export default function DogMap({ dogs }: DogMapProps) {
   }
 
   // Filter dogs that have valid coordinates
-  const dogsWithLocation = dogs.filter(
-    dog => dog.location?.coordinates?.lat && dog.location?.coordinates?.lng
-  );
+  const dogsWithLocation = dogs
+    .map((dog) => {
+      const coords = getDogCoordinates(dog);
+      return coords ? { dog, coords } : null;
+    })
+    .filter(Boolean) as { dog: Dog; coords: [number, number] }[];
+
+  console.log(`🗺️ Map: ${dogsWithLocation.length}/${dogs.length} dogs have coordinates`);
+
+  // Debug: log dogs without coordinates
+  const dogsWithoutCoords = dogs.filter((d) => !getDogCoordinates(d));
+  if (dogsWithoutCoords.length > 0) {
+    console.log(
+      '⚠️ Dogs without coordinates:',
+      dogsWithoutCoords.map((d) => `${d.name} (${d.city || 'no city'})`)
+    );
+  }
 
   if (dogsWithLocation.length === 0) {
     return (
       <div className="w-full h-[600px] bg-gray-100 rounded-lg flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-600 text-lg mb-2">No dogs with location data available</p>
-          <p className="text-gray-500 text-sm">Dogs need to have coordinates to appear on the map</p>
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-3xl">🗺️</span>
+          </div>
+          <p className="text-gray-600 text-lg font-semibold mb-2">
+            No dogs with location data
+          </p>
+          <p className="text-gray-500 text-sm mb-4">
+            Dogs need a valid UK postcode or city to appear on the map.
+            {dogs.length > 0 && (
+              <span className="block mt-1">
+                {dogs.length} dog{dogs.length !== 1 ? 's' : ''} found but none have coordinates.
+              </span>
+            )}
+          </p>
+          <Link href="/browse" className="text-primary-600 hover:text-primary-700 font-medium text-sm">
+            Browse dogs in list view →
+          </Link>
         </div>
       </div>
     );
@@ -136,17 +175,14 @@ export default function DogMap({ dogs }: DogMapProps) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        
+
         <MapBounds dogs={dogsWithLocation} />
 
-        {dogsWithLocation.map((dog) => (
+        {dogsWithLocation.map(({ dog, coords }) => (
           <Marker
             key={dog.id || dog._id}
-            position={[
-              dog.location!.coordinates!.lat,
-              dog.location!.coordinates!.lng
-            ]}
-            icon={createCustomIcon(dog.gender as 'male' | 'female')}
+            position={coords}
+            icon={createCustomIcon(dog.gender)}
           >
             <Popup className="dog-popup" maxWidth={300}>
               <DogPopupContent dog={dog} />
@@ -160,14 +196,17 @@ export default function DogMap({ dogs }: DogMapProps) {
         <h3 className="font-bold text-sm mb-2">Legend</h3>
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-blue-500 rounded-full border-2 border-white"></div>
-            <span className="text-sm">Male</span>
+            <div className="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow"></div>
+            <span className="text-sm">Male ({dogsWithLocation.filter(d => d.dog.gender?.toUpperCase() === 'MALE').length})</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-pink-500 rounded-full border-2 border-white"></div>
-            <span className="text-sm">Female</span>
+            <div className="w-4 h-4 bg-pink-500 rounded-full border-2 border-white shadow"></div>
+            <span className="text-sm">Female ({dogsWithLocation.filter(d => d.dog.gender?.toUpperCase() === 'FEMALE').length})</span>
           </div>
         </div>
+        <p className="text-xs text-gray-500 mt-2 border-t pt-2">
+          {dogsWithLocation.length} of {dogs.length} dogs shown
+        </p>
       </div>
     </div>
   );
@@ -175,57 +214,79 @@ export default function DogMap({ dogs }: DogMapProps) {
 
 function DogPopupContent({ dog }: { dog: Dog }) {
   const dogId = dog.id || dog._id;
-  const imageUrl = getImageUrl(dog.mainImage || dog.images?.[0] || '');
+  const imageUrl = dog.mainImage
+    ? getImageUrl(dog.mainImage)
+    : dog.images?.[0]
+    ? getImageUrl(dog.images[0])
+    : null;
+
+  const isMale = dog.gender?.toUpperCase() === 'MALE';
+  const city = getDogCity(dog);
 
   return (
     <div className="w-64">
       {/* Image */}
       <div className="relative w-full h-40 mb-3 rounded-lg overflow-hidden bg-gray-200">
         {imageUrl ? (
-          <Image
+          <img
             src={imageUrl}
             alt={dog.name}
-            fill
-            className="object-cover"
-            unoptimized
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+              const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+              if (fallback) fallback.style.display = 'flex';
+            }}
           />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-400">
-            No image
-          </div>
-        )}
+        ) : null}
+        <div
+          className="w-full h-full flex items-center justify-center text-4xl"
+          style={{ display: imageUrl ? 'none' : 'flex' }}
+        >
+          🐕
+        </div>
       </div>
 
       {/* Info */}
       <div className="space-y-3">
         <h3 className="font-bold text-xl text-gray-900">{dog.name}</h3>
-        
+
         <div className="flex items-center gap-2 flex-wrap">
-          <span className={`px-3 py-1.5 rounded-full text-xs font-bold shadow-sm ${
-            dog.gender === 'male' 
-              ? 'bg-blue-500 text-white' 
-              : 'bg-pink-500 text-white'
-          }`}>
-            {dog.gender === 'male' ? '♂ Male' : '♀ Female'}
+          <span
+            className={`px-3 py-1.5 rounded-full text-xs font-bold shadow-sm ${
+              isMale ? 'bg-blue-500 text-white' : 'bg-pink-500 text-white'
+            }`}
+          >
+            {isMale ? '♂ Male' : '♀ Female'}
           </span>
           <span className="text-sm font-medium text-gray-700">{dog.breed}</span>
         </div>
 
         <div className="text-sm text-gray-700 space-y-1">
           <p className="flex items-center gap-2">
-            <span className="font-medium">Age:</span> 
+            <span className="font-medium">Age:</span>
             <span>{dog.age} years</span>
           </p>
           <p className="flex items-center gap-2">
-            <span className="font-medium">Location:</span> 
-            <span>{dog.location?.city || 'Unknown'}</span>
+            <span className="font-medium">Location:</span>
+            <span>{city}{dog.county ? `, ${dog.county}` : ''}</span>
           </p>
+          {dog.studFee && (
+            <p className="flex items-center gap-2">
+              <span className="font-medium">Stud Fee:</span>
+              <span>£{dog.studFee}</span>
+            </p>
+          )}
         </div>
 
-        {dog.breeding?.available && (
+        {dog.available && (
           <div className="flex items-center gap-1.5 text-sm text-green-700 font-semibold bg-green-50 px-3 py-2 rounded-lg border border-green-200">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              <path
+                fillRule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                clipRule="evenodd"
+              />
             </svg>
             Available for breeding
           </div>
@@ -233,14 +294,9 @@ function DogPopupContent({ dog }: { dog: Dog }) {
 
         <Link
           href={`/dogs/${dogId}`}
-          className="group block w-full text-center bg-gradient-to-r from-primary-600 to-primary-700 text-white py-3.5 px-4 rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all font-bold text-base mt-4 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+          className="block w-full text-center bg-gradient-to-r from-primary-600 to-primary-700 text-white py-3 px-4 rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all font-bold text-sm mt-3 shadow-md"
         >
-          <span className="flex items-center justify-center gap-2">
-            View Profile
-            <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </span>
+          View Profile →
         </Link>
       </div>
     </div>
