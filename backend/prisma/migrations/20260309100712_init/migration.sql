@@ -42,6 +42,7 @@ CREATE TABLE "dogs" (
     "description" TEXT NOT NULL,
     "images" TEXT[],
     "mainImage" TEXT,
+    "breedId" TEXT,
     "vaccinated" BOOLEAN NOT NULL DEFAULT false,
     "neutered" BOOLEAN NOT NULL DEFAULT false,
     "vetName" TEXT,
@@ -62,6 +63,8 @@ CREATE TABLE "dogs" (
     "county" TEXT NOT NULL,
     "postcode" TEXT,
     "country" TEXT NOT NULL DEFAULT 'UK',
+    "latitude" DOUBLE PRECISION,
+    "longitude" DOUBLE PRECISION,
     "status" "Status" NOT NULL DEFAULT 'PENDING',
     "views" INTEGER NOT NULL DEFAULT 0,
     "favorites" INTEGER NOT NULL DEFAULT 0,
@@ -70,6 +73,32 @@ CREATE TABLE "dogs" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "dogs_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "breeds" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "slug" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+    "height" TEXT,
+    "weight" TEXT,
+    "color" TEXT NOT NULL DEFAULT 'Various',
+    "longevity" TEXT,
+    "healthProblems" TEXT,
+    "imageUrl" TEXT,
+    "officialLink" TEXT,
+    "kennelClubCategory" TEXT,
+    "size" TEXT,
+    "exerciseNeeds" TEXT,
+    "grooming" TEXT,
+    "temperament" TEXT,
+    "goodWithChildren" TEXT,
+    "searchKeywords" TEXT[],
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "breeds_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -112,20 +141,28 @@ CREATE TABLE "reviews" (
 -- CreateTable
 CREATE TABLE "_ConversationToUser" (
     "A" TEXT NOT NULL,
-    "B" TEXT NOT NULL
+    "B" TEXT NOT NULL,
+
+    CONSTRAINT "_ConversationToUser_AB_pkey" PRIMARY KEY ("A","B")
 );
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "breeds_name_key" ON "breeds"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "breeds_slug_key" ON "breeds"("slug");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "reviews_dogId_reviewerId_key" ON "reviews"("dogId", "reviewerId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "_ConversationToUser_AB_unique" ON "_ConversationToUser"("A", "B");
-
--- CreateIndex
 CREATE INDEX "_ConversationToUser_B_index" ON "_ConversationToUser"("B");
+
+-- AddForeignKey
+ALTER TABLE "dogs" ADD CONSTRAINT "dogs_breedId_fkey" FOREIGN KEY ("breedId") REFERENCES "breeds"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "dogs" ADD CONSTRAINT "dogs_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
