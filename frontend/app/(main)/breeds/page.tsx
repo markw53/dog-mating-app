@@ -219,6 +219,7 @@ export default function BreedsPage() {
                           ? 'bg-white shadow-sm text-primary-600'
                           : 'text-gray-500 hover:text-gray-700'
                       }`}
+                      title="Grid view"
                     >
                       <Grid3X3 className="h-4 w-4" />
                     </button>
@@ -229,6 +230,7 @@ export default function BreedsPage() {
                           ? 'bg-white shadow-sm text-primary-600'
                           : 'text-gray-500 hover:text-gray-700'
                       }`}
+                      title="List view"
                     >
                       <List className="h-4 w-4" />
                     </button>
