@@ -243,6 +243,7 @@ export default function BreedSelector({
                   }
                 }}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                title="Clear search"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -414,6 +415,7 @@ export default function BreedSelector({
                 type="button"
                 onClick={() => setShowBreedInfo(false)}
                 className="text-gray-400 hover:text-gray-600 p-0.5"
+                title="Close breed info"
               >
                 <X className="h-3.5 w-3.5" />
               </button>

@@ -421,6 +421,7 @@ export default function EditDogPage() {
                           type="button"
                           onClick={() => removeExistingImage(index)}
                           className="absolute -top-2 -right-2 bg-red-600 text-white p-2 rounded-full hover:bg-red-700 shadow-lg transform hover:scale-110 transition-all"
+                          title="Remove image"
                         >
                           <X className="h-4 w-4" />
                         </button>
@@ -448,6 +449,7 @@ export default function EditDogPage() {
                           type="button"
                           onClick={() => removeNewImage(index)}
                           className="absolute -top-2 -right-2 bg-red-600 text-white p-2 rounded-full hover:bg-red-700 shadow-lg transform hover:scale-110 transition-all"
+                          title="Remove image"
                         >
                           <X className="h-4 w-4" />
                         </button>
@@ -485,6 +487,7 @@ export default function EditDogPage() {
                     value={formData.name}
                     onChange={handleChange}
                     className="input-field"
+                    placeholder="e.g., Max"
                   />
                 </div>
 
@@ -498,6 +501,7 @@ export default function EditDogPage() {
                     value={formData.breed}
                     onChange={handleChange}
                     className="input-field"
+                    title="Select your dog's breed"
                   >
                     <option value="">Select breed</option>
                     {POPULAR_BREEDS.map(breed => (
@@ -516,6 +520,7 @@ export default function EditDogPage() {
                     value={formData.gender}
                     onChange={handleChange}
                     className="input-field"
+                    title="Select your dog's gender"
                   >
                     <option value="male">Male</option>
                     <option value="female">Female</option>
@@ -533,6 +538,7 @@ export default function EditDogPage() {
                     value={formData.dateOfBirth}
                     onChange={handleChange}
                     className="input-field"
+                    title="Select your dog's date of birth"
                   />
                 </div>
 
@@ -547,6 +553,7 @@ export default function EditDogPage() {
                     value={formData.weight}
                     onChange={handleChange}
                     className="input-field"
+                    placeholder="e.g., 25"
                   />
                 </div>
 
@@ -561,6 +568,7 @@ export default function EditDogPage() {
                     value={formData.color}
                     onChange={handleChange}
                     className="input-field"
+                    placeholder="e.g., Black and White"
                   />
                 </div>
               </div>

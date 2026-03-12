@@ -354,6 +354,7 @@ export default function AddDogPage() {
                         <button
                           type="button"
                           onClick={() => removeImage(index)}
+                          title="Remove image"
                           className="absolute -top-2 -right-2 bg-red-600 text-white p-2 rounded-full hover:bg-red-700 shadow-lg transform hover:scale-110 transition-all"
                         >
                           <X className="h-4 w-4" />
@@ -417,6 +418,7 @@ export default function AddDogPage() {
                     value={formData.gender}
                     onChange={handleChange}
                     className="input-field"
+                    title="Select your dog's gender"
                   >
                     <option value="MALE">Male</option>
                     <option value="FEMALE">Female</option>
@@ -434,6 +436,8 @@ export default function AddDogPage() {
                     value={formData.dateOfBirth}
                     onChange={handleChange}
                     className="input-field"
+                    placeholder="e.g., 2018-06-15"
+                    title="Select your dog's date of birth"
                   />
                 </div>
 
@@ -709,6 +713,7 @@ export default function AddDogPage() {
                           onChange={handleChange}
                           className="input-field"
                           placeholder="e.g., 500"
+                          title="Enter stud fee in pounds"
                         />
                       </div>
 
