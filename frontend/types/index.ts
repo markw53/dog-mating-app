@@ -1,3 +1,5 @@
+// types/index.ts
+
 export interface User {
   id: string;
   _id?: string;
@@ -45,6 +47,7 @@ export interface Dog {
   // Owner
   owner?: {
     id: string;
+    _id?: string;
     firstName: string;
     lastName: string;
     email?: string;
@@ -53,8 +56,16 @@ export interface Dog {
     city?: string;
     county?: string;
     verified?: boolean;
+    createdAt?: Date | string;
+    location?: {
+      address?: string;
+      city?: string;
+      state?: string;
+      zipCode?: string;
+      country?: string;
+    };
   };
-  
+
   // Location
   address?: string | null;
   city: string;
@@ -75,7 +86,7 @@ export interface Dog {
       lng: number;
     };
   };
-  
+
   // Health Info (direct fields from DB)
   vaccinated: boolean;
   neutered: boolean;
@@ -92,7 +103,7 @@ export interface Dog {
     };
     medicalHistory?: string;
   };
-  
+
   // Pedigree (direct fields from DB)
   registered: boolean;
   registrationNumber?: string | null;
@@ -107,7 +118,7 @@ export interface Dog {
     sire?: string | null;
     dam?: string | null;
   };
-  
+
   // Breeding (direct fields from DB)
   available: boolean;
   studFee?: number | null;
@@ -125,10 +136,10 @@ export interface Dog {
     experience?: string;
     temperament?: string[];
   };
-  
+
   createdAt?: Date | string;
   updatedAt?: Date | string;
-}
+} // <-- Make sure this closing brace exists!
 
 export interface Review {
   id: string;

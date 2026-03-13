@@ -24,7 +24,7 @@ import DogImagePlaceholder from '@/components/ui/DogImagePlaceholder';
 import Link from 'next/link';
 
 // Helper function to safely get owner info
-function getOwnerInfo(owner: User | string | undefined): User | null {
+function getOwnerInfo(owner: Dog['owner']): NonNullable<Dog['owner']> | null {
   if (!owner || typeof owner === 'string') return null;
   return owner;
 }
