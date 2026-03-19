@@ -1,56 +1,56 @@
-'use client';
+'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { breedsApi, Breed } from '@/lib/api/breeds';
-import { useDebounce } from '@/lib/hooks/useDebounce';
-import { Search, Loader2, X } from 'lucide-react';
-import Image from 'next/image';
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import { breedsApi, Breed } from '@/lib/api/breeds'
+import { useDebounce } from '@/lib/hooks/useDebounce'
+import { Search, Loader2, X } from 'lucide-react'
+import Image from 'next/image'
 
 export default function BreedSearch() {
-  const router = useRouter();
-  const [query, setQuery] = useState('');
-  const [isOpen, setIsOpen] = useState(false);
-  const [results, setResults] = useState<Breed[]>([]);
-  const [loading, setLoading] = useState(false);
-  const debouncedQuery = useDebounce(query, 300);
-  const wrapperRef = useRef<HTMLDivElement>(null);
+  const router = useRouter()
+  const [query, setQuery] = useState('')
+  const [isOpen, setIsOpen] = useState(false)
+  const [results, setResults] = useState<Breed[]>([])
+  const [loading, setLoading] = useState(false)
+  const debouncedQuery = useDebounce(query, 300)
+  const wrapperRef = useRef<HTMLDivElement>(null)
 
   // Search when debounced query changes
   useEffect(() => {
     if (!debouncedQuery.trim()) {
-      setResults([]);
-      setIsOpen(false);
-      return;
+      setResults([])
+      setIsOpen(false)
+      return
     }
 
-    let cancelled = false;
+    let cancelled = false
 
     const fetchResults = async () => {
-      setLoading(true);
+      setLoading(true)
       try {
-        const response = await breedsApi.search(debouncedQuery);
+        const response = await breedsApi.search(debouncedQuery)
         if (!cancelled) {
-          setResults(response.data);
-          setIsOpen(true);
+          setResults(response.data)
+          setIsOpen(true)
         }
       } catch {
         if (!cancelled) {
-          setResults([]);
+          setResults([])
         }
       } finally {
         if (!cancelled) {
-          setLoading(false);
+          setLoading(false)
         }
       }
-    };
+    }
 
-    fetchResults();
+    fetchResults()
 
     return () => {
-      cancelled = true;
-    };
-  }, [debouncedQuery]);
+      cancelled = true
+    }
+  }, [debouncedQuery])
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -59,21 +59,21 @@ export default function BreedSearch() {
         wrapperRef.current &&
         !wrapperRef.current.contains(e.target as Node)
       ) {
-        setIsOpen(false);
+        setIsOpen(false)
       }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const handleSelect = useCallback(
     (slug: string) => {
-      setQuery('');
-      setIsOpen(false);
-      router.push(`/breeds/${slug}`);
+      setQuery('')
+      setIsOpen(false)
+      router.push(`/breeds/${slug}`)
     },
-    [router]
-  );
+    [router],
+  )
 
   return (
     <div ref={wrapperRef} className="relative w-full max-w-xl mx-auto">
@@ -85,15 +85,15 @@ export default function BreedSearch() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => {
-            if (results.length > 0 && query.trim()) setIsOpen(true);
+            if (results.length > 0 && query.trim()) setIsOpen(true)
           }}
           className="w-full pl-12 pr-12 py-3.5 border border-gray-300 rounded-xl text-base focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all shadow-sm bg-white"
         />
         {query && (
           <button
             onClick={() => {
-              setQuery('');
-              setIsOpen(false);
+              setQuery('')
+              setIsOpen(false)
             }}
             title="Clear search"
             className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
@@ -127,6 +127,7 @@ export default function BreedSearch() {
                   <Image
                     src={breed.imageUrl}
                     alt={breed.name}
+                    fill
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -156,5 +157,5 @@ export default function BreedSearch() {
         </div>
       )}
     </div>
-  );
+  )
 }
