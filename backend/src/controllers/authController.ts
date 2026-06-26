@@ -1,91 +1,65 @@
-// controllers/authController.ts
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../config/database';
 import { AuthRequest } from '../middleware/auth';
+import logger from '../utils/logger';
+import { uploadToCloudinary } from '../utils/cloudinary';
+
+const USER_SELECT = {
+  id: true,
+  email: true,
+  firstName: true,
+  lastName: true,
+  role: true,
+  phone: true,
+  avatar: true,
+  verified: true,
+  address: true,
+  city: true,
+  county: true,
+  postcode: true,
+  country: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
 
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
-    console.log('🔐 Login attempt:', { email });
-
-    // Validate input
     if (!email || !password) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        message: 'Email and password are required' 
+        message: 'Email and password are required',
       });
     }
 
-    // Find user
     const user = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
-      select: {
-        id: true,
-        email: true,
-        password: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        phone: true,
-        avatar: true,
-        verified: true,
-        address: true,
-        city: true,
-        county: true,
-        postcode: true,
-        country: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      select: { ...USER_SELECT, password: true },
     });
 
     if (!user) {
-      console.log('❌ User not found');
-      return res.status(401).json({ 
-        success: false,
-        message: 'Invalid credentials' 
-      });
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
-    // Check password
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-      console.log('❌ Invalid password');
-      return res.status(401).json({ 
-        success: false,
-        message: 'Invalid credentials' 
-      });
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
-    // Generate token
-    const token = jwt.sign(
-      { id: user.id },
-      process.env.JWT_SECRET!,
-      { expiresIn: '7d' }
-    );
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
 
-    // Remove password from response
     const { password: _, ...userWithoutPassword } = user;
 
-    console.log('✅ Login successful:', { userId: user.id, email: user.email });
+    logger.info({ userId: user.id }, 'User logged in');
 
-    // IMPORTANT: Make sure you're returning JSON, not a string
-    res.json({
-      success: true,
-      token,
-      user: userWithoutPassword,
-    });
-  } catch (error: unknown) {
-    const err = error as Error;
-    console.error('❌ Login error:', err);
-    res.status(500).json({ 
-      success: false,
-      message: 'Server error during login' 
-    });
+    res.json({ success: true, token, user: userWithoutPassword });
+  } catch (error) {
+    logger.error({ err: error }, 'Login error');
+    res.status(500).json({ success: false, message: 'Server error during login' });
   }
 };
 
@@ -93,33 +67,30 @@ export const register = async (req: Request, res: Response) => {
   try {
     const { email, password, firstName, lastName, phone } = req.body;
 
-    console.log('📝 Registration attempt:', { email, firstName, lastName });
-
-    // Validate input
     if (!email || !password || !firstName || !lastName) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        message: 'All fields are required' 
+        message: 'All fields are required',
       });
     }
 
-    // Check if user exists
+    if (password.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 8 characters',
+      });
+    }
+
     const existingUser = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
     });
 
     if (existingUser) {
-      console.log('❌ Email already registered');
-      return res.status(400).json({ 
-        success: false,
-        message: 'Email already registered' 
-      });
+      return res.status(400).json({ success: false, message: 'Email already registered' });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
     const user = await prisma.user.create({
       data: {
         email: email.toLowerCase(),
@@ -129,46 +100,17 @@ export const register = async (req: Request, res: Response) => {
         phone: phone || null,
         country: 'UK',
       },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        phone: true,
-        avatar: true,
-        verified: true,
-        address: true,
-        city: true,
-        county: true,
-        postcode: true,
-        country: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      select: USER_SELECT,
     });
 
-    // Generate token
-    const token = jwt.sign(
-      { id: user.id },
-      process.env.JWT_SECRET!,
-      { expiresIn: '7d' }
-    );
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
 
-    console.log('✅ Registration successful:', { userId: user.id, email: user.email });
+    logger.info({ userId: user.id }, 'User registered');
 
-    res.status(201).json({
-      success: true,
-      token,
-      user,
-    });
-  } catch (error: unknown) {
-    const err = error as Error;
-    console.error('❌ Registration error:', err);
-    res.status(500).json({ 
-      success: false,
-      message: 'Server error during registration' 
-    });
+    res.status(201).json({ success: true, token, user });
+  } catch (error) {
+    logger.error({ err: error }, 'Registration error');
+    res.status(500).json({ success: false, message: 'Server error during registration' });
   }
 };
 
@@ -176,61 +118,23 @@ export const getCurrentUser = async (req: AuthRequest, res: Response) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user!.id },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        phone: true,
-        avatar: true,
-        verified: true,
-        address: true,
-        city: true,
-        county: true,
-        postcode: true,
-        country: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      select: USER_SELECT,
     });
 
     if (!user) {
-      return res.status(404).json({ 
-        success: false,
-        message: 'User not found' 
-      });
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    res.json({
-      success: true,
-      user,
-    });
-  } catch (error: unknown) {
-    const err = error as Error;
-    console.error('❌ Get current user error:', err);
-    res.status(500).json({ 
-      success: false,
-      message: 'Server error' 
-    });
+    res.json({ success: true, user });
+  } catch (error) {
+    logger.error({ err: error }, 'Get current user error');
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
 export const updateProfile = async (req: AuthRequest, res: Response) => {
   try {
-    const {
-      firstName,
-      lastName,
-      phone,
-      address,
-      city,
-      county,
-      postcode,
-      country,
-    } = req.body;
-
-    console.log('📝 Updating profile for user:', req.user?.id);
-    console.log('📋 Update data:', { firstName, lastName, phone, city, county });
+    const { firstName, lastName, phone, address, city, county, postcode, country } = req.body;
 
     const updatedUser = await prisma.user.update({
       where: { id: req.user!.id },
@@ -244,88 +148,33 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
         ...(postcode !== undefined && { postcode: postcode || null }),
         ...(country && { country }),
       },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        phone: true,
-        avatar: true,
-        verified: true,
-        address: true,
-        city: true,
-        county: true,
-        postcode: true,
-        country: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      select: USER_SELECT,
     });
 
-    console.log('✅ Profile updated successfully');
-
-    res.json({
-      success: true,
-      user: updatedUser,
-    });
-  } catch (error: unknown) {
-    const err = error as Error;
-    console.error('❌ Update profile error:', err);
-    res.status(500).json({ 
-      success: false,
-      message: err.message || 'Failed to update profile' 
-    });
+    res.json({ success: true, user: updatedUser });
+  } catch (error) {
+    logger.error({ err: error }, 'Update profile error');
+    res.status(500).json({ success: false, message: 'Failed to update profile' });
   }
 };
 
 export const uploadAvatar = async (req: AuthRequest, res: Response) => {
   try {
-    console.log('📸 Uploading avatar for user:', req.user?.id);
-
     if (!req.file) {
-      return res.status(400).json({ 
-        success: false,
-        message: 'No file uploaded' 
-      });
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
 
-    const avatarPath = `/uploads/${req.file.filename}`;
+    const avatarUrl = await uploadToCloudinary(req.file.buffer, 'dogmate/avatars');
 
     const updatedUser = await prisma.user.update({
       where: { id: req.user!.id },
-      data: { avatar: avatarPath },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        phone: true,
-        avatar: true,
-        verified: true,
-        address: true,
-        city: true,
-        county: true,
-        postcode: true,
-        country: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      data: { avatar: avatarUrl },
+      select: USER_SELECT,
     });
 
-    console.log('✅ Avatar uploaded successfully:', avatarPath);
-
-    res.json({
-      success: true,
-      user: updatedUser,
-    });
-  } catch (error: unknown) {
-    const err = error as Error;
-    console.error('❌ Upload avatar error:', err);
-    res.status(500).json({ 
-      success: false,
-      message: err.message || 'Failed to upload avatar' 
-    });
+    res.json({ success: true, user: updatedUser });
+  } catch (error) {
+    logger.error({ err: error }, 'Upload avatar error');
+    res.status(500).json({ success: false, message: 'Failed to upload avatar' });
   }
 };

@@ -1,152 +1,92 @@
-// src/utils/geocoding.ts
 import axios from 'axios';
+import logger from './logger';
 
 interface GeocodingResult {
   latitude: number;
   longitude: number;
 }
 
-/**
- * Strategy 1: UK Postcode via postcodes.io (most accurate, free, no API key)
- */
 async function geocodePostcode(postcode: string): Promise<GeocodingResult | null> {
   if (!postcode?.trim()) return null;
 
   try {
     const cleaned = postcode.trim().replace(/\s+/g, '');
-    console.log(`  📍 [1/4] Trying postcodes.io for: "${cleaned}"`);
-
     const response = await axios.get(
       `https://api.postcodes.io/postcodes/${encodeURIComponent(cleaned)}`,
-      { timeout: 5000 }
+      { timeout: 5000 },
     );
 
     if (response.data?.status === 200 && response.data?.result) {
       const { latitude, longitude } = response.data.result;
-      if (latitude && longitude) {
-        console.log(`  ✅ postcodes.io success: ${latitude}, ${longitude}`);
-        return { latitude, longitude };
-      }
+      if (latitude && longitude) return { latitude, longitude };
     }
-
-    console.log(`  ⚠️ postcodes.io: no result`);
     return null;
   } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
-    // Don't log full error for 404s (invalid postcode)
     if (axios.isAxiosError(error) && error.response?.status === 404) {
-      console.log(`  ⚠️ postcodes.io: postcode not found`);
+      // Invalid postcode — not worth logging
     } else {
-      console.warn(`  ⚠️ postcodes.io failed: ${msg}`);
+      logger.warn({ err: error }, 'postcodes.io geocoding failed');
     }
     return null;
   }
 }
 
-/**
- * Strategy 2/3: Address/City via OpenStreetMap Nominatim (free, 1 req/sec)
- */
 async function geocodeNominatim(query: string): Promise<GeocodingResult | null> {
   if (!query?.trim()) return null;
 
   try {
-    console.log(`  📍 Trying Nominatim for: "${query}"`);
-
     const response = await axios.get('https://nominatim.openstreetmap.org/search', {
-      params: {
-        q: query,
-        format: 'json',
-        limit: 1,
-        countrycodes: 'gb',
-      },
-      headers: {
-        'User-Agent': 'DogMate/1.0 (dog-breeding-website)',
-      },
+      params: { q: query, format: 'json', limit: 1, countrycodes: 'gb' },
+      headers: { 'User-Agent': 'DogMate/1.0 (dog-breeding-website)' },
       timeout: 5000,
     });
 
-    if (response.data && response.data.length > 0) {
-      const { lat, lon } = response.data[0];
-      const latitude = parseFloat(lat);
-      const longitude = parseFloat(lon);
-
-      if (!isNaN(latitude) && !isNaN(longitude)) {
-        console.log(`  ✅ Nominatim success: ${latitude}, ${longitude}`);
-        return { latitude, longitude };
-      }
+    if (response.data?.length > 0) {
+      const latitude = parseFloat(response.data[0].lat);
+      const longitude = parseFloat(response.data[0].lon);
+      if (!isNaN(latitude) && !isNaN(longitude)) return { latitude, longitude };
     }
-
-    console.log(`  ⚠️ Nominatim: no result`);
     return null;
   } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
-    console.warn(`  ⚠️ Nominatim failed: ${msg}`);
+    logger.warn({ err: error }, 'Nominatim geocoding failed');
     return null;
   }
 }
 
-/**
- * Main geocoding function - tries multiple strategies in order:
- * 1. UK Postcode (postcodes.io) - most accurate
- * 2. Full address + city + county (Nominatim) - good accuracy
- * 3. City + county only (Nominatim) - approximate
- * 4. City only (Nominatim) - last API attempt
- */
 export async function geocodeAddress(
   address: string | null | undefined,
   city: string,
   county: string | null | undefined,
   postcode?: string | null,
-  country: string = 'UK'
+  country: string = 'UK',
 ): Promise<GeocodingResult | null> {
-  console.log(`\n🗺️ Geocoding location:`);
-  console.log(`   address: "${address || ''}"`);
-  console.log(`   city: "${city}"`);
-  console.log(`   county: "${county || ''}"`);
-  console.log(`   postcode: "${postcode || ''}"`);
-
-  // Strategy 1: UK Postcode (most accurate for UK)
   if (postcode) {
     const result = await geocodePostcode(postcode);
     if (result) return result;
   }
 
-  // Strategy 2: Full address via Nominatim
   if (address) {
     const fullQuery = [address, city, county, country].filter(Boolean).join(', ');
-    console.log(`  📍 [2/4] Trying full address...`);
     const result = await geocodeNominatim(fullQuery);
     if (result) return result;
-
-    // Small delay to respect Nominatim rate limit
     await new Promise((r) => setTimeout(r, 1100));
   }
 
-  // Strategy 3: City + County via Nominatim
   if (city && county) {
-    const cityCountyQuery = [city, county, country].filter(Boolean).join(', ');
-    console.log(`  📍 [3/4] Trying city + county...`);
-    const result = await geocodeNominatim(cityCountyQuery);
+    const result = await geocodeNominatim([city, county, country].filter(Boolean).join(', '));
     if (result) return result;
-
     await new Promise((r) => setTimeout(r, 1100));
   }
 
-  // Strategy 4: City only via Nominatim
   if (city) {
-    const cityQuery = [city, country].filter(Boolean).join(', ');
-    console.log(`  📍 [4/4] Trying city only...`);
-    const result = await geocodeNominatim(cityQuery);
+    const result = await geocodeNominatim([city, country].filter(Boolean).join(', '));
     if (result) return result;
   }
 
-  console.log(`  ❌ All geocoding strategies failed\n`);
+  logger.debug({ city, county, postcode }, 'All geocoding strategies failed');
   return null;
 }
 
-/**
- * UK city coordinates fallback (for when all APIs fail)
- */
 const UK_CITY_COORDINATES: Record<string, GeocodingResult> = {
   'london': { latitude: 51.5074, longitude: -0.1278 },
   'manchester': { latitude: 53.4808, longitude: -2.2426 },
@@ -204,29 +144,16 @@ const UK_CITY_COORDINATES: Record<string, GeocodingResult> = {
   'cheltenham': { latitude: 51.8994, longitude: -2.0783 },
 };
 
-/**
- * Get fallback coordinates for a city (when all API calls fail)
- */
 export function getFallbackCoordinates(city: string | null | undefined): GeocodingResult | null {
   if (!city?.trim()) return null;
 
   const normalized = city.trim().toLowerCase();
-
-  // Exact match
   const exact = UK_CITY_COORDINATES[normalized];
-  if (exact) {
-    console.log(`  📍 Fallback coordinates for "${city}": ${exact.latitude}, ${exact.longitude}`);
-    return exact;
-  }
+  if (exact) return exact;
 
-  // Partial match (e.g. "Newcastle upon Tyne" matches "newcastle")
   for (const [key, coords] of Object.entries(UK_CITY_COORDINATES)) {
-    if (normalized.includes(key) || key.includes(normalized)) {
-      console.log(`  📍 Partial fallback match "${city}" -> "${key}": ${coords.latitude}, ${coords.longitude}`);
-      return coords;
-    }
+    if (normalized.includes(key) || key.includes(normalized)) return coords;
   }
 
-  console.warn(`  ❌ No fallback coordinates for "${city}"`);
   return null;
 }

@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import prisma from '../config/database';
 import { AuthRequest } from '../middleware/auth';
+import logger from '../utils/logger';
 
 export const getPendingDogs = async (req: AuthRequest, res: Response) => {
   try {
@@ -8,21 +9,16 @@ export const getPendingDogs = async (req: AuthRequest, res: Response) => {
       where: { status: 'PENDING' },
       include: {
         owner: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
+          select: { id: true, firstName: true, lastName: true, email: true },
         },
       },
       orderBy: { createdAt: 'desc' },
     });
 
     res.json({ success: true, dogs });
-  } catch (error: any) {
-    console.error('Get pending dogs error:', error);
-    res.status(500).json({ message: error.message });
+  } catch (error) {
+    logger.error({ err: error }, 'Get pending dogs error');
+    res.status(500).json({ success: false, message: 'Failed to fetch pending dogs' });
   }
 };
 
@@ -34,9 +30,9 @@ export const approveDog = async (req: AuthRequest, res: Response) => {
     });
 
     res.json({ success: true, dog });
-  } catch (error: any) {
-    console.error('Approve dog error:', error);
-    res.status(500).json({ message: error.message });
+  } catch (error) {
+    logger.error({ err: error }, 'Approve dog error');
+    res.status(500).json({ success: false, message: 'Failed to approve dog' });
   }
 };
 
@@ -48,9 +44,9 @@ export const rejectDog = async (req: AuthRequest, res: Response) => {
     });
 
     res.json({ success: true, dog });
-  } catch (error: any) {
-    console.error('Reject dog error:', error);
-    res.status(500).json({ message: error.message });
+  } catch (error) {
+    logger.error({ err: error }, 'Reject dog error');
+    res.status(500).json({ success: false, message: 'Failed to reject dog' });
   }
 };
 
@@ -58,46 +54,32 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
   try {
     const users = await prisma.user.findMany({
       select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        phone: true,
-        avatar: true,
-        verified: true,
-        city: true,
-        county: true,
-        createdAt: true,
+        id: true, email: true, firstName: true, lastName: true,
+        role: true, phone: true, avatar: true, verified: true,
+        city: true, county: true, createdAt: true,
       },
       orderBy: { createdAt: 'desc' },
     });
 
     res.json({ success: true, users });
-  } catch (error: any) {
-    console.error('Get all users error:', error);
-    res.status(500).json({ message: error.message });
+  } catch (error) {
+    logger.error({ err: error }, 'Get all users error');
+    res.status(500).json({ success: false, message: 'Failed to fetch users' });
   }
 };
 
 export const getStats = async (req: AuthRequest, res: Response) => {
   try {
-    const totalUsers = await prisma.user.count();
-    const totalDogs = await prisma.dog.count();
-    const activeDogs = await prisma.dog.count({ where: { status: 'ACTIVE' } });
-    const pendingDogs = await prisma.dog.count({ where: { status: 'PENDING' } });
+    const [totalUsers, totalDogs, activeDogs, pendingDogs] = await Promise.all([
+      prisma.user.count(),
+      prisma.dog.count(),
+      prisma.dog.count({ where: { status: 'ACTIVE' } }),
+      prisma.dog.count({ where: { status: 'PENDING' } }),
+    ]);
 
-    res.json({
-      success: true,
-      stats: {
-        totalUsers,
-        totalDogs,
-        activeDogs,
-        pendingDogs,
-      },
-    });
-  } catch (error: any) {
-    console.error('Get stats error:', error);
-    res.status(500).json({ message: error.message });
+    res.json({ success: true, stats: { totalUsers, totalDogs, activeDogs, pendingDogs } });
+  } catch (error) {
+    logger.error({ err: error }, 'Get stats error');
+    res.status(500).json({ success: false, message: 'Failed to fetch stats' });
   }
 };

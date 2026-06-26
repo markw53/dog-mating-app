@@ -1,19 +1,14 @@
 import { Response } from 'express';
 import prisma from '../config/database';
 import { AuthRequest } from '../middleware/auth';
+import logger from '../utils/logger';
 
 export const createReview = async (req: AuthRequest, res: Response) => {
   try {
     const { dogId, rating, comment } = req.body;
 
-    // Check if review already exists
     const existingReview = await prisma.review.findUnique({
-      where: {
-        dogId_reviewerId: {
-          dogId,
-          reviewerId: req.user!.id,
-        },
-      },
+      where: { dogId_reviewerId: { dogId, reviewerId: req.user!.id } },
     });
 
     if (existingReview) {
@@ -21,28 +16,18 @@ export const createReview = async (req: AuthRequest, res: Response) => {
     }
 
     const review = await prisma.review.create({
-      data: {
-        dogId,
-        reviewerId: req.user!.id,
-        rating: parseInt(rating),
-        comment,
-      },
+      data: { dogId, reviewerId: req.user!.id, rating: parseInt(rating), comment },
       include: {
         reviewer: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            avatar: true,
-          },
+          select: { id: true, firstName: true, lastName: true, avatar: true },
         },
       },
     });
 
     res.status(201).json({ success: true, review });
-  } catch (error: any) {
-    console.error('Create review error:', error);
-    res.status(500).json({ message: error.message });
+  } catch (error) {
+    logger.error({ err: error }, 'Create review error');
+    res.status(500).json({ success: false, message: 'Failed to create review' });
   }
 };
 
@@ -54,32 +39,24 @@ export const getDogReviews = async (req: AuthRequest, res: Response) => {
       where: { dogId },
       include: {
         reviewer: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            avatar: true,
-          },
+          select: { id: true, firstName: true, lastName: true, avatar: true },
         },
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    // Calculate average rating
-    const avgRating = reviews.length > 0
-      ? reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length
-      : 0;
+    const avgRating =
+      reviews.length > 0
+        ? reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length
+        : 0;
 
     res.json({
       success: true,
       reviews,
-      stats: {
-        total: reviews.length,
-        avgRating: Math.round(avgRating * 10) / 10,
-      },
+      stats: { total: reviews.length, avgRating: Math.round(avgRating * 10) / 10 },
     });
-  } catch (error: any) {
-    console.error('Get dog reviews error:', error);
-    res.status(500).json({ message: error.message });
+  } catch (error) {
+    logger.error({ err: error }, 'Get dog reviews error');
+    res.status(500).json({ success: false, message: 'Failed to fetch reviews' });
   }
 };

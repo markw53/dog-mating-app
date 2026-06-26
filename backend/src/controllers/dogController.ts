@@ -1,37 +1,34 @@
-// controllers/dogController.ts
 import { Response } from 'express';
 import prisma from '../config/database';
 import { AuthRequest } from '../middleware/auth';
 import { Gender, Status } from '@prisma/client';
 import { geocodeAddress, getFallbackCoordinates } from '../utils/geocoding';
+import logger from '../utils/logger';
+import { uploadToCloudinary } from '../utils/cloudinary';
 
 export const createDog = async (req: AuthRequest, res: Response) => {
   try {
     const genderUpper = (req.body.gender as string).toUpperCase() as Gender;
 
-    // Geocode the address
     let latitude: number | null = null;
     let longitude: number | null = null;
 
     if (req.body.latitude && req.body.longitude) {
-      // Use provided coordinates
       latitude = parseFloat(req.body.latitude);
       longitude = parseFloat(req.body.longitude);
     } else {
-      // Try to geocode
       const coords = await geocodeAddress(
         req.body.address,
         req.body.city,
         req.body.county,
         req.body.postcode,
-        req.body.country || 'UK'
+        req.body.country || 'UK',
       );
 
       if (coords) {
         latitude = coords.latitude;
         longitude = coords.longitude;
       } else {
-        // Fallback to city coordinates
         const fallback = getFallbackCoordinates(req.body.city);
         if (fallback) {
           latitude = fallback.latitude;
@@ -51,29 +48,21 @@ export const createDog = async (req: AuthRequest, res: Response) => {
       description: req.body.description,
       images: req.body.images || [],
       mainImage: req.body.mainImage || null,
-      
-      // Health
       vaccinated: Boolean(req.body.vaccinated),
       neutered: Boolean(req.body.neutered),
       vetName: req.body.vetName || null,
       vetContact: req.body.vetContact || null,
       medicalHistory: req.body.medicalHistory || null,
-      
-      // Pedigree
       registered: Boolean(req.body.registered),
       registrationNumber: req.body.registrationNumber || null,
       registry: req.body.registry || null,
       sire: req.body.sire || null,
       dam: req.body.dam || null,
-      
-      // Breeding
       available: req.body.available !== false,
       studFee: req.body.studFee ? parseFloat(req.body.studFee) : null,
       studFeeNegotiable: Boolean(req.body.studFeeNegotiable),
       previousLitters: parseInt(req.body.previousLitters) || 0,
       temperament: req.body.temperament || [],
-      
-      // Location
       address: req.body.address || null,
       city: req.body.city,
       county: req.body.county,
@@ -81,7 +70,6 @@ export const createDog = async (req: AuthRequest, res: Response) => {
       country: req.body.country || 'UK',
       latitude,
       longitude,
-      
       ownerId: req.user!.id,
       status: Status.PENDING,
     };
@@ -101,16 +89,12 @@ export const createDog = async (req: AuthRequest, res: Response) => {
       },
     });
 
-    console.log('✅ Dog created with coordinates:', { latitude, longitude });
+    logger.info({ dogId: dog.id, userId: req.user!.id }, 'Dog created');
 
-    res.status(201).json({
-      success: true,
-      dog,
-    });
-  } catch (error: unknown) {
-    const err = error as Error;
-    console.error('❌ Create dog error:', err);
-    res.status(500).json({ message: err.message });
+    res.status(201).json({ success: true, dog });
+  } catch (error) {
+    logger.error({ err: error }, 'Create dog error');
+    res.status(500).json({ success: false, message: 'Failed to create dog' });
   }
 };
 
@@ -130,15 +114,10 @@ export const getAllDogs = async (req: AuthRequest, res: Response) => {
 
     const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
 
-    const where: any = {
-      status: Status.ACTIVE,
-    };
+    const where: any = { status: Status.ACTIVE };
 
-    if (breed) {
-      where.breed = { contains: breed as string, mode: 'insensitive' };
-    }
+    if (breed) where.breed = { contains: breed as string, mode: 'insensitive' };
 
-    // Convert gender to uppercase to match Prisma enum
     if (gender) {
       const genderUpper = (gender as string).toUpperCase();
       if (genderUpper === 'MALE' || genderUpper === 'FEMALE') {
@@ -146,13 +125,8 @@ export const getAllDogs = async (req: AuthRequest, res: Response) => {
       }
     }
 
-    if (city) {
-      where.city = { contains: city as string, mode: 'insensitive' };
-    }
-
-    if (county) {
-      where.county = { contains: county as string, mode: 'insensitive' };
-    }
+    if (city) where.city = { contains: city as string, mode: 'insensitive' };
+    if (county) where.county = { contains: county as string, mode: 'insensitive' };
 
     if (minAge || maxAge) {
       where.age = {};
@@ -160,12 +134,7 @@ export const getAllDogs = async (req: AuthRequest, res: Response) => {
       if (maxAge) where.age.lte = parseInt(maxAge as string);
     }
 
-    // Add available filter
-    if (available === 'true') {
-      where.available = true;
-    }
-
-    console.log('🔍 Query filters:', JSON.stringify(where, null, 2));
+    if (available === 'true') where.available = true;
 
     const [dogs, total] = await Promise.all([
       prisma.dog.findMany({
@@ -189,8 +158,6 @@ export const getAllDogs = async (req: AuthRequest, res: Response) => {
       prisma.dog.count({ where }),
     ]);
 
-    console.log(`✅ Found ${dogs.length} dogs out of ${total} total`);
-
     res.json({
       success: true,
       dogs,
@@ -198,25 +165,20 @@ export const getAllDogs = async (req: AuthRequest, res: Response) => {
       page: parseInt(page as string),
       totalPages: Math.ceil(total / parseInt(limit as string)),
     });
-  } catch (error: unknown) {
-    const err = error as Error;
-    console.error('❌ Get all dogs error:', err);
-    res.status(500).json({ message: err.message });
+  } catch (error) {
+    logger.error({ err: error }, 'Get all dogs error');
+    res.status(500).json({ success: false, message: 'Failed to fetch dogs' });
   }
 };
 
 export const getMyDogs = async (req: AuthRequest, res: Response) => {
   try {
-    console.log('📋 Getting dogs for user:', req.user?.id);
-
     if (!req.user?.id) {
       return res.status(401).json({ message: 'User not authenticated' });
     }
 
     const dogs = await prisma.dog.findMany({
-      where: {
-        ownerId: req.user.id,
-      },
+      where: { ownerId: req.user.id },
       include: {
         owner: {
           select: {
@@ -230,22 +192,13 @@ export const getMyDogs = async (req: AuthRequest, res: Response) => {
           },
         },
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: { createdAt: 'desc' },
     });
 
-    console.log('✅ Found', dogs.length, 'dogs for user');
-
-    res.json({
-      success: true,
-      dogs,
-      total: dogs.length,
-    });
-  } catch (error: unknown) {
-    const err = error as Error;
-    console.error('❌ Get my dogs error:', err);
-    res.status(500).json({ message: err.message });
+    res.json({ success: true, dogs, total: dogs.length });
+  } catch (error) {
+    logger.error({ err: error }, 'Get my dogs error');
+    res.status(500).json({ success: false, message: 'Failed to fetch your dogs' });
   }
 };
 
@@ -293,20 +246,15 @@ export const getDogById = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: 'Dog not found' });
     }
 
-    // Increment views
     await prisma.dog.update({
       where: { id },
       data: { views: { increment: 1 } },
     });
 
-    res.json({
-      success: true,
-      dog,
-    });
-  } catch (error: unknown) {
-    const err = error as Error;
-    console.error('❌ Get dog by ID error:', err);
-    res.status(500).json({ message: err.message });
+    res.json({ success: true, dog });
+  } catch (error) {
+    logger.error({ err: error }, 'Get dog by ID error');
+    res.status(500).json({ success: false, message: 'Failed to fetch dog' });
   }
 };
 
@@ -318,9 +266,7 @@ export const updateDog = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ message: 'Invalid dog ID' });
     }
 
-    const dog = await prisma.dog.findUnique({
-      where: { id },
-    });
+    const dog = await prisma.dog.findUnique({ where: { id } });
 
     if (!dog) {
       return res.status(404).json({ message: 'Dog not found' });
@@ -331,86 +277,46 @@ export const updateDog = async (req: AuthRequest, res: Response) => {
     }
 
     const {
-      name,
-      breed,
-      gender,
-      dateOfBirth,
-      age,
-      weight,
-      color,
-      description,
-      images,
-      mainImage,
-      vaccinated,
-      neutered,
-      vetName,
-      vetContact,
-      medicalHistory,
-      registered,
-      registrationNumber,
-      registry,
-      sire,
-      dam,
-      available,
-      studFee,
-      studFeeNegotiable,
-      previousLitters,
-      temperament,
-      address,
-      city,
-      county,
-      postcode,
-      country,
-      latitude,
-      longitude,
-      status,
+      name, breed, gender, dateOfBirth, age, weight, color, description, images, mainImage,
+      vaccinated, neutered, vetName, vetContact, medicalHistory,
+      registered, registrationNumber, registry, sire, dam,
+      available, studFee, studFeeNegotiable, previousLitters, temperament,
+      address, city, county, postcode, country, latitude, longitude, status,
     } = req.body;
 
-    // Initialize coordinate variables at function scope
     let newLatitude: number | null | undefined = undefined;
     let newLongitude: number | null | undefined = undefined;
 
-    // If coordinates are provided in the request, use them
-    if (latitude !== undefined) {
-      newLatitude = latitude ? parseFloat(latitude) : null;
-    }
-    if (longitude !== undefined) {
-      newLongitude = longitude ? parseFloat(longitude) : null;
-    }
+    if (latitude !== undefined) newLatitude = latitude ? parseFloat(latitude) : null;
+    if (longitude !== undefined) newLongitude = longitude ? parseFloat(longitude) : null;
 
-    // Check if location changed and needs re-geocoding
     const locationChanged =
       (city && city !== dog.city) ||
       (county && county !== dog.county) ||
       (address !== undefined && address !== dog.address) ||
       (postcode !== undefined && postcode !== dog.postcode);
 
-    // If location changed and no coordinates provided, try to geocode
     if (locationChanged && latitude === undefined && longitude === undefined) {
       const coords = await geocodeAddress(
         address !== undefined ? address : dog.address,
         city || dog.city,
         county || dog.county,
         postcode !== undefined ? postcode : dog.postcode,
-        country || dog.country
+        country || dog.country,
       );
 
       if (coords) {
         newLatitude = coords.latitude;
         newLongitude = coords.longitude;
-        console.log('🗺️ Re-geocoded location:', { newLatitude, newLongitude });
       } else {
-        // Fallback to city coordinates
         const fallback = getFallbackCoordinates(city || dog.city);
         if (fallback) {
           newLatitude = fallback.latitude;
           newLongitude = fallback.longitude;
-          console.log('🗺️ Using fallback coordinates:', { newLatitude, newLongitude });
         }
       }
     }
 
-    // Build update data object
     const updateData: any = {};
 
     if (name) updateData.name = name;
@@ -465,16 +371,10 @@ export const updateDog = async (req: AuthRequest, res: Response) => {
       },
     });
 
-    console.log('✅ Dog updated successfully');
-
-    res.json({
-      success: true,
-      dog: updatedDog,
-    });
-  } catch (error: unknown) {
-    const err = error as Error;
-    console.error('❌ Update dog error:', err);
-    res.status(500).json({ message: err.message });
+    res.json({ success: true, dog: updatedDog });
+  } catch (error) {
+    logger.error({ err: error }, 'Update dog error');
+    res.status(500).json({ success: false, message: 'Failed to update dog' });
   }
 };
 
@@ -486,9 +386,7 @@ export const deleteDog = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ message: 'Invalid dog ID' });
     }
 
-    const dog = await prisma.dog.findUnique({
-      where: { id },
-    });
+    const dog = await prisma.dog.findUnique({ where: { id } });
 
     if (!dog) {
       return res.status(404).json({ message: 'Dog not found' });
@@ -498,18 +396,12 @@ export const deleteDog = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
-    await prisma.dog.delete({
-      where: { id },
-    });
+    await prisma.dog.delete({ where: { id } });
 
-    res.json({
-      success: true,
-      message: 'Dog deleted successfully',
-    });
-  } catch (error: unknown) {
-    const err = error as Error;
-    console.error('❌ Delete dog error:', err);
-    res.status(500).json({ message: err.message });
+    res.json({ success: true, message: 'Dog deleted successfully' });
+  } catch (error) {
+    logger.error({ err: error }, 'Delete dog error');
+    res.status(500).json({ success: false, message: 'Failed to delete dog' });
   }
 };
 
@@ -525,9 +417,7 @@ export const uploadDogImages = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ message: 'No files uploaded' });
     }
 
-    const dog = await prisma.dog.findUnique({
-      where: { id },
-    });
+    const dog = await prisma.dog.findUnique({ where: { id } });
 
     if (!dog) {
       return res.status(404).json({ message: 'Dog not found' });
@@ -537,8 +427,9 @@ export const uploadDogImages = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
-    const imagePaths = (req.files as Express.Multer.File[]).map(
-      (file) => `/uploads/${file.filename}`
+    const files = req.files as Express.Multer.File[];
+    const imagePaths = await Promise.all(
+      files.map((file) => uploadToCloudinary(file.buffer, 'dogmate/dogs')),
     );
 
     const updatedDog = await prisma.dog.update({
@@ -562,14 +453,9 @@ export const uploadDogImages = async (req: AuthRequest, res: Response) => {
       },
     });
 
-    res.json({
-      success: true,
-      images: imagePaths,
-      dog: updatedDog,
-    });
-  } catch (error: unknown) {
-    const err = error as Error;
-    console.error('❌ Upload images error:', err);
-    res.status(500).json({ message: err.message });
+    res.json({ success: true, images: imagePaths, dog: updatedDog });
+  } catch (error) {
+    logger.error({ err: error }, 'Upload dog images error');
+    res.status(500).json({ success: false, message: 'Failed to upload images' });
   }
 };

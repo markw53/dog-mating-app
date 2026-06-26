@@ -1,15 +1,18 @@
 import { PrismaClient } from '@prisma/client';
+import logger from '../utils/logger';
+
+const isDev = process.env.NODE_ENV !== 'production';
 
 const prisma = new PrismaClient({
-  log: ['query', 'error', 'warn'],
+  log: isDev ? ['error', 'warn'] : ['error'],
 });
 
 export const connectDB = async () => {
   try {
     await prisma.$connect();
-    console.log('✅ PostgreSQL Connected');
+    logger.info('PostgreSQL connected');
   } catch (error: any) {
-    console.error('❌ Database connection error:', error.message);
+    logger.error({ err: error }, 'Database connection error');
     process.exit(1);
   }
 };

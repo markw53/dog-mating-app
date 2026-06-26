@@ -1,26 +1,18 @@
-// controllers/matchingController.ts
 import { Response, NextFunction } from 'express';
 import prisma from '../config/database';
 import { AuthRequest } from '../middleware/auth';
 import { calculateMatchScore } from '../services/matchingService';
 import { Gender, Status } from '@prisma/client';
+import logger from '../utils/logger';
 
 export const findMatches = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    console.log('🔍 findMatches called');
-    console.log('   User:', req.user?.id, req.user?.email);
-    console.log('   Params:', req.params);
-    console.log('   Query:', req.query);
-
     const dogId = req.params.dogId as string;
     const { limit = '10', minScore = '30' } = req.query;
 
     if (!dogId || Array.isArray(dogId)) {
-      console.log('   ❌ Invalid dog ID');
       return res.status(400).json({ message: 'Invalid dog ID' });
     }
-
-    console.log('   Looking for dog:', dogId);
 
     const sourceDog = await prisma.dog.findUnique({
       where: { id: dogId },
@@ -39,22 +31,14 @@ export const findMatches = async (req: AuthRequest, res: Response, next: NextFun
     });
 
     if (!sourceDog) {
-      console.log('   ❌ Dog not found');
       return res.status(404).json({ message: 'Dog not found' });
     }
 
-    console.log('   ✅ Dog found:', sourceDog.name, 'Owner:', sourceDog.ownerId);
-
-    // Check ownership or admin
     if (sourceDog.ownerId !== req.user!.id && req.user!.role !== 'ADMIN') {
-      console.log('   ❌ Not authorized. Dog owner:', sourceDog.ownerId, 'User:', req.user!.id);
       return res.status(403).json({ message: 'Not authorized to view matches for this dog' });
     }
 
-    console.log('   ✅ Authorization passed');
-
     const oppositeGender = sourceDog.gender === Gender.MALE ? Gender.FEMALE : Gender.MALE;
-    console.log('   Looking for opposite gender:', oppositeGender);
 
     const potentialMatches = await prisma.dog.findMany({
       where: {
@@ -81,10 +65,8 @@ export const findMatches = async (req: AuthRequest, res: Response, next: NextFun
       },
     });
 
-    console.log('   📊 Found potential matches:', potentialMatches.length);
-
     const matches = potentialMatches
-      .map(dog => {
+      .map((dog) => {
         const matchScore = calculateMatchScore(
           {
             breed: sourceDog.breed,
@@ -113,7 +95,7 @@ export const findMatches = async (req: AuthRequest, res: Response, next: NextFun
               vaccinated: dog.vaccinated,
               neutered: dog.neutered,
             },
-          }
+          },
         );
 
         return {
@@ -170,11 +152,9 @@ export const findMatches = async (req: AuthRequest, res: Response, next: NextFun
           distance: matchScore.distance,
         };
       })
-      .filter(match => match.matchScore >= parseInt(minScore as string))
+      .filter((match) => match.matchScore >= parseInt(minScore as string))
       .sort((a, b) => b.matchScore - a.matchScore)
       .slice(0, parseInt(limit as string));
-
-    console.log('   ✅ Returning', matches.length, 'matches after filtering');
 
     res.json({
       success: true,
@@ -189,37 +169,26 @@ export const findMatches = async (req: AuthRequest, res: Response, next: NextFun
       total: matches.length,
     });
   } catch (error) {
-    console.error('❌ Find matches error:', error);
+    logger.error({ err: error }, 'Find matches error');
     next(error);
   }
 };
 
 export const getMatchStats = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    console.log('📈 getMatchStats called');
-    console.log('   User:', req.user?.id);
-    console.log('   Params:', req.params);
-    
     const dogId = req.params.dogId as string;
 
     if (!dogId || Array.isArray(dogId)) {
-      console.log('   ❌ Invalid dog ID');
       return res.status(400).json({ message: 'Invalid dog ID' });
     }
 
-    const sourceDog = await prisma.dog.findUnique({
-      where: { id: dogId },
-    });
+    const sourceDog = await prisma.dog.findUnique({ where: { id: dogId } });
 
     if (!sourceDog) {
-      console.log('   ❌ Dog not found');
       return res.status(404).json({ message: 'Dog not found' });
     }
 
-    console.log('   ✅ Dog found:', sourceDog.name);
-
     if (sourceDog.ownerId !== req.user!.id && req.user!.role !== 'ADMIN') {
-      console.log('   ❌ Not authorized');
       return res.status(403).json({ message: 'Not authorized' });
     }
 
@@ -248,19 +217,18 @@ export const getMatchStats = async (req: AuthRequest, res: Response, next: NextF
         : 0,
     ]);
 
-    console.log('   ✅ Stats:', { totalPotential, sameBreed, nearbyCount });
-
     res.json({
       success: true,
       stats: {
         totalPotential,
         sameBreed,
         nearby: nearbyCount,
-        breedCompatibility: totalPotential > 0 ? Math.round((sameBreed / totalPotential) * 100) : 0,
+        breedCompatibility:
+          totalPotential > 0 ? Math.round((sameBreed / totalPotential) * 100) : 0,
       },
     });
   } catch (error) {
-    console.error('❌ Get match stats error:', error);
+    logger.error({ err: error }, 'Get match stats error');
     next(error);
   }
 };
