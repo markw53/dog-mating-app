@@ -33,7 +33,6 @@ export default function Navbar() {
 
   // Debug log to see user role
   useEffect(() => {
-    console.log('Navbar - User role:', user?.role);
   }, [user?.role]);
 
   return (

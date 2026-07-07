@@ -1,7 +1,7 @@
 // app/(main)/messages/page.tsx
 'use client';
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { Suspense, useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useRequireAuth } from '@/lib/hooks/useRequireAuth';
 import { useDebounce } from '@/lib/hooks/useDebounce';
@@ -26,9 +26,9 @@ import { Card } from '@/components/ui/Card';
 import { Section } from '@/components/ui/Section';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
-import { io, Socket } from 'socket.io-client';
+import { io } from 'socket.io-client';
 
-export default function MessagesPage() {
+function MessagesPageInner() {
   const searchParams = useSearchParams();
 
   // Auth hook - handles redirect automatically if not authenticated
@@ -47,7 +47,12 @@ export default function MessagesPage() {
 
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const socketRef = useRef<Socket | null>(null);
+  // Socket handlers read this instead of closing over selectedConversation,
+  // so the socket effect doesn't need to re-run on conversation change
+  const selectedConversationIdRef = useRef<string | null>(null);
+  // Debounce conversation-list refetches so a burst of incoming messages
+  // triggers one request instead of one per message
+  const refetchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Get user ID safely
   const userId = useMemo(() => {
@@ -117,32 +122,31 @@ export default function MessagesPage() {
   useEffect(() => {
     if (!isAuthorized || !user) return;
 
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
     const socketUrl =
       process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000';
     const socket = io(socketUrl, {
       transports: ['websocket', 'polling'],
+      auth: { token },
     });
-    socketRef.current = socket;
-
-    if (userId) {
-      socket.emit('join', userId);
-    }
 
     socket.on('newMessage', (message: Message) => {
-      setMessages((prev) => [...prev, message]);
-      setTimeout(scrollToBottom, 100);
+      // Only append if the message belongs to the open conversation
+      if (message.conversationId === selectedConversationIdRef.current) {
+        setMessages((prev) => [...prev, message]);
+        setTimeout(scrollToBottom, 100);
+      }
 
-      // Optionally refetch conversations to update lastMessage
-      refetchConversations();
-    });
-
-    socket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
+      // Refetch conversations (debounced) to update lastMessage previews
+      if (refetchDebounceRef.current) clearTimeout(refetchDebounceRef.current);
+      refetchDebounceRef.current = setTimeout(() => refetchConversations(), 500);
     });
 
     return () => {
       socket.disconnect();
-      socketRef.current = null;
+      if (refetchDebounceRef.current) clearTimeout(refetchDebounceRef.current);
     };
   }, [isAuthorized, user, userId, scrollToBottom, refetchConversations]);
 
@@ -150,7 +154,10 @@ export default function MessagesPage() {
   useEffect(() => {
     if (selectedConversation) {
       const conversationId = selectedConversation._id || selectedConversation.id;
+      selectedConversationIdRef.current = conversationId;
       fetchMessages(conversationId);
+    } else {
+      selectedConversationIdRef.current = null;
     }
   }, [selectedConversation, fetchMessages]);
 
@@ -205,13 +212,7 @@ export default function MessagesPage() {
       setMessageText('');
       setTimeout(scrollToBottom, 100);
 
-      // Emit socket event
-      if (socketRef.current) {
-        socketRef.current.emit('sendMessage', {
-          receiverId,
-          message: response.message,
-        });
-      }
+      // Real-time delivery to the receiver is handled server-side by the API
 
       // Refetch conversations to update lastMessage
       refetchConversations();
@@ -648,5 +649,14 @@ function NoConversationSelected() {
         </p>
       </div>
     </div>
+  );
+}
+
+// useSearchParams() requires a Suspense boundary for prerendering
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={null}>
+      <MessagesPageInner />
+    </Suspense>
   );
 }

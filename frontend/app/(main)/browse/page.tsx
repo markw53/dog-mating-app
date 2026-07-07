@@ -1,7 +1,7 @@
 // app/(main)/browse/page.tsx
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { Suspense, useState, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { dogsApi } from '@/lib/api/dogs';
 import { useDebounce } from '@/lib/hooks/useDebounce';
@@ -58,7 +58,7 @@ const buildApiFilters = (filters: Filters): Record<string, string | number | boo
   ) as Record<string, string | number | boolean>;
 };
 
-export default function BrowsePage() {
+function BrowsePageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showFilters, setShowFilters] = useState(false);
@@ -284,5 +284,14 @@ export default function BrowsePage() {
         </div>
       </section>
     </div>
+  );
+}
+
+// useSearchParams() requires a Suspense boundary for prerendering
+export default function BrowsePage() {
+  return (
+    <Suspense fallback={null}>
+      <BrowsePageInner />
+    </Suspense>
   );
 }

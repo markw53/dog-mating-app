@@ -1,7 +1,7 @@
 // app/(auth)/main/register/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/hooks/useAuth';
@@ -9,7 +9,7 @@ import { Dog, Mail, Lock, User, Phone, MapPin, ArrowRight, Loader2, CheckCircle 
 import { Card } from '@/components/ui/Card';
 import toast from 'react-hot-toast';
 
-export default function RegisterPage() {
+function RegisterPageInner() {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirect') || '/browse';
   
@@ -456,5 +456,14 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// useSearchParams() requires a Suspense boundary for prerendering
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterPageInner />
+    </Suspense>
   );
 }

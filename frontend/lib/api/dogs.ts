@@ -68,12 +68,9 @@ export const dogsApi = {
 
   update: async (id: string, data: UpdateDogData): Promise<{ success: boolean; dog: Dog }> => {
     try {
-      console.log('📤 Updating dog:', id);
-      console.log('📝 Update data:', data);
       
       const response = await apiClient.put<{ success: boolean; dog: Dog }>(`/dogs/${id}`, data);
       
-      console.log('✅ Dog updated:', response.data);
       return response.data;
     } catch (err) {
       const error = err as AxiosError<ApiErrorResponse>;
@@ -95,7 +92,6 @@ export const dogsApi = {
 
   uploadImages: async (dogId: string, files: File[]): Promise<{ success: boolean; images: string[]; dog: Dog }> => {
     try {
-      console.log('📤 Uploading', files.length, 'images for dog:', dogId);
       
       const formData = new FormData();
       files.forEach((file) => {
@@ -112,7 +108,6 @@ export const dogsApi = {
         }
       );
       
-      console.log('✅ Images uploaded:', response.data.images);
       return response.data;
     } catch (err) {
       const error = err as AxiosError<ApiErrorResponse>;

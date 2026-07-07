@@ -39,8 +39,6 @@ export default function DogCard({ dog }: DogCardProps) {
   const imageUrl = dog.mainImage || dog.images?.[0];
   const fullImageUrl = imageUrl ? getImageUrl(imageUrl) : null;
 
-  console.log('DogCard - imageUrl:', imageUrl);
-  console.log('DogCard - fullImageUrl:', fullImageUrl);
 
   return (
     <Link href={`/dogs/${dog._id || dog.id}`}>

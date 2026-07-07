@@ -29,11 +29,9 @@ interface ApiErrorResponse {
 export const authApi = {
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
     try {
-      console.log('🔐 authApi.login called with:', credentials);
       
       const response = await apiClient.post<AuthResponse>('/auth/login', credentials);
       
-      console.log('✅ Login response received');
       
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
@@ -50,7 +48,6 @@ export const authApi = {
 
   register: async (data: RegisterData): Promise<AuthResponse> => {
     try {
-      console.log('📝 Register attempt');
       
       const response = await apiClient.post<AuthResponse>('/auth/register', data);
       

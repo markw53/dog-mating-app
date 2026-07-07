@@ -5,14 +5,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getImageUrl } from '@/lib/api/client';
 import { MapPin, Heart, Award, TrendingUp } from 'lucide-react';
-import { User } from '@/types';
+import { Dog } from '@/types';
 
 interface MatchCardProps {
   match: Match;
 }
 
 // Helper to safely get owner info
-function getOwnerInfo(owner: User | string | undefined): User | null {
+function getOwnerInfo(owner: Dog['owner'] | string | undefined): Dog['owner'] | null {
   if (!owner || typeof owner === 'string') return null;
   return owner;
 }

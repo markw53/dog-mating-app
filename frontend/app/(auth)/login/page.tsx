@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/hooks/useAuth';
@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/Card';
 import toast from 'react-hot-toast';
 import { AxiosError } from 'axios';
 
-export default function LoginPage() {
+function LoginPageInner() {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirect') || '/browse';
   
@@ -216,5 +216,14 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// useSearchParams() requires a Suspense boundary for prerendering
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageInner />
+    </Suspense>
   );
 }

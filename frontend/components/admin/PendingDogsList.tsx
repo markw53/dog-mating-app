@@ -47,7 +47,7 @@ export default function PendingDogsList({
                   <h3 className="text-xl font-bold text-gray-900">{dog.name}</h3>
                   <p className="text-gray-600">{dog.breed}</p>
                   <p className="text-sm text-gray-500 mt-1">
-                    Owner: {dog.owner.firstName} {dog.owner.lastName}
+                    Owner: {dog.owner ? `${dog.owner.firstName} ${dog.owner.lastName}` : 'Unknown'}
                   </p>
                 </div>
                 <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-semibold">

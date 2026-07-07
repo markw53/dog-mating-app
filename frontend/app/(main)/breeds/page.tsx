@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { Suspense, useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { breedsApi, Breed } from '@/lib/api/breeds';
 import { useDebounce } from '@/lib/hooks/useDebounce';
@@ -27,7 +27,7 @@ const INITIAL_FILTERS: BreedFilterValues = {
   search: '',
 };
 
-export default function BreedsPage() {
+function BreedsPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showFilters, setShowFilters] = useState(false);
@@ -396,5 +396,14 @@ export default function BreedsPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+// useSearchParams() requires a Suspense boundary for prerendering
+export default function BreedsPage() {
+  return (
+    <Suspense fallback={null}>
+      <BreedsPageInner />
+    </Suspense>
   );
 }

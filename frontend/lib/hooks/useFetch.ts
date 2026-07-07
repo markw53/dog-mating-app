@@ -1,5 +1,5 @@
 // hooks/useFetch.ts
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { AxiosError } from 'axios';
 
 interface UseFetchOptions<T> {
@@ -16,58 +16,49 @@ export function useFetch<T>(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<AxiosError | null>(null);
 
+  // Keep the latest fetchFn/options in refs so `fetchData` has a stable
+  // identity — callers put it in effect deps (e.g. socket setup) and an
+  // unstable identity would re-run those effects on every render.
+  const fetchFnRef = useRef(fetchFn);
+  const optionsRef = useRef(options);
+  useEffect(() => {
+    fetchFnRef.current = fetchFn;
+    optionsRef.current = options;
+  });
+
+  // Guards every path (initial load and refetch) against state updates
+  // after the component unmounts
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const result = await fetchFn();
+      const result = await fetchFnRef.current();
+      if (!mountedRef.current) return;
       setData(result);
-      options?.onSuccess?.(result);
+      optionsRef.current?.onSuccess?.(result);
     } catch (err) {
+      if (!mountedRef.current) return;
       const axiosError = err as AxiosError;
       setError(axiosError);
-      options?.onError?.(axiosError);
+      optionsRef.current?.onError?.(axiosError);
     } finally {
-      setLoading(false);
+      if (mountedRef.current) {
+        setLoading(false);
+      }
     }
-  }, [fetchFn, options]);
+  }, []);
 
   useEffect(() => {
-    let isMounted = true;
-
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const result = await fetchFn();
-        
-        if (isMounted) {
-          setData(result);
-          options?.onSuccess?.(result);
-        }
-      } catch (err) {
-        if (isMounted) {
-          const axiosError = err as AxiosError;
-          setError(axiosError);
-          options?.onError?.(axiosError);
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    loadData();
-
-    return () => {
-      isMounted = false;
-    };
+    fetchData();
   }, deps); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const refetch = useCallback(async () => {
-    await fetchData();
-  }, [fetchData]);
-
-  return { data, loading, error, refetch };
+  return { data, loading, error, refetch: fetchData };
 }

@@ -43,6 +43,7 @@ export interface Dog {
   status: 'pending' | 'active' | 'rejected' | 'inactive';
   views?: number;
   favorites?: number;
+  ownerId?: string;
 
   // Owner
   owner?: {
@@ -209,7 +210,6 @@ export interface UpdateDogData {
   breed?: string;
   gender?: 'MALE' | 'FEMALE';
   dateOfBirth?: string;
-  age?: number;
   weight?: number;
   color?: string;
   description?: string;

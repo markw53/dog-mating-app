@@ -45,17 +45,9 @@ export const matchingApi = {
       const baseURL = apiClient.defaults.baseURL;
       const fullURL = `${baseURL}${url}`;
       
-      console.log('🔍 findMatches request:');
-      console.log('   dogId:', dogId);
-      console.log('   params:', params);
-      console.log('   url:', url);
-      console.log('   baseURL:', baseURL);
-      console.log('   fullURL:', fullURL);
-      console.log('   token:', localStorage.getItem('token') ? 'Present' : 'Missing');
       
       const response = await apiClient.get<MatchResponse>(url, { params });
       
-      console.log('✅ findMatches response:', response.data);
       return response.data;
     } catch (err) {
       const error = err as AxiosError<ApiErrorResponse>;
@@ -73,11 +65,9 @@ export const matchingApi = {
 
   getStats: async (dogId: string): Promise<{ success: boolean; stats: MatchStats }> => {
     try {
-      console.log('📈 getStats request for dogId:', dogId);
       const response = await apiClient.get<{ success: boolean; stats: MatchStats }>(
         `/matching/${dogId}/stats`
       );
-      console.log('✅ getStats response:', response.data);
       return response.data;
     } catch (err) {
       const error = err as AxiosError<ApiErrorResponse>;

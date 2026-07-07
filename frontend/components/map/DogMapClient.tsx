@@ -110,17 +110,6 @@ export default function DogMapClient({ dogs }: DogMapProps) {
     })
     .filter(Boolean) as { dog: Dog; coords: [number, number] }[];
 
-  console.log(`🗺️ Map: ${dogsWithLocation.length}/${dogs.length} dogs have coordinates`);
-
-  // Debug: log dogs without coordinates
-  const dogsWithoutCoords = dogs.filter((d) => !getDogCoordinates(d));
-  if (dogsWithoutCoords.length > 0) {
-    console.log(
-      '⚠️ Dogs without coordinates:',
-      dogsWithoutCoords.map((d) => `${d.name} (${d.city || 'no city'})`)
-    );
-  }
-
   if (dogsWithLocation.length === 0) {
     return (
       <div className="w-full h-[600px] bg-gray-100 rounded-lg flex items-center justify-center">

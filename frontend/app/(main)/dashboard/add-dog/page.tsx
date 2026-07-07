@@ -147,15 +147,11 @@ export default function AddDogPage() {
     setLoading(true);
 
     try {
-      const birthDate = new Date(formData.dateOfBirth);
-      const age = new Date().getFullYear() - birthDate.getFullYear();
-
       const dogData: UpdateDogData = {
         name: formData.name,
         breed: formData.breed,
         gender: formData.gender,
         dateOfBirth: formData.dateOfBirth,
-        age: age,
         weight: parseFloat(formData.weight),
         color: formData.color,
         description: formData.description,
@@ -185,15 +181,11 @@ export default function AddDogPage() {
         country: 'UK',
       };
 
-      console.log('📤 Creating dog with data:', dogData);
 
       const response = await dogsApi.create(dogData);
-      console.log('✅ Dog created:', response.dog.id);
 
       if (images.length > 0 && response.dog.id) {
-        console.log('📸 Uploading images...');
         await dogsApi.uploadImages(response.dog.id, images);
-        console.log('✅ Images uploaded');
       }
 
       toast.success('Dog added successfully! 🎉');
@@ -349,6 +341,7 @@ export default function AddDogPage() {
                             width={200}
                             height={200}
                             className="w-full h-full object-cover"
+                            unoptimized
                           />
                         </div>
                         <button

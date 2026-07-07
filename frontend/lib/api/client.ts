@@ -3,9 +3,6 @@ import axios from 'axios';
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000';
 
-console.log('🔧 API Configuration:');
-console.log('   API_URL:', API_URL);
-console.log('   BASE_URL:', BASE_URL);
 
 export const apiClient = axios.create({
   baseURL: API_URL || 'http://localhost:3000/api',
@@ -32,10 +29,18 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const requestUrl: string = error.config?.url ?? '';
+    // A 401 from login/register means bad credentials, not an expired
+    // session — let the form show the error instead of redirecting
+    const isAuthAttempt =
+      requestUrl.includes('/auth/login') || requestUrl.includes('/auth/register');
+
+    if (error.response?.status === 401 && !isAuthAttempt) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
@@ -57,7 +62,6 @@ export const getImageUrl = (path: string | null | undefined): string => {
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
   const fullUrl = `${BASE_URL}${cleanPath}`;
   
-  console.log('🖼️ Image URL:', { path, fullUrl });
   
   return fullUrl;
 };

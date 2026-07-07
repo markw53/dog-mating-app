@@ -30,7 +30,6 @@ export const useAuthStore = create<AuthState>()(
       login: async (email: string, password: string) => {
         set({ loading: true });
         try {
-          console.log('🔐 Login attempt:', { email });
           
           // FIX: Create credentials object
           const credentials = {
@@ -38,11 +37,9 @@ export const useAuthStore = create<AuthState>()(
             password: password,
           };
 
-          console.log('📦 Calling authApi.login with credentials object');
           
           const response = await authApi.login(credentials); // Pass object, not separate params
           
-          console.log('✅ Login successful');
           
           localStorage.setItem('token', response.token);
           localStorage.setItem('user', JSON.stringify(response.user));
@@ -63,7 +60,6 @@ export const useAuthStore = create<AuthState>()(
       register: async (data: RegisterData) => {
         set({ loading: true });
         try {
-          console.log('📝 Registration attempt');
           
           const response = await authApi.register(data);
           
