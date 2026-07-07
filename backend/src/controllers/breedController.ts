@@ -1,18 +1,16 @@
 import { Request, Response } from 'express';
 import prisma from '../config/database';
 import logger from '../utils/logger';
+import { parsePagination } from '../utils/pagination';
 
 export const getAllBreeds = async (req: Request, res: Response) => {
   try {
-    const {
-      type, size,
-      page = '1', limit = '50',
-      sortBy = 'name', order = 'asc',
-    } = req.query;
-
-    const pageNum = parseInt(page as string);
-    const limitNum = parseInt(limit as string);
-    const skip = (pageNum - 1) * limitNum;
+    const { type, size, sortBy = 'name', order = 'asc' } = req.query;
+    const { page: pageNum, limit: limitNum, skip } = parsePagination(
+      req.query.page,
+      req.query.limit,
+      { defaultLimit: 50, maxLimit: 300 },
+    );
 
     const where: any = {};
     if (type && type !== 'all') where.type = type as string;

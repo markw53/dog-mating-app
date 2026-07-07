@@ -5,6 +5,8 @@ import { Gender, Status } from '@prisma/client';
 import { geocodeAddress, getFallbackCoordinates } from '../utils/geocoding';
 import logger from '../utils/logger';
 import { uploadToCloudinary } from '../utils/cloudinary';
+import { parsePagination, parseIntSafe } from '../utils/pagination';
+import { maxDobForMinAge, minDobForMaxAge } from '../utils/age';
 
 export const createDog = async (req: AuthRequest, res: Response) => {
   try {
@@ -42,7 +44,6 @@ export const createDog = async (req: AuthRequest, res: Response) => {
       breed: req.body.breed,
       gender: genderUpper,
       dateOfBirth: new Date(req.body.dateOfBirth),
-      age: parseInt(req.body.age),
       weight: parseFloat(req.body.weight),
       color: req.body.color,
       description: req.body.description,
@@ -100,19 +101,8 @@ export const createDog = async (req: AuthRequest, res: Response) => {
 
 export const getAllDogs = async (req: AuthRequest, res: Response) => {
   try {
-    const {
-      page = '1',
-      limit = '12',
-      breed,
-      gender,
-      minAge,
-      maxAge,
-      city,
-      county,
-      available,
-    } = req.query;
-
-    const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
+    const { breed, gender, minAge, maxAge, city, county, available } = req.query;
+    const { page, limit, skip } = parsePagination(req.query.page, req.query.limit);
 
     const where: any = { status: Status.ACTIVE };
 
@@ -128,10 +118,11 @@ export const getAllDogs = async (req: AuthRequest, res: Response) => {
     if (city) where.city = { contains: city as string, mode: 'insensitive' };
     if (county) where.county = { contains: county as string, mode: 'insensitive' };
 
+    // Age filters translate to dateOfBirth ranges (age is derived, not stored)
     if (minAge || maxAge) {
-      where.age = {};
-      if (minAge) where.age.gte = parseInt(minAge as string);
-      if (maxAge) where.age.lte = parseInt(maxAge as string);
+      where.dateOfBirth = {};
+      if (minAge) where.dateOfBirth.lte = maxDobForMinAge(parseIntSafe(minAge, 0));
+      if (maxAge) where.dateOfBirth.gt = minDobForMaxAge(parseIntSafe(maxAge, 30));
     }
 
     if (available === 'true') where.available = true;
@@ -152,7 +143,7 @@ export const getAllDogs = async (req: AuthRequest, res: Response) => {
           },
         },
         skip,
-        take: parseInt(limit as string),
+        take: limit,
         orderBy: { createdAt: 'desc' },
       }),
       prisma.dog.count({ where }),
@@ -162,8 +153,8 @@ export const getAllDogs = async (req: AuthRequest, res: Response) => {
       success: true,
       dogs,
       total,
-      page: parseInt(page as string),
-      totalPages: Math.ceil(total / parseInt(limit as string)),
+      page,
+      totalPages: Math.ceil(total / limit),
     });
   } catch (error) {
     logger.error({ err: error }, 'Get all dogs error');
@@ -246,10 +237,19 @@ export const getDogById = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: 'Dog not found' });
     }
 
-    await prisma.dog.update({
-      where: { id },
-      data: { views: { increment: 1 } },
-    });
+    // Non-ACTIVE listings are only visible to their owner and admins
+    const isOwnerOrAdmin =
+      req.user && (req.user.id === dog.ownerId || req.user.role === 'ADMIN');
+    if (dog.status !== Status.ACTIVE && !isOwnerOrAdmin) {
+      return res.status(404).json({ message: 'Dog not found' });
+    }
+
+    if (!isOwnerOrAdmin) {
+      await prisma.dog.update({
+        where: { id },
+        data: { views: { increment: 1 } },
+      });
+    }
 
     res.json({ success: true, dog });
   } catch (error) {
@@ -277,7 +277,7 @@ export const updateDog = async (req: AuthRequest, res: Response) => {
     }
 
     const {
-      name, breed, gender, dateOfBirth, age, weight, color, description, images, mainImage,
+      name, breed, gender, dateOfBirth, weight, color, description, images, mainImage,
       vaccinated, neutered, vetName, vetContact, medicalHistory,
       registered, registrationNumber, registry, sire, dam,
       available, studFee, studFeeNegotiable, previousLitters, temperament,
@@ -323,12 +323,16 @@ export const updateDog = async (req: AuthRequest, res: Response) => {
     if (breed) updateData.breed = breed;
     if (gender) updateData.gender = (gender as string).toUpperCase() as Gender;
     if (dateOfBirth) updateData.dateOfBirth = new Date(dateOfBirth);
-    if (age !== undefined) updateData.age = parseInt(age);
     if (weight !== undefined) updateData.weight = parseFloat(weight);
     if (color) updateData.color = color;
     if (description) updateData.description = description;
     if (images) updateData.images = images;
     if (mainImage !== undefined) updateData.mainImage = mainImage;
+    // If the image list no longer contains the current main image (and the
+    // client didn't pick a new one), fall back to the first remaining image
+    if (images && mainImage === undefined && dog.mainImage && !images.includes(dog.mainImage)) {
+      updateData.mainImage = images[0] ?? null;
+    }
     if (vaccinated !== undefined) updateData.vaccinated = Boolean(vaccinated);
     if (neutered !== undefined) updateData.neutered = Boolean(neutered);
     if (vetName !== undefined) updateData.vetName = vetName || null;
@@ -351,7 +355,11 @@ export const updateDog = async (req: AuthRequest, res: Response) => {
     if (country) updateData.country = country;
     if (newLatitude !== undefined) updateData.latitude = newLatitude;
     if (newLongitude !== undefined) updateData.longitude = newLongitude;
-    if (status) updateData.status = status as Status;
+    // Only admins may change status — otherwise owners could self-approve
+    // pending listings and bypass moderation
+    if (status && req.user!.role === 'ADMIN' && Object.values(Status).includes(status as Status)) {
+      updateData.status = status as Status;
+    }
 
     const updatedDog = await prisma.dog.update({
       where: { id },

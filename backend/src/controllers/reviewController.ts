@@ -7,6 +7,19 @@ export const createReview = async (req: AuthRequest, res: Response) => {
   try {
     const { dogId, rating, comment } = req.body;
 
+    const dog = await prisma.dog.findUnique({
+      where: { id: dogId },
+      select: { ownerId: true },
+    });
+
+    if (!dog) {
+      return res.status(404).json({ message: 'Dog not found' });
+    }
+
+    if (dog.ownerId === req.user!.id) {
+      return res.status(400).json({ message: 'You cannot review your own dog' });
+    }
+
     const existingReview = await prisma.review.findUnique({
       where: { dogId_reviewerId: { dogId, reviewerId: req.user!.id } },
     });

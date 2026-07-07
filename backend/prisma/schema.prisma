@@ -43,7 +43,6 @@ model Dog {
   breed       String
   gender      Gender
   dateOfBirth DateTime
-  age         Int
   weight      Float
   color       String
   description String   @db.Text

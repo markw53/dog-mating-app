@@ -2,13 +2,19 @@ import { Response, NextFunction } from 'express';
 import prisma from '../config/database';
 import { AuthRequest } from '../middleware/auth';
 import { calculateMatchScore } from '../services/matchingService';
+import { ageInYears } from '../utils/age';
 import { Gender, Status } from '@prisma/client';
 import logger from '../utils/logger';
+import { parsePagination, parseIntSafe } from '../utils/pagination';
 
 export const findMatches = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const dogId = req.params.dogId as string;
-    const { limit = '10', minScore = '30' } = req.query;
+    const { limit, minScore } = req.query;
+    // parsePagination floors limit at 1 and caps it, so negative/garbage
+    // values can't reach Array.slice as a negative index
+    const { limit: limitNum } = parsePagination(undefined, limit, { defaultLimit: 10, maxLimit: 50 });
+    const minScoreNum = parseIntSafe(minScore, 30);
 
     if (!dogId || Array.isArray(dogId)) {
       return res.status(400).json({ message: 'Invalid dog ID' });
@@ -65,13 +71,15 @@ export const findMatches = async (req: AuthRequest, res: Response, next: NextFun
       },
     });
 
+    const sourceAge = ageInYears(sourceDog.dateOfBirth);
+
     const matches = potentialMatches
       .map((dog) => {
         const matchScore = calculateMatchScore(
           {
             breed: sourceDog.breed,
             gender: sourceDog.gender,
-            age: sourceDog.age,
+            age: sourceAge,
             location:
               sourceDog.latitude && sourceDog.longitude
                 ? { latitude: sourceDog.latitude, longitude: sourceDog.longitude }
@@ -85,7 +93,7 @@ export const findMatches = async (req: AuthRequest, res: Response, next: NextFun
           {
             breed: dog.breed,
             gender: dog.gender,
-            age: dog.age,
+            age: ageInYears(dog.dateOfBirth),
             location:
               dog.latitude && dog.longitude
                 ? { latitude: dog.latitude, longitude: dog.longitude }
@@ -152,9 +160,9 @@ export const findMatches = async (req: AuthRequest, res: Response, next: NextFun
           distance: matchScore.distance,
         };
       })
-      .filter((match) => match.matchScore >= parseInt(minScore as string))
+      .filter((match) => match.matchScore >= minScoreNum)
       .sort((a, b) => b.matchScore - a.matchScore)
-      .slice(0, parseInt(limit as string));
+      .slice(0, limitNum);
 
     res.json({
       success: true,

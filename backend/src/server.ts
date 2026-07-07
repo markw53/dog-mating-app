@@ -3,11 +3,10 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import { Server } from 'socket.io';
 import http from 'http';
-import jwt from 'jsonwebtoken';
 import { connectDB } from './config/database';
 import { errorHandler } from './middleware/errorHandler';
+import { initSocket } from './socket';
 import logger from './utils/logger';
 
 import authRoutes from './routes/authRoutes';
@@ -20,14 +19,20 @@ import breedRoutes from './routes/breedRoutes';
 
 dotenv.config();
 
+const REQUIRED_ENV = ['JWT_SECRET', 'DATABASE_URL'];
+const missingEnv = REQUIRED_ENV.filter((name) => !process.env[name]);
+if (missingEnv.length > 0) {
+  logger.fatal({ missing: missingEnv }, 'Missing required environment variables');
+  process.exit(1);
+}
+
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-    credentials: true,
-  },
-});
+initSocket(server);
+
+// Required behind a reverse proxy (Railway/Render/etc.) so rate limiting
+// sees real client IPs instead of the proxy's
+app.set('trust proxy', 1);
 
 app.use(helmet());
 app.use(cors({
@@ -73,44 +78,9 @@ app.use((_req, res) => {
 
 app.use(errorHandler);
 
-// Socket.io with JWT auth
-const userSockets = new Map<string, string>();
-
-io.use((socket, next) => {
-  const token = socket.handshake.auth?.token;
-  if (!token) return next(new Error('Authentication required'));
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: string };
-    socket.data.userId = decoded.id;
-    next();
-  } catch {
-    next(new Error('Invalid token'));
-  }
-});
-
-io.on('connection', (socket) => {
-  const userId = socket.data.userId as string;
-  userSockets.set(userId, socket.id);
-  logger.debug({ userId }, 'Socket connected');
-
-  socket.on('sendMessage', (data) => {
-    const receiverSocketId = userSockets.get(data.receiverId);
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit('newMessage', data);
-    }
-  });
-
-  socket.on('disconnect', () => {
-    userSockets.delete(userId);
-  });
-});
-
 const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, async () => {
   await connectDB();
   logger.info({ port: PORT }, 'Server started');
 });
-
-export { io };

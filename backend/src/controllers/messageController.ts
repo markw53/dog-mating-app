@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import prisma from '../config/database';
 import { AuthRequest } from '../middleware/auth';
+import { emitToUser } from '../socket';
 import logger from '../utils/logger';
 
 export const getMessages = async (req: AuthRequest, res: Response) => {
@@ -98,10 +99,19 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
         id: conversationId,
         participants: { some: { id: req.user!.id } },
       },
+      include: { participants: { select: { id: true } } },
     });
 
     if (!conversation) {
       return res.status(404).json({ message: 'Conversation not found' });
+    }
+
+    // Receiver must be another participant of this conversation
+    const isValidReceiver = conversation.participants.some(
+      (p) => p.id === receiverId && p.id !== req.user!.id,
+    );
+    if (!isValidReceiver) {
+      return res.status(400).json({ message: 'Invalid receiver for this conversation' });
     }
 
     const message = await prisma.message.create({
@@ -132,6 +142,10 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
       data: { lastMessage: content.trim(), lastMessageAt: new Date() },
     });
 
+    // Real-time delivery happens server-side from the persisted, validated
+    // message — clients cannot inject payloads for other users
+    emitToUser(receiverId, 'newMessage', message);
+
     res.json({ success: true, message });
   } catch (error) {
     logger.error({ err: error }, 'Send message error');
@@ -149,6 +163,15 @@ export const createConversation = async (req: AuthRequest, res: Response) => {
 
     if (participantId === req.user!.id) {
       return res.status(400).json({ message: 'Cannot create conversation with yourself' });
+    }
+
+    const participant = await prisma.user.findUnique({
+      where: { id: participantId },
+      select: { id: true },
+    });
+
+    if (!participant) {
+      return res.status(400).json({ message: 'Participant not found' });
     }
 
     const existingConversation = await prisma.conversation.findFirst({

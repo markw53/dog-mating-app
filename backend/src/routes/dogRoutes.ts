@@ -3,18 +3,18 @@ import {
   createDog, getAllDogs, getDogById,
   updateDog, deleteDog, getMyDogs, uploadDogImages,
 } from '../controllers/dogController';
-import { protect } from '../middleware/auth';
+import { protect, optionalAuth } from '../middleware/auth';
 import upload from '../middleware/upload';
-import { validateCreateDog, handleValidation } from '../middleware/validate';
+import { validateCreateDog, validateUpdateDog, handleValidation } from '../middleware/validate';
 
 const router = express.Router();
 
 router.get('/', getAllDogs);
 router.get('/my-dogs', protect, getMyDogs);
 router.post('/', protect, validateCreateDog, handleValidation, createDog);
-router.put('/:id', protect, updateDog);
+router.put('/:id', protect, validateUpdateDog, handleValidation, updateDog);
 router.delete('/:id', protect, deleteDog);
 router.post('/:id/images', protect, upload.array('images', 10), uploadDogImages);
-router.get('/:id', getDogById);
+router.get('/:id', optionalAuth, getDogById);
 
 export default router;
