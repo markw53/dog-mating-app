@@ -3,9 +3,12 @@
   "version": "1.0.0",
   "description": "Backend for dog mating website",
   "main": "dist/server.js",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "nodemon --exec ts-node src/server.ts",
-    "build": "tsc",
+    "build": "prisma generate && tsc",
     "start": "node dist/server.js",
     "geocode-dogs": "ts-node scripts/geocodeDogs.ts",
     "import-breeds": "ts-node scripts/importBreeds.ts",
