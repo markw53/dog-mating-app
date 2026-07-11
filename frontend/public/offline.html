@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Offline - DogMate</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+      color: #0c4a6e;
+      text-align: center;
+      padding: 24px;
+    }
+    .card { max-width: 360px; }
+    img { width: 96px; height: 96px; border-radius: 24px; margin-bottom: 24px; }
+    h1 { font-size: 1.5rem; margin: 0 0 8px; }
+    p { color: #0369a1; line-height: 1.5; margin: 0 0 24px; }
+    button {
+      background: #0284c7;
+      color: #fff;
+      border: none;
+      padding: 12px 32px;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:active { background: #0369a1; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img src="/icons/icon-192.png" alt="DogMate" />
+    <h1>You're offline</h1>
+    <p>DogMate needs an internet connection. Check your connection and try again.</p>
+    <button onclick="location.reload()">Try Again</button>
+  </div>
+</body>
+</html>
