@@ -4,7 +4,13 @@ import { body, validationResult, ValidationChain } from 'express-validator';
 export const handleValidation = (req: Request, res: Response, next: NextFunction) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ success: false, errors: errors.array() });
+    const errorList = errors.array();
+    return res.status(400).json({
+      success: false,
+      // Frontend toasts read `message`, so surface the first failure there
+      message: errorList[0].msg,
+      errors: errorList,
+    });
   }
   next();
 };
@@ -14,7 +20,12 @@ export const validateRegister: ValidationChain[] = [
   body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
   body('firstName').trim().notEmpty().withMessage('First name is required'),
   body('lastName').trim().notEmpty().withMessage('Last name is required'),
-  body('phone').optional().isMobilePhone('any').withMessage('Invalid phone number'),
+  body('phone')
+    // Forms submit blank fields as '' — treat any falsy value as "not provided"
+    .optional({ values: 'falsy' })
+    .customSanitizer((value) => String(value).replace(/[\s()-]/g, ''))
+    .isMobilePhone('any')
+    .withMessage('Invalid phone number'),
 ];
 
 export const validateLogin: ValidationChain[] = [
