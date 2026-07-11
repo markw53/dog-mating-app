@@ -7,6 +7,7 @@ import logger from '../utils/logger';
 import { uploadToCloudinary } from '../utils/cloudinary';
 import { parsePagination, parseIntSafe } from '../utils/pagination';
 import { maxDobForMinAge, minDobForMaxAge } from '../utils/age';
+import { notifyAdmin } from '../utils/notify';
 
 export const createDog = async (req: AuthRequest, res: Response) => {
   try {
@@ -91,6 +92,10 @@ export const createDog = async (req: AuthRequest, res: Response) => {
     });
 
     logger.info({ dogId: dog.id, userId: req.user!.id }, 'Dog created');
+    notifyAdmin(
+      'Dog listing awaiting approval',
+      `${dog.name} (${dog.breed}, ${dog.gender.toLowerCase()}) listed by ${dog.owner.firstName} ${dog.owner.lastName} — review it in the admin dashboard`,
+    );
 
     res.status(201).json({ success: true, dog });
   } catch (error) {

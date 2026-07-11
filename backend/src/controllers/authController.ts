@@ -5,6 +5,7 @@ import prisma from '../config/database';
 import { AuthRequest } from '../middleware/auth';
 import logger from '../utils/logger';
 import { uploadToCloudinary } from '../utils/cloudinary';
+import { notifyAdmin } from '../utils/notify';
 
 const USER_SELECT = {
   id: true,
@@ -106,6 +107,7 @@ export const register = async (req: Request, res: Response) => {
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
 
     logger.info({ userId: user.id }, 'User registered');
+    notifyAdmin('New user registered', `${user.firstName} ${user.lastName} (${user.email})`);
 
     res.status(201).json({ success: true, token, user });
   } catch (error) {
