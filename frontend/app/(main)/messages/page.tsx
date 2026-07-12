@@ -24,6 +24,7 @@ import {
 import { formatRelativeTime } from '@/lib/utils/formatters';
 import { Card } from '@/components/ui/Card';
 import { Section } from '@/components/ui/Section';
+import EnableNotificationsBanner from '@/components/pwa/EnableNotificationsBanner';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { io } from 'socket.io-client';
@@ -292,6 +293,7 @@ function MessagesPageInner() {
       {/* Main Content */}
       <section className="py-8 -mt-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <EnableNotificationsBanner />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-250px)]">
             {/* Conversations List */}
             <div className="lg:col-span-1">

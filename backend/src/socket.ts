@@ -41,3 +41,9 @@ export function initSocket(server: http.Server): Server {
 export function emitToUser(userId: string, event: string, payload: unknown): void {
   io?.to(userId).emit(event, payload);
 }
+
+// True when the user has at least one live socket (their per-user room is
+// non-empty) — used to skip push notifications for users already online
+export function isUserConnected(userId: string): boolean {
+  return (io?.sockets.adapter.rooms.get(userId)?.size ?? 0) > 0;
+}
