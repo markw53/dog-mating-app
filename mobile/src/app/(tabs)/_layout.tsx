@@ -28,6 +28,15 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="matches"
+        options={{
+          title: 'Matches',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="heart-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="messages"
         options={{
           title: 'Messages',

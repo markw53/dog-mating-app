@@ -14,11 +14,13 @@ Working foundation — not yet feature-complete with the web app.
 - Add/edit dog: shared listing form (components/DogForm.tsx) with camera-roll
   photo upload (up to 10), existing-photo removal on edit, searchable breed
   picker, native date picker, temperament chips
+- Matches tab: pick one of your dogs, see scored matches with reasons and
+  distance; taps through to the dog detail
 - Messages: conversation list + live chat (Socket.io with JWT handshake)
 - Profile: account info + sign out
 
-**Not yet built:** matching, map, breeds directory, reviews, admin, native
-push notifications (Expo Notifications).
+**Not yet built:** map, breeds directory, reviews, admin, native push
+notifications (Expo Notifications).
 
 ## Development
 

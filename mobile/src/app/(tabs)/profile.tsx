@@ -38,7 +38,6 @@ export default function ProfileScreen() {
 
       <View style={styles.section}>
         <Row icon="paw-outline" label="My Dogs" hint="Coming soon" />
-        <Row icon="heart-outline" label="Matches" hint="Coming soon" />
         <Row icon="settings-outline" label="Edit Profile" hint="Coming soon" />
       </View>
 
