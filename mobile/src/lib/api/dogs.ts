@@ -34,4 +34,29 @@ export const dogsApi = {
     );
     return data;
   },
+
+  create: async (dogData: Record<string, unknown>) => {
+    const { data } = await apiClient.post<{ success: boolean; dog: Dog }>('/dogs', dogData);
+    return data;
+  },
+
+  uploadImages: async (dogId: string, images: { uri: string; mimeType?: string }[]) => {
+    const formData = new FormData();
+    images.forEach((image, index) => {
+      const ext = image.mimeType?.split('/')[1] ?? 'jpg';
+      // React Native FormData file part: {uri, name, type}
+      formData.append('images', {
+        uri: image.uri,
+        name: `photo-${index}.${ext}`,
+        type: image.mimeType ?? 'image/jpeg',
+      } as unknown as Blob);
+    });
+
+    const { data } = await apiClient.post<{ success: boolean; images: string[]; dog: Dog }>(
+      `/dogs/${dogId}/images`,
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 60000 },
+    );
+    return data;
+  },
 };

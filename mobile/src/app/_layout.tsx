@@ -45,6 +45,7 @@ export default function RootLayout() {
         <Stack.Screen name="register" options={{ headerShown: false }} />
         <Stack.Screen name="dog/[id]" options={{ title: 'Dog Details' }} />
         <Stack.Screen name="chat/[id]" options={{ title: 'Chat' }} />
+        <Stack.Screen name="add-dog" options={{ title: 'Add Your Dog', presentation: 'modal' }} />
       </Stack>
     </>
   );

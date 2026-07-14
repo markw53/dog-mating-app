@@ -1,4 +1,5 @@
-import { Tabs } from 'expo-router';
+import { Tabs, Link } from 'expo-router';
+import { TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/constants/colors';
 
@@ -17,6 +18,13 @@ export default function TabsLayout() {
           title: 'Browse',
           headerTitle: 'DogMate',
           tabBarIcon: ({ color, size }) => <Ionicons name="paw" size={size} color={color} />,
+          headerRight: () => (
+            <Link href="/add-dog" asChild>
+              <TouchableOpacity style={{ marginRight: 16 }} hitSlop={8}>
+                <Ionicons name="add-circle" size={28} color={colors.primary600} />
+              </TouchableOpacity>
+            </Link>
+          ),
         }}
       />
       <Tabs.Screen
