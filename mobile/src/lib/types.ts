@@ -44,6 +44,7 @@ export interface Dog {
   owner?: DogOwner;
   city: string;
   county: string;
+  postcode?: string | null;
   latitude?: number | null;
   longitude?: number | null;
   vaccinated: boolean;

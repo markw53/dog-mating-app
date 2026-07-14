@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { Image } from 'expo-image';
-import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { useLocalSearchParams, useRouter, Stack, useFocusEffect, Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { dogsApi } from '@/lib/api/dogs';
 import { messagesApi } from '@/lib/api/messages';
@@ -28,14 +28,17 @@ export default function DogDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [contacting, setContacting] = useState(false);
 
-  useEffect(() => {
-    if (!id) return;
-    dogsApi
-      .getById(id)
-      .then((data) => setDog(data.dog))
-      .catch(() => Alert.alert('Error', 'Could not load this dog.'))
-      .finally(() => setLoading(false));
-  }, [id]);
+  // Refetch on focus so returning from the edit screen shows fresh data
+  useFocusEffect(
+    useCallback(() => {
+      if (!id) return;
+      dogsApi
+        .getById(id)
+        .then((data) => setDog(data.dog))
+        .catch(() => Alert.alert('Error', 'Could not load this dog.'))
+        .finally(() => setLoading(false));
+    }, [id]),
+  );
 
   const handleMessageOwner = async () => {
     if (!dog?.owner || contacting) return;
@@ -71,7 +74,20 @@ export default function DogDetailScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: dog.name }} />
+      <Stack.Screen
+        options={{
+          title: dog.name,
+          headerRight: isOwnDog
+            ? () => (
+                <Link href={`/edit-dog/${dog.id}`} asChild>
+                  <TouchableOpacity hitSlop={8}>
+                    <Ionicons name="create-outline" size={24} color={colors.primary600} />
+                  </TouchableOpacity>
+                </Link>
+              )
+            : undefined,
+        }}
+      />
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 32 }}>
         {images.length > 0 ? (
           <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}>

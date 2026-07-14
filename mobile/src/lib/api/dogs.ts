@@ -40,6 +40,11 @@ export const dogsApi = {
     return data;
   },
 
+  update: async (id: string, dogData: Record<string, unknown>) => {
+    const { data } = await apiClient.put<{ success: boolean; dog: Dog }>(`/dogs/${id}`, dogData);
+    return data;
+  },
+
   uploadImages: async (dogId: string, images: { uri: string; mimeType?: string }[]) => {
     const formData = new FormData();
     images.forEach((image, index) => {

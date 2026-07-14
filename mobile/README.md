@@ -11,13 +11,14 @@ Working foundation — not yet feature-complete with the web app.
 - Auth: login, register, session persisted in SecureStore, auto-restore on launch
 - Browse: paginated dog list with pull-to-refresh
 - Dog detail: image gallery, facts, health/pedigree, stud fee, message-owner button
-- Add dog: full listing form with camera-roll photo upload (up to 10),
-  searchable breed picker, native date picker, temperament chips
+- Add/edit dog: shared listing form (components/DogForm.tsx) with camera-roll
+  photo upload (up to 10), existing-photo removal on edit, searchable breed
+  picker, native date picker, temperament chips
 - Messages: conversation list + live chat (Socket.io with JWT handshake)
 - Profile: account info + sign out
 
-**Not yet built:** edit dog, matching, map, breeds directory, reviews, admin,
-native push notifications (Expo Notifications).
+**Not yet built:** matching, map, breeds directory, reviews, admin, native
+push notifications (Expo Notifications).
 
 ## Development
 
