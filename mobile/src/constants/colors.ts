@@ -1,0 +1,20 @@
+// DogMate brand palette — mirrors frontend/tailwind.config.js `primary`
+export const colors = {
+  primary50: '#f0f9ff',
+  primary100: '#e0f2fe',
+  primary200: '#bae6fd',
+  primary500: '#0ea5e9',
+  primary600: '#0284c7',
+  primary700: '#0369a1',
+  primary900: '#0c4a6e',
+  white: '#ffffff',
+  gray50: '#f9fafb',
+  gray100: '#f3f4f6',
+  gray200: '#e5e7eb',
+  gray400: '#9ca3af',
+  gray500: '#6b7280',
+  gray600: '#4b5563',
+  gray900: '#111827',
+  red500: '#ef4444',
+  green500: '#22c55e',
+};
