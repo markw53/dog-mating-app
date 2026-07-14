@@ -38,6 +38,51 @@ export const subscribe = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// Expo device tokens for the native app
+const EXPO_TOKEN_PATTERN = /^Expo(nent)?PushToken\[.+\]$/;
+
+export const registerDeviceToken = async (req: AuthRequest, res: Response) => {
+  try {
+    const { token } = req.body ?? {};
+
+    if (typeof token !== 'string' || !EXPO_TOKEN_PATTERN.test(token)) {
+      return res.status(400).json({ success: false, message: 'Invalid device token' });
+    }
+
+    // Same device re-registering (or a different account on it) reuses the
+    // token — always attach it to the current user
+    await prisma.devicePushToken.upsert({
+      where: { token },
+      update: { userId: req.user!.id },
+      create: { token, userId: req.user!.id },
+    });
+
+    res.status(201).json({ success: true });
+  } catch (error) {
+    logger.error({ err: error }, 'Device token register error');
+    res.status(500).json({ success: false, message: 'Failed to save device token' });
+  }
+};
+
+export const removeDeviceToken = async (req: AuthRequest, res: Response) => {
+  try {
+    const { token } = req.body ?? {};
+
+    if (typeof token !== 'string') {
+      return res.status(400).json({ success: false, message: 'Token is required' });
+    }
+
+    await prisma.devicePushToken.deleteMany({
+      where: { token, userId: req.user!.id },
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    logger.error({ err: error }, 'Device token remove error');
+    res.status(500).json({ success: false, message: 'Failed to remove device token' });
+  }
+};
+
 export const unsubscribe = async (req: AuthRequest, res: Response) => {
   try {
     const { endpoint } = req.body ?? {};

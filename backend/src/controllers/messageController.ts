@@ -2,7 +2,7 @@ import { Response } from 'express';
 import prisma from '../config/database';
 import { AuthRequest } from '../middleware/auth';
 import { emitToUser, isUserConnected } from '../socket';
-import { sendPushToUser } from '../utils/push';
+import { pushToUser } from '../utils/push';
 import logger from '../utils/logger';
 
 export const getMessages = async (req: AuthRequest, res: Response) => {
@@ -147,13 +147,14 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
     // message — clients cannot inject payloads for other users
     emitToUser(receiverId, 'newMessage', message);
 
-    // Push only reaches users without a live socket — anyone with the app
-    // open already got the message via the socket event above
+    // Push (web + native) only reaches users without a live socket — anyone
+    // with the app open already got the message via the socket event above
     if (!isUserConnected(receiverId)) {
-      sendPushToUser(receiverId, {
+      pushToUser(receiverId, {
         title: `New message from ${message.sender.firstName}`,
         body: content.trim().slice(0, 120),
         url: `/messages?conversation=${conversationId}`,
+        data: { conversationId },
       });
     }
 

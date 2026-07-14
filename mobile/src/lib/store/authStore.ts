@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
 import apiClient, { TOKEN_KEY } from '../api/client';
+import { unregisterDevicePush } from '../notifications';
 import { User } from '../types';
 
 interface AuthState {
@@ -40,8 +41,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: () => {
-    void SecureStore.deleteItemAsync(TOKEN_KEY);
     set({ user: null, status: 'signedOut' });
+    // Unregister this device for push while the auth token is still stored,
+    // then clear the session
+    void unregisterDevicePush().finally(() => {
+      void SecureStore.deleteItemAsync(TOKEN_KEY);
+    });
   },
 
   // Called once at app start: restore the session from the stored token

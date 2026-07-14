@@ -17,10 +17,21 @@ Working foundation — not yet feature-complete with the web app.
 - Matches tab: pick one of your dogs, see scored matches with reasons and
   distance; taps through to the dog detail
 - Messages: conversation list + live chat (Socket.io with JWT handshake)
+- Native push notifications: device registers on sign-in, new-message
+  pushes arrive when the app is closed, tapping opens the conversation
 - Profile: account info + sign out
 
-**Not yet built:** map, breeds directory, reviews, admin, native push
-notifications (Expo Notifications).
+**Not yet built:** map, breeds directory, reviews, admin.
+
+### Push notification caveats
+
+- Requires a physical device (no simulators) and an EAS project ID —
+  run `npx eas init` once so `getExpoPushTokenAsync` can mint tokens.
+- Android Expo Go no longer supports remote push (SDK 53+); use a
+  development build (`npx eas build --profile development`) to test on
+  Android. iOS Expo Go generally still works.
+- No backend config needed: Expo's push service needs no keys, and dead
+  tokens are pruned automatically.
 
 ## Development
 

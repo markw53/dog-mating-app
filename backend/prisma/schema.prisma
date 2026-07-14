@@ -31,6 +31,7 @@ model User {
   reviews   Review[]
   conversations Conversation[]
   pushSubscriptions PushSubscription[]
+  devicePushTokens  DevicePushToken[]
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -178,6 +179,19 @@ model Review {
 
   @@unique([dogId, reviewerId])
   @@map("reviews")
+}
+
+// Expo push tokens for the native mobile app (one per device install)
+model DevicePushToken {
+  id    String @id @default(cuid())
+  token String @unique
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  createdAt DateTime @default(now())
+
+  @@map("device_push_tokens")
 }
 
 model PushSubscription {

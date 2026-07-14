@@ -2,7 +2,9 @@ import { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import * as Notifications from 'expo-notifications';
 import { useAuthStore } from '@/lib/store/authStore';
+import { registerForPushNotifications } from '@/lib/notifications';
 import { colors } from '@/constants/colors';
 
 export default function RootLayout() {
@@ -27,6 +29,24 @@ export default function RootLayout() {
       router.replace('/');
     }
   }, [status, segments, router]);
+
+  // Register this device for push once signed in
+  useEffect(() => {
+    if (status === 'signedIn') {
+      void registerForPushNotifications();
+    }
+  }, [status]);
+
+  // Tapping a message notification opens that conversation
+  useEffect(() => {
+    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
+      const conversationId = response.notification.request.content.data?.conversationId;
+      if (typeof conversationId === 'string' && conversationId) {
+        router.push(`/chat/${conversationId}`);
+      }
+    });
+    return () => subscription.remove();
+  }, [router]);
 
   if (status === 'loading') {
     return (
