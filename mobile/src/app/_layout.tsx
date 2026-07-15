@@ -67,6 +67,8 @@ export default function RootLayout() {
         <Stack.Screen name="chat/[id]" options={{ title: 'Chat' }} />
         <Stack.Screen name="add-dog" options={{ title: 'Add Your Dog', presentation: 'modal' }} />
         <Stack.Screen name="edit-dog/[id]" options={{ title: 'Edit Dog', presentation: 'modal' }} />
+        <Stack.Screen name="breeds/index" options={{ title: 'Breed Directory' }} />
+        <Stack.Screen name="breeds/[slug]" options={{ title: 'Breed' }} />
       </Stack>
     </>
   );

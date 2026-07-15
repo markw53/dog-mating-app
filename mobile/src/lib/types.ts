@@ -66,6 +66,23 @@ export interface Breed {
   size?: string | null;
   imageUrl?: string | null;
   temperament?: string | null;
+  height?: string | null;
+  weight?: string | null;
+  color?: string | null;
+  longevity?: string | null;
+  healthProblems?: string | null;
+  exerciseNeeds?: string | null;
+  grooming?: string | null;
+  goodWithChildren?: string | null;
+  kennelClubCategory?: string | null;
+  officialLink?: string | null;
+}
+
+// Breed detail includes a sample of ACTIVE dogs of that breed
+export interface BreedDetail extends Breed {
+  dogs?: Array<
+    Pick<Dog, 'id' | 'name' | 'gender' | 'age' | 'mainImage' | 'city' | 'county' | 'available'>
+  >;
 }
 
 export interface Message {

@@ -1,9 +1,11 @@
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/lib/store/authStore';
 import { colors } from '@/constants/colors';
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const { user, logout } = useAuthStore();
 
   const handleLogout = () => {
@@ -37,6 +39,11 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.section}>
+        <Row
+          icon="library-outline"
+          label="Breed Directory"
+          onPress={() => router.push('/breeds')}
+        />
         <Row icon="paw-outline" label="My Dogs" hint="Coming soon" />
         <Row icon="settings-outline" label="Edit Profile" hint="Coming soon" />
       </View>
@@ -49,14 +56,34 @@ export default function ProfileScreen() {
   );
 }
 
-function Row({ icon, label, hint }: { icon: any; label: string; hint?: string }) {
-  return (
-    <View style={styles.row}>
+function Row({
+  icon,
+  label,
+  hint,
+  onPress,
+}: {
+  icon: any;
+  label: string;
+  hint?: string;
+  onPress?: () => void;
+}) {
+  const content = (
+    <>
       <Ionicons name={icon} size={22} color={colors.primary600} />
       <Text style={styles.rowLabel}>{label}</Text>
       {hint && <Text style={styles.rowHint}>{hint}</Text>}
-    </View>
+      {onPress && <Ionicons name="chevron-forward" size={18} color={colors.gray400} />}
+    </>
   );
+
+  if (onPress) {
+    return (
+      <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
+        {content}
+      </TouchableOpacity>
+    );
+  }
+  return <View style={styles.row}>{content}</View>;
 }
 
 const styles = StyleSheet.create({

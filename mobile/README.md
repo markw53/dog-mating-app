@@ -21,9 +21,12 @@ Working foundation — not yet feature-complete with the web app.
 - Messages: conversation list + live chat (Socket.io with JWT handshake)
 - Native push notifications: device registers on sign-in, new-message
   pushes arrive when the app is closed, tapping opens the conversation
+- Breeds directory (via Profile): searchable list with breed-group filter
+  chips; detail screens with facts, temperament, health notes, and
+  available dogs of that breed
 - Profile: account info + sign out
 
-**Not yet built:** breeds directory, reviews, admin.
+**Not yet built:** reviews, admin.
 
 ### Map caveat
 
