@@ -16,6 +16,7 @@ import { dogsApi } from '@/lib/api/dogs';
 import { messagesApi } from '@/lib/api/messages';
 import { useAuthStore } from '@/lib/store/authStore';
 import { Dog } from '@/lib/types';
+import ReviewsSection from '@/components/ReviewsSection';
 import { colors } from '@/constants/colors';
 
 const { width } = Dimensions.get('window');
@@ -146,6 +147,8 @@ export default function DogDetailScreen() {
               {dog.county}
             </Text>
           </Section>
+
+          <ReviewsSection dogId={dog.id} ownerId={dog.ownerId || dog.owner?.id} />
 
           {dog.owner && !isOwnDog && (
             <TouchableOpacity

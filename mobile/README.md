@@ -24,9 +24,11 @@ Working foundation — not yet feature-complete with the web app.
 - Breeds directory (via Profile): searchable list with breed-group filter
   chips; detail screens with facts, temperament, health notes, and
   available dogs of that breed
+- Reviews on dog detail: average-rating summary, review list, star-picker
+  write modal (blocked for own dogs and duplicate reviews, matching the API)
 - Profile: account info + sign out
 
-**Not yet built:** reviews, admin.
+**Not yet built:** admin (use the web dashboard).
 
 ### Map caveat
 

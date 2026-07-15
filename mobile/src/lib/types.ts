@@ -85,6 +85,21 @@ export interface BreedDetail extends Breed {
   >;
 }
 
+export interface Review {
+  id: string;
+  rating: number;
+  comment: string;
+  dogId: string;
+  reviewerId: string;
+  reviewer: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    avatar?: string | null;
+  };
+  createdAt: string;
+}
+
 export interface Message {
   id: string;
   content: string;
