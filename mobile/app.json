@@ -22,7 +22,8 @@
           "apiKey": "AIzaSyAUrpXfQydtvc90m5b2vJMKaUvcxnSuqaI"
         }
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.markw54.dogmate"
     },
     "web": {
       "output": "static",
