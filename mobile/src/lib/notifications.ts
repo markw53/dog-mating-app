@@ -5,15 +5,18 @@ import Constants from 'expo-constants';
 import apiClient from './api/client';
 
 // Show notifications when the app is foregrounded too — the server only
-// pushes when the user has no live chat socket, so these aren't duplicates
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+// pushes when the user has no live chat socket, so these aren't duplicates.
+// (Guarded: expo-notifications logs warnings on the web target.)
+if (Platform.OS !== 'web') {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+    }),
+  });
+}
 
 // Remembered so logout can unregister this device
 let currentToken: string | null = null;
