@@ -16,12 +16,22 @@ Working foundation — not yet feature-complete with the web app.
   picker, native date picker, temperament chips
 - Matches tab: pick one of your dogs, see scored matches with reasons and
   distance; taps through to the dog detail
+- Map tab: dogs with coordinates on a UK map (react-native-maps), gender-
+  colored pins, callouts through to dog detail
 - Messages: conversation list + live chat (Socket.io with JWT handshake)
 - Native push notifications: device registers on sign-in, new-message
   pushes arrive when the app is closed, tapping opens the conversation
 - Profile: account info + sign out
 
-**Not yet built:** map, breeds directory, reviews, admin.
+**Not yet built:** breeds directory, reviews, admin.
+
+### Map caveat
+
+Expo Go renders the map with no setup (Apple Maps on iOS, Google Maps on
+Android). Standalone **Android** builds (EAS preview/production) need a
+Google Maps API key: enable "Maps SDK for Android" in Google Cloud, then add
+`android.config.googleMaps.apiKey` to app.json. iOS standalone builds use
+Apple Maps and need nothing.
 
 ### Push notification caveats
 
