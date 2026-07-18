@@ -26,6 +26,8 @@ Working foundation — not yet feature-complete with the web app.
   available dogs of that breed
 - Reviews on dog detail: average-rating summary, review list, star-picker
   write modal (blocked for own dogs and duplicate reviews, matching the API)
+- My Dogs (via Profile): all your listings with approval-status badges —
+  the route to viewing/editing dogs that are still awaiting approval
 - Profile: account info + sign out
 
 **Not yet built:** admin (use the web dashboard).

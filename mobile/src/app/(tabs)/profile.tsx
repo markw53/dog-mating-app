@@ -44,7 +44,7 @@ export default function ProfileScreen() {
           label="Breed Directory"
           onPress={() => router.push('/breeds')}
         />
-        <Row icon="paw-outline" label="My Dogs" hint="Coming soon" />
+        <Row icon="paw-outline" label="My Dogs" onPress={() => router.push('/my-dogs')} />
         <Row icon="settings-outline" label="Edit Profile" hint="Coming soon" />
       </View>
 
