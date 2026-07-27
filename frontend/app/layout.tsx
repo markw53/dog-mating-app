@@ -4,6 +4,7 @@ import './globals.css';
 import { Toaster } from 'react-hot-toast';
 import 'leaflet/dist/leaflet.css';
 import ServiceWorkerRegister from '@/components/pwa/ServiceWorkerRegister';
+import { Analytics } from '@vercel/analytics/next';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -37,6 +38,7 @@ export default function RootLayout({
         {children}
         <Toaster position="top-right" />
         <ServiceWorkerRegister />
+        <Analytics />
       </body>
     </html>
   );
