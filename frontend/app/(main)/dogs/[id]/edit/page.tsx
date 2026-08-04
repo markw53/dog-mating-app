@@ -471,11 +471,12 @@ export default function EditDogPage() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label htmlFor="edit-name" className="block text-sm font-semibold text-gray-700 mb-2">
                     Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
+                    id="edit-name"
                     name="name"
                     required
                     value={formData.name}
@@ -496,10 +497,11 @@ export default function EditDogPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label htmlFor="edit-gender" className="block text-sm font-semibold text-gray-700 mb-2">
                     Gender <span className="text-red-500">*</span>
                   </label>
                   <select
+                    id="edit-gender"
                     name="gender"
                     required
                     value={formData.gender}
@@ -513,11 +515,12 @@ export default function EditDogPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label htmlFor="edit-dateOfBirth" className="block text-sm font-semibold text-gray-700 mb-2">
                     Date of Birth <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="date"
+                    id="edit-dateOfBirth"
                     name="dateOfBirth"
                     required
                     value={formData.dateOfBirth}
@@ -528,11 +531,12 @@ export default function EditDogPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label htmlFor="edit-weight" className="block text-sm font-semibold text-gray-700 mb-2">
                     Weight (kg) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
+                    id="edit-weight"
                     name="weight"
                     required
                     value={formData.weight}
@@ -543,11 +547,12 @@ export default function EditDogPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label htmlFor="edit-color" className="block text-sm font-semibold text-gray-700 mb-2">
                     Colour <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
+                    id="edit-color"
                     name="color"
                     required
                     value={formData.color}
@@ -559,10 +564,11 @@ export default function EditDogPage() {
               </div>
 
               <div className="mt-6">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label htmlFor="edit-description" className="block text-sm font-semibold text-gray-700 mb-2">
                   Description <span className="text-red-500">*</span>
                 </label>
                 <textarea
+                  id="edit-description"
                   name="description"
                   required
                   value={formData.description}
@@ -617,11 +623,12 @@ export default function EditDogPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label htmlFor="edit-vetName" className="block text-sm font-semibold text-gray-700 mb-2">
                       Veterinarian Name
                     </label>
                     <input
                       type="text"
+                      id="edit-vetName"
                       name="vetName"
                       value={formData.vetName}
                       onChange={handleChange}
@@ -631,11 +638,12 @@ export default function EditDogPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label htmlFor="edit-vetContact" className="block text-sm font-semibold text-gray-700 mb-2">
                       Veterinarian Contact
                     </label>
                     <input
                       type="text"
+                      id="edit-vetContact"
                       name="vetContact"
                       value={formData.vetContact}
                       onChange={handleChange}
@@ -646,10 +654,11 @@ export default function EditDogPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label htmlFor="edit-medicalHistory" className="block text-sm font-semibold text-gray-700 mb-2">
                     Medical History
                   </label>
                   <textarea
+                    id="edit-medicalHistory"
                     name="medicalHistory"
                     value={formData.medicalHistory}
                     onChange={handleChange}
@@ -691,11 +700,12 @@ export default function EditDogPage() {
                   <div className="pl-8 space-y-6 border-l-4 border-primary-200">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <label htmlFor="edit-registry" className="block text-sm font-semibold text-gray-700 mb-2">
                           Registry
                         </label>
                         <input
                           type="text"
+                          id="edit-registry"
                           name="registry"
                           value={formData.registry}
                           onChange={handleChange}
@@ -705,11 +715,12 @@ export default function EditDogPage() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <label htmlFor="edit-registrationNumber" className="block text-sm font-semibold text-gray-700 mb-2">
                           Registration Number
                         </label>
                         <input
                           type="text"
+                          id="edit-registrationNumber"
                           name="registrationNumber"
                           value={formData.registrationNumber}
                           onChange={handleChange}
@@ -719,11 +730,12 @@ export default function EditDogPage() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <label htmlFor="edit-sire" className="block text-sm font-semibold text-gray-700 mb-2">
                           Sire (Father)
                         </label>
                         <input
                           type="text"
+                          id="edit-sire"
                           name="sire"
                           value={formData.sire}
                           onChange={handleChange}
@@ -733,11 +745,12 @@ export default function EditDogPage() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <label htmlFor="edit-dam" className="block text-sm font-semibold text-gray-700 mb-2">
                           Dam (Mother)
                         </label>
                         <input
                           type="text"
+                          id="edit-dam"
                           name="dam"
                           value={formData.dam}
                           onChange={handleChange}
@@ -783,11 +796,12 @@ export default function EditDogPage() {
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <label htmlFor="edit-studFee" className="block text-sm font-semibold text-gray-700 mb-2">
                           Stud Fee (£)
                         </label>
                         <input
                           type="number"
+                          id="edit-studFee"
                           name="studFee"
                           value={formData.studFee}
                           onChange={handleChange}
@@ -797,11 +811,12 @@ export default function EditDogPage() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <label htmlFor="edit-previousLitters" className="block text-sm font-semibold text-gray-700 mb-2">
                           Previous Litters
                         </label>
                         <input
                           type="number"
+                          id="edit-previousLitters"
                           name="previousLitters"
                           value={formData.previousLitters}
                           onChange={handleChange}
@@ -825,28 +840,30 @@ export default function EditDogPage() {
                       </span>
                     </label>
 
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    <fieldset>
+                      <legend className="block text-sm font-semibold text-gray-700 mb-3">
                         Temperament Traits
-                      </label>
-                      <div className="flex flex-wrap gap-2">
+                      </legend>
+                      <ul className="flex flex-wrap gap-2">
                         {TEMPERAMENT_OPTIONS.map(trait => (
-                          <button
-                            key={trait}
-                            type="button"
-                            onClick={() => handleTemperamentToggle(trait)}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                              formData.temperament.includes(trait)
-                                ? 'bg-gradient-to-r from-primary-600 to-primary-700 text-white shadow-md scale-105'
-                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                            }`}
-                          >
-                            {formData.temperament.includes(trait) && <Check className="inline h-4 w-4 mr-1" />}
-                            {trait}
-                          </button>
+                          <li key={trait}>
+                            <button
+                              type="button"
+                              onClick={() => handleTemperamentToggle(trait)}
+                              aria-pressed={formData.temperament.includes(trait)}
+                              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                                formData.temperament.includes(trait)
+                                  ? 'bg-gradient-to-r from-primary-600 to-primary-700 text-white shadow-md scale-105'
+                                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                              }`}
+                            >
+                              {formData.temperament.includes(trait) && <Check className="inline h-4 w-4 mr-1" aria-hidden="true" />}
+                              {trait}
+                            </button>
+                          </li>
                         ))}
-                      </div>
-                    </div>
+                      </ul>
+                    </fieldset>
                   </div>
                 )}
               </div>
@@ -866,11 +883,12 @@ export default function EditDogPage() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label htmlFor="edit-address" className="block text-sm font-semibold text-gray-700 mb-2">
                     Address
                   </label>
                   <input
                     type="text"
+                    id="edit-address"
                     name="address"
                     value={formData.address}
                     onChange={handleChange}
@@ -880,11 +898,12 @@ export default function EditDogPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label htmlFor="edit-city" className="block text-sm font-semibold text-gray-700 mb-2">
                     City <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
+                    id="edit-city"
                     name="city"
                     required
                     value={formData.city}
@@ -895,11 +914,12 @@ export default function EditDogPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label htmlFor="edit-county" className="block text-sm font-semibold text-gray-700 mb-2">
                     County <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
+                    id="edit-county"
                     name="county"
                     required
                     value={formData.county}
@@ -910,11 +930,12 @@ export default function EditDogPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label htmlFor="edit-postcode" className="block text-sm font-semibold text-gray-700 mb-2">
                     Postcode
                   </label>
                   <input
                     type="text"
+                    id="edit-postcode"
                     name="postcode"
                     value={formData.postcode}
                     onChange={handleChange}
