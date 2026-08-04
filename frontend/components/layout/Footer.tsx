@@ -17,8 +17,8 @@ export default function Footer() {
             </p>
           </div>
 
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
+          <nav aria-labelledby="footer-quick-links">
+            <h3 id="footer-quick-links" className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2">
               <li>
                 <Link href="/browse" className="text-gray-400 hover:text-white">
@@ -36,10 +36,10 @@ export default function Footer() {
                 </Link>
               </li>
             </ul>
-          </div>
+          </nav>
 
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Legal</h3>
+          <nav aria-labelledby="footer-legal">
+            <h3 id="footer-legal" className="text-lg font-semibold mb-4">Legal</h3>
             <ul className="space-y-2">
               <li>
                 <Link href="/privacy" className="text-gray-400 hover:text-white">
@@ -52,7 +52,7 @@ export default function Footer() {
                 </Link>
               </li>
             </ul>
-          </div>
+          </nav>
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">

@@ -21,13 +21,13 @@ export function PageLayout({
       
       {showHero && title && (
         <section className="relative bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 text-white py-16 md:py-24">
-          <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 opacity-10" aria-hidden="true">
             <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
             <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
           </div>
-          
+
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="text-center">
+            <header className="text-center">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
                 {title}
               </h1>
@@ -36,7 +36,7 @@ export function PageLayout({
                   {subtitle}
                 </p>
               )}
-            </div>
+            </header>
           </div>
         </section>
       )}

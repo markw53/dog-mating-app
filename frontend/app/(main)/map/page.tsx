@@ -12,9 +12,9 @@ import Link from 'next/link';
 const DogMap = dynamic(() => import('@/components/map/DogMapClient'), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-[600px] bg-gray-200 rounded-lg flex items-center justify-center">
+    <div className="w-full h-[600px] bg-gray-200 rounded-lg flex items-center justify-center" role="status">
       <div className="text-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary-600 mx-auto mb-2" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary-600 mx-auto mb-2" aria-hidden="true" />
         <p className="text-gray-600">Loading map...</p>
       </div>
     </div>
@@ -44,9 +44,9 @@ export default function MapPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
+      <div className="flex justify-center items-center min-h-screen" role="status">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary-600 mx-auto mb-4" />
+          <Loader2 className="h-12 w-12 animate-spin text-primary-600 mx-auto mb-4" aria-hidden="true" />
           <p className="text-gray-600">Loading map...</p>
         </div>
       </div>
@@ -56,12 +56,12 @@ export default function MapPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b">
+      <header className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                <MapIcon className="h-8 w-8 text-primary-600" />
+                <MapIcon className="h-8 w-8 text-primary-600" aria-hidden="true" />
                 Dog Map
               </h1>
               <p className="text-gray-600 mt-2">
@@ -72,21 +72,21 @@ export default function MapPage() {
               href="/browse"
               className="btn-secondary flex items-center gap-2"
             >
-              <List className="h-4 w-4" />
+              <List className="h-4 w-4" aria-hidden="true" />
               List View
             </Link>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Map */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <DogMap dogs={dogs} />
 
         {/* Info Box */}
-        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <aside className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex gap-3">
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0" aria-hidden="true">
               <svg className="h-5 w-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
               </svg>
@@ -98,7 +98,7 @@ export default function MapPage() {
               </p>
             </div>
           </div>
-        </div>
+        </aside>
       </div>
     </div>
   );

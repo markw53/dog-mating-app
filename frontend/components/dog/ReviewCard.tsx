@@ -10,7 +10,7 @@ interface ReviewCardProps {
 
 export default function ReviewCard({ review }: ReviewCardProps) {
   return (
-    <div className="border-b border-gray-200 pb-4 last:border-0">
+    <article className="border-b border-gray-200 pb-4 last:border-0">
       <div className="flex items-start space-x-3">
         {review.reviewer.avatar ? (
           <Image
@@ -22,22 +22,22 @@ export default function ReviewCard({ review }: ReviewCardProps) {
             unoptimized
           />
         ) : (
-          <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+          <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center" aria-hidden="true">
             <User className="h-5 w-5 text-gray-400" />
           </div>
         )}
 
         <div className="flex-1">
-          <div className="flex items-center justify-between mb-1">
+          <header className="flex items-center justify-between mb-1">
             <p className="font-semibold">
               {review.reviewer.firstName} {review.reviewer.lastName}
             </p>
-            <span className="text-sm text-gray-500">
+            <time dateTime={new Date(review.createdAt).toISOString()} className="text-sm text-gray-500">
               {formatRelativeTime(review.createdAt)}
-            </span>
-          </div>
+            </time>
+          </header>
 
-          <div className="flex items-center mb-2">
+          <div className="flex items-center mb-2" role="img" aria-label={`${review.rating} out of 5 stars`}>
             {Array.from({ length: 5 }).map((_, i) => (
               <Star
                 key={i}
@@ -53,6 +53,6 @@ export default function ReviewCard({ review }: ReviewCardProps) {
           <p className="text-gray-700">{review.comment}</p>
         </div>
       </div>
-    </div>
+    </article>
   );
 }

@@ -252,7 +252,7 @@ function MessagesPageInner() {
             There was an error loading your conversations. Please try again.
           </p>
           <button onClick={refetchConversations} className="btn-primary">
-            <RefreshCw className="h-4 w-4 mr-2" />
+            <RefreshCw className="h-4 w-4 mr-2" aria-hidden="true" />
             Try Again
           </button>
         </Card>
@@ -264,13 +264,13 @@ function MessagesPageInner() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Hero Section */}
       <Section variant="primary" className="py-12 md:py-16">
-        <div className="flex items-center justify-between">
+        <header className="flex items-center justify-between">
           <div className="text-center flex-1">
-            <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-4">
+            <p className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-4">
               <span className="text-white font-semibold text-sm">
                 💬 Messaging Center
               </span>
-            </div>
+            </p>
             <h1 className="text-3xl md:text-4xl font-bold mb-3">
               Your Messages
             </h1>
@@ -285,9 +285,10 @@ function MessagesPageInner() {
           >
             <RefreshCw
               className={`h-5 w-5 ${conversationsLoading ? 'animate-spin' : ''}`}
+              aria-hidden="true"
             />
           </button>
-        </div>
+        </header>
       </Section>
 
       {/* Main Content */}
@@ -297,13 +298,14 @@ function MessagesPageInner() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-250px)]">
             {/* Conversations List */}
             <div className="lg:col-span-1">
-              <Card hover={false} className="h-full flex flex-col">
+              <Card as="section" hover={false} className="h-full flex flex-col">
                 {/* Search */}
                 <div className="mb-4">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <div className="relative" role="search">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" aria-hidden="true" />
                     <input
-                      type="text"
+                      type="search"
+                      aria-label="Search conversations"
                       placeholder="Search conversations..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
@@ -312,18 +314,20 @@ function MessagesPageInner() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between mb-4">
+                <header className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold text-gray-900">
                     Conversations ({filteredConversations.length})
                   </h2>
-                </div>
+                </header>
 
                 {/* Conversations List */}
-                <div className="flex-1 overflow-y-auto space-y-2">
-                  {filteredConversations.length === 0 ? (
+                {filteredConversations.length === 0 ? (
+                  <div className="flex-1 overflow-y-auto">
                     <EmptyConversations hasSearch={!!searchQuery} />
-                  ) : (
-                    filteredConversations.map((conversation) => (
+                  </div>
+                ) : (
+                  <ul className="flex-1 overflow-y-auto space-y-2">
+                    {filteredConversations.map((conversation) => (
                       <ConversationItem
                         key={conversation._id || conversation.id}
                         conversation={conversation}
@@ -334,15 +338,15 @@ function MessagesPageInner() {
                         otherUser={getOtherParticipant(conversation)}
                         onSelect={() => setSelectedConversation(conversation)}
                       />
-                    ))
-                  )}
-                </div>
+                    ))}
+                  </ul>
+                )}
               </Card>
             </div>
 
             {/* Messages Area */}
             <div className="lg:col-span-2">
-              <Card hover={false} className="h-full flex flex-col">
+              <Card as="section" hover={false} className="h-full flex flex-col">
                 {selectedConversation ? (
                   <>
                     {/* Chat Header */}
@@ -353,9 +357,9 @@ function MessagesPageInner() {
                     {/* Messages */}
                     <div className="flex-1 overflow-y-auto mb-4 space-y-4 px-2">
                       {messagesLoading ? (
-                        <div className="flex items-center justify-center h-full">
+                        <div className="flex items-center justify-center h-full" role="status">
                           <div className="text-center">
-                            <Loader2 className="h-8 w-8 animate-spin text-primary-600 mx-auto mb-2" />
+                            <Loader2 className="h-8 w-8 animate-spin text-primary-600 mx-auto mb-2" aria-hidden="true" />
                             <p className="text-gray-500 text-sm">
                               Loading messages...
                             </p>
@@ -380,13 +384,14 @@ function MessagesPageInner() {
                           />
                         ))
                       )}
-                      <div ref={messagesEndRef} />
+                      <div ref={messagesEndRef} aria-hidden="true" />
                     </div>
 
                     {/* Input */}
                     <form onSubmit={handleSendMessage} className="flex gap-3">
                       <input
                         type="text"
+                        aria-label="Message"
                         value={messageText}
                         onChange={(e) => setMessageText(e.target.value)}
                         placeholder="Type your message..."
@@ -396,12 +401,13 @@ function MessagesPageInner() {
                       <button
                         type="submit"
                         disabled={sending || !messageText.trim()}
+                        aria-label={sending ? 'Sending message' : 'Send message'}
                         className="btn-primary px-6 py-4 rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all"
                       >
                         {sending ? (
-                          <Loader2 className="h-5 w-5 animate-spin" />
+                          <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
                         ) : (
-                          <Send className="h-5 w-5" />
+                          <Send className="h-5 w-5" aria-hidden="true" />
                         )}
                       </button>
                     </form>
@@ -422,9 +428,9 @@ function MessagesPageInner() {
 
 function LoadingScreen({ message }: { message: string }) {
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100" role="status">
       <div className="text-center">
-        <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" />
+        <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" aria-hidden="true" />
         <p className="text-gray-600 font-medium">{message}</p>
       </div>
     </div>
@@ -434,7 +440,7 @@ function LoadingScreen({ message }: { message: string }) {
 function EmptyConversations({ hasSearch }: { hasSearch: boolean }) {
   return (
     <div className="text-center py-12">
-      <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4" aria-hidden="true">
         <MessageSquare className="h-10 w-10 text-gray-400" />
       </div>
       <p className="text-gray-500 font-medium mb-2">
@@ -463,70 +469,73 @@ function ConversationItem({
   if (!otherUser) return null;
 
   return (
-    <button
-      onClick={onSelect}
-      className={`w-full text-left p-4 rounded-xl transition-all group ${
-        isSelected
-          ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg'
-          : 'hover:bg-gray-50 border border-gray-200'
-      }`}
-    >
-      <div className="flex items-center space-x-3">
-        <div className="relative">
-          {otherUser.avatar ? (
-            <Image
-              src={getImageUrl(otherUser.avatar)}
-              alt={otherUser.firstName}
-              width={48}
-              height={48}
-              className="rounded-full border-2 border-white"
-              unoptimized
-            />
-          ) : (
-            <div
-              className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${
-                isSelected
-                  ? 'bg-white/20 border-white'
-                  : 'bg-gradient-to-br from-primary-100 to-primary-200 border-primary-300'
-              }`}
-            >
-              <User
-                className={`h-6 w-6 ${isSelected ? 'text-white' : 'text-primary-600'}`}
+    <li>
+      <button
+        onClick={onSelect}
+        aria-current={isSelected ? 'true' : undefined}
+        className={`w-full text-left p-4 rounded-xl transition-all group ${
+          isSelected
+            ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg'
+            : 'hover:bg-gray-50 border border-gray-200'
+        }`}
+      >
+        <span className="flex items-center space-x-3">
+          <span className="relative block flex-shrink-0">
+            {otherUser.avatar ? (
+              <Image
+                src={getImageUrl(otherUser.avatar)}
+                alt=""
+                width={48}
+                height={48}
+                className="rounded-full border-2 border-white"
+                unoptimized
               />
-            </div>
-          )}
-          {otherUser.verified && (
-            <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1 border-2 border-white">
-              <CheckCircle className="h-3 w-3 text-white" />
-            </div>
-          )}
-        </div>
-        <div className="flex-1 min-w-0">
-          <p
-            className={`font-bold truncate ${isSelected ? 'text-white' : 'text-gray-900'}`}
-          >
-            {otherUser.firstName} {otherUser.lastName}
-          </p>
-          {conversation.lastMessage && (
-            <p
-              className={`text-sm truncate ${isSelected ? 'text-white/80' : 'text-gray-500'}`}
-            >
-              {conversation.lastMessage}
-            </p>
-          )}
-        </div>
-        {conversation.lastMessageAt && (
-          <div className="flex flex-col items-end">
+            ) : (
+              <span
+                className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${
+                  isSelected
+                    ? 'bg-white/20 border-white'
+                    : 'bg-gradient-to-br from-primary-100 to-primary-200 border-primary-300'
+                }`}
+                aria-hidden="true"
+              >
+                <User
+                  className={`h-6 w-6 ${isSelected ? 'text-white' : 'text-primary-600'}`}
+                />
+              </span>
+            )}
+            {otherUser.verified && (
+              <span className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1 border-2 border-white block" aria-hidden="true">
+                <CheckCircle className="h-3 w-3 text-white" />
+              </span>
+            )}
+          </span>
+          <span className="flex-1 min-w-0">
             <span
+              className={`block font-bold truncate ${isSelected ? 'text-white' : 'text-gray-900'}`}
+            >
+              {otherUser.firstName} {otherUser.lastName}
+            </span>
+            {conversation.lastMessage && (
+              <span
+                className={`block text-sm truncate ${isSelected ? 'text-white/80' : 'text-gray-500'}`}
+              >
+                {conversation.lastMessage}
+              </span>
+            )}
+          </span>
+          {conversation.lastMessageAt && (
+            <time
+              dateTime={new Date(conversation.lastMessageAt).toISOString()}
               className={`text-xs flex items-center ${isSelected ? 'text-white/80' : 'text-gray-400'}`}
             >
-              <Clock className="h-3 w-3 mr-1" />
+              <Clock className="h-3 w-3 mr-1" aria-hidden="true" />
               {formatRelativeTime(conversation.lastMessageAt)}
-            </span>
-          </div>
-        )}
-      </div>
-    </button>
+            </time>
+          )}
+        </span>
+      </button>
+    </li>
   );
 }
 
@@ -538,20 +547,20 @@ function ChatHeader({
   if (!otherUser) return null;
 
   return (
-    <div className="border-b border-gray-200 pb-4 mb-4">
+    <header className="border-b border-gray-200 pb-4 mb-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           {otherUser.avatar ? (
             <Image
               src={getImageUrl(otherUser.avatar)}
-              alt={otherUser.firstName}
+              alt=""
               width={56}
               height={56}
               className="rounded-full border-2 border-gray-200"
               unoptimized
             />
           ) : (
-            <div className="w-14 h-14 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center border-2 border-gray-200">
+            <div className="w-14 h-14 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center border-2 border-gray-200" aria-hidden="true">
               <User className="h-7 w-7 text-primary-600" />
             </div>
           )}
@@ -561,7 +570,7 @@ function ChatHeader({
                 {otherUser.firstName} {otherUser.lastName}
               </h3>
               {otherUser.verified && (
-                <CheckCircle className="h-5 w-5 text-green-500 ml-2" />
+                <CheckCircle className="h-5 w-5 text-green-500 ml-2" aria-label="Verified user" />
               )}
             </div>
             {(otherUser.location || otherUser.city) && (
@@ -573,11 +582,14 @@ function ChatHeader({
             )}
           </div>
         </div>
-        <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-          <MoreVertical className="h-5 w-5 text-gray-600" />
+        <button
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          aria-label="Conversation options"
+        >
+          <MoreVertical className="h-5 w-5 text-gray-600" aria-hidden="true" />
         </button>
       </div>
-    </div>
+    </header>
   );
 }
 
@@ -585,7 +597,7 @@ function EmptyMessages() {
   return (
     <div className="flex items-center justify-center h-full">
       <div className="text-center">
-        <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4" aria-hidden="true">
           <MessageSquare className="h-10 w-10 text-gray-400" />
         </div>
         <p className="text-gray-500 font-medium">No messages yet</p>
@@ -609,11 +621,11 @@ function MessageBubble({
       className={`flex items-end gap-2 ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
     >
       {!isOwnMessage && showAvatar && (
-        <div className="w-8 h-8 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center flex-shrink-0">
+        <div className="w-8 h-8 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center flex-shrink-0" aria-hidden="true">
           <User className="h-4 w-4 text-primary-600" />
         </div>
       )}
-      {!isOwnMessage && !showAvatar && <div className="w-8" />}
+      {!isOwnMessage && !showAvatar && <div className="w-8" aria-hidden="true" />}
 
       <div
         className={`max-w-xs lg:max-w-md px-5 py-3 rounded-2xl shadow-sm ${
@@ -623,14 +635,15 @@ function MessageBubble({
         }`}
       >
         <p className="text-sm leading-relaxed">{message.content}</p>
-        <p
+        <time
+          dateTime={new Date(message.createdAt).toISOString()}
           className={`text-xs mt-1 flex items-center ${
             isOwnMessage ? 'text-primary-100' : 'text-gray-500'
           }`}
         >
-          <Clock className="h-3 w-3 mr-1" />
+          <Clock className="h-3 w-3 mr-1" aria-hidden="true" />
           {formatRelativeTime(message.createdAt)}
-        </p>
+        </time>
       </div>
     </div>
   );
@@ -640,7 +653,7 @@ function NoConversationSelected() {
   return (
     <div className="flex-1 flex items-center justify-center">
       <div className="text-center">
-        <div className="w-24 h-24 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center mx-auto mb-6">
+        <div className="w-24 h-24 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center mx-auto mb-6" aria-hidden="true">
           <MessageSquare className="h-12 w-12 text-primary-600" />
         </div>
         <h3 className="text-xl font-bold text-gray-900 mb-2">

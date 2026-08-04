@@ -14,12 +14,13 @@ interface DogCardProps {
 
 function PlaceholderImage({ name }: { name: string }) {
   return (
-    <div className="w-full h-full bg-gradient-to-br from-gray-200 via-gray-300 to-gray-200 flex flex-col items-center justify-center">
+    <figure className="w-full h-full bg-gradient-to-br from-gray-200 via-gray-300 to-gray-200 flex flex-col items-center justify-center">
       <svg
         className="w-20 h-20 text-gray-400 mb-3"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
+        aria-hidden="true"
       >
         <path
           strokeLinecap="round"
@@ -28,9 +29,11 @@ function PlaceholderImage({ name }: { name: string }) {
           d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
         />
       </svg>
-      <p className="text-sm font-medium text-gray-500">{name}</p>
-      <p className="text-xs text-gray-400 mt-1">No photo available</p>
-    </div>
+      <figcaption className="text-center">
+        <span className="block text-sm font-medium text-gray-500">{name}</span>
+        <span className="block text-xs text-gray-400 mt-1">No photo available</span>
+      </figcaption>
+    </figure>
   );
 }
 
@@ -42,7 +45,7 @@ export default function DogCard({ dog }: DogCardProps) {
 
   return (
     <Link href={`/dogs/${dog._id || dog.id}`}>
-      <div className="card hover:shadow-lg transition-shadow cursor-pointer h-full">
+      <article className="card hover:shadow-lg transition-shadow cursor-pointer h-full">
         <div className="relative h-48 bg-gray-200 rounded-lg overflow-hidden mb-4">
           {fullImageUrl && !imageError ? (
             <Image
@@ -63,7 +66,7 @@ export default function DogCard({ dog }: DogCardProps) {
         </div>
 
         <div className="space-y-2">
-          <div className="flex justify-between items-start">
+          <header className="flex justify-between items-start">
             <div>
               <h3 className="text-xl font-semibold text-gray-900">{dog.name}</h3>
               <p className="text-gray-600">{dog.breed}</p>
@@ -75,12 +78,12 @@ export default function DogCard({ dog }: DogCardProps) {
             }`}>
               {dog.gender}
             </span>
-          </div>
+          </header>
 
-          <div className="flex items-center text-sm text-gray-600">
-            <MapPin className="h-4 w-4 mr-1" />
+          <p className="flex items-center text-sm text-gray-600">
+            <MapPin className="h-4 w-4 mr-1" aria-hidden="true" />
             <span>{dog.location?.city || dog.city}, {dog.location?.state || dog.county}</span>
-          </div>
+          </p>
 
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600">{formatAge(dog.dateOfBirth)}</span>
@@ -88,14 +91,12 @@ export default function DogCard({ dog }: DogCardProps) {
           </div>
 
           {(dog.breeding?.available || dog.available) && (
-            <div className="pt-2 border-t">
-              <span className="text-sm font-semibold text-green-600">
-                Available for Breeding
-              </span>
-            </div>
+            <p className="pt-2 border-t text-sm font-semibold text-green-600">
+              Available for Breeding
+            </p>
           )}
         </div>
-      </div>
+      </article>
     </Link>
   );
 }

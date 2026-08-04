@@ -114,7 +114,7 @@ export default function DogMapClient({ dogs }: DogMapProps) {
     return (
       <div className="w-full h-[600px] bg-gray-100 rounded-lg flex items-center justify-center">
         <div className="text-center max-w-md">
-          <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4" aria-hidden="true">
             <span className="text-3xl">🗺️</span>
           </div>
           <p className="text-gray-600 text-lg font-semibold mb-2">
@@ -168,22 +168,22 @@ export default function DogMapClient({ dogs }: DogMapProps) {
       </MapContainer>
 
       {/* Legend */}
-      <div className="absolute bottom-4 right-4 bg-white p-4 rounded-lg shadow-lg z-[1000]">
-        <h3 className="font-bold text-sm mb-2">Legend</h3>
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow"></div>
+      <aside className="absolute bottom-4 right-4 bg-white p-4 rounded-lg shadow-lg z-[1000]" aria-labelledby="map-legend">
+        <h3 id="map-legend" className="font-bold text-sm mb-2">Legend</h3>
+        <ul className="space-y-2">
+          <li className="flex items-center gap-2">
+            <span className="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow" aria-hidden="true"></span>
             <span className="text-sm">Male ({dogsWithLocation.filter(d => d.dog.gender?.toUpperCase() === 'MALE').length})</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-pink-500 rounded-full border-2 border-white shadow"></div>
+          </li>
+          <li className="flex items-center gap-2">
+            <span className="w-4 h-4 bg-pink-500 rounded-full border-2 border-white shadow" aria-hidden="true"></span>
             <span className="text-sm">Female ({dogsWithLocation.filter(d => d.dog.gender?.toUpperCase() === 'FEMALE').length})</span>
-          </div>
-        </div>
+          </li>
+        </ul>
         <p className="text-xs text-gray-500 mt-2 border-t pt-2">
           {dogsWithLocation.length} of {dogs.length} dogs shown
         </p>
-      </div>
+      </aside>
     </div>
   );
 }
@@ -200,9 +200,9 @@ function DogPopupContent({ dog }: { dog: Dog }) {
   const city = getDogCity(dog);
 
   return (
-    <div className="w-64">
+    <article className="w-64">
       {/* Image */}
-      <div className="relative w-full h-40 mb-3 rounded-lg overflow-hidden bg-gray-200">
+      <figure className="relative w-full h-40 mb-3 rounded-lg overflow-hidden bg-gray-200">
         {imageUrl ? (
           <img
             src={imageUrl}
@@ -218,10 +218,11 @@ function DogPopupContent({ dog }: { dog: Dog }) {
         <div
           className="w-full h-full flex items-center justify-center text-4xl"
           style={{ display: imageUrl ? 'none' : 'flex' }}
+          aria-hidden="true"
         >
           🐕
         </div>
-      </div>
+      </figure>
 
       {/* Info */}
       <div className="space-y-3">
@@ -238,26 +239,26 @@ function DogPopupContent({ dog }: { dog: Dog }) {
           <span className="text-sm font-medium text-gray-700">{dog.breed}</span>
         </div>
 
-        <div className="text-sm text-gray-700 space-y-1">
-          <p className="flex items-center gap-2">
-            <span className="font-medium">Age:</span>
-            <span>{dog.age} years</span>
-          </p>
-          <p className="flex items-center gap-2">
-            <span className="font-medium">Location:</span>
-            <span>{city}{dog.county ? `, ${dog.county}` : ''}</span>
-          </p>
+        <dl className="text-sm text-gray-700 space-y-1">
+          <div className="flex items-center gap-2">
+            <dt className="font-medium">Age:</dt>
+            <dd>{dog.age} years</dd>
+          </div>
+          <div className="flex items-center gap-2">
+            <dt className="font-medium">Location:</dt>
+            <dd>{city}{dog.county ? `, ${dog.county}` : ''}</dd>
+          </div>
           {dog.studFee && (
-            <p className="flex items-center gap-2">
-              <span className="font-medium">Stud Fee:</span>
-              <span>£{dog.studFee}</span>
-            </p>
+            <div className="flex items-center gap-2">
+              <dt className="font-medium">Stud Fee:</dt>
+              <dd>£{dog.studFee}</dd>
+            </div>
           )}
-        </div>
+        </dl>
 
         {dog.available && (
-          <div className="flex items-center gap-1.5 text-sm text-green-700 font-semibold bg-green-50 px-3 py-2 rounded-lg border border-green-200">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <p className="flex items-center gap-1.5 text-sm text-green-700 font-semibold bg-green-50 px-3 py-2 rounded-lg border border-green-200">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
               <path
                 fillRule="evenodd"
                 d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
@@ -265,7 +266,7 @@ function DogPopupContent({ dog }: { dog: Dog }) {
               />
             </svg>
             Available for breeding
-          </div>
+          </p>
         )}
 
         <Link
@@ -275,6 +276,6 @@ function DogPopupContent({ dog }: { dog: Dog }) {
           View Profile →
         </Link>
       </div>
-    </div>
+    </article>
   );
 }

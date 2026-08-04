@@ -22,20 +22,24 @@ export default function AdminTabs({
 
   return (
     <div className="mb-6 border-b">
-      <nav className="-mb-px flex space-x-8">
-        {tabs.map(({ id, label, count }) => (
-          <button
-            key={id}
-            onClick={() => onTabChange(id)}
-            className={`py-4 px-1 border-b-2 font-medium text-sm ${
-              activeTab === id
-                ? 'border-primary-500 text-primary-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            {label} {count !== undefined ? `(${count})` : ''}
-          </button>
-        ))}
+      <nav className="-mb-px" aria-label="Admin sections">
+        <ul className="flex space-x-8">
+          {tabs.map(({ id, label, count }) => (
+            <li key={id}>
+              <button
+                onClick={() => onTabChange(id)}
+                aria-current={activeTab === id ? 'true' : undefined}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === id
+                    ? 'border-primary-500 text-primary-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                {label} {count !== undefined ? `(${count})` : ''}
+              </button>
+            </li>
+          ))}
+        </ul>
       </nav>
     </div>
   );

@@ -39,19 +39,19 @@ export default function ContactPage() {
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
+          <header className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">Get In Touch</h1>
             <p className="text-xl text-primary-100 max-w-3xl mx-auto">
               Have questions? We&apos;d love to hear from you. Send us a message and we&apos;ll respond as soon as possible.
             </p>
-          </div>
+          </header>
         </div>
       </section>
 
       {/* Contact Content */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-3 gap-8 mb-16">
+          <ul className="grid md:grid-cols-3 gap-8 mb-16">
             <ContactCard
               icon={<Mail className="h-8 w-8 text-primary-600" />}
               title="Email Us"
@@ -70,16 +70,16 @@ export default function ContactPage() {
               content="Devon, United Kingdom"
               description="12 Heather Park, Devon"
             />
-          </div>
+          </ul>
 
           <div className="grid md:grid-cols-2 gap-12">
             {/* Contact Form */}
-            <div className="bg-white rounded-2xl shadow-xl p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <MessageCircle className="h-8 w-8 text-primary-600" />
-                <h2 className="text-3xl font-bold text-gray-900">Send us a message</h2>
-              </div>
-              
+            <section className="bg-white rounded-2xl shadow-xl p-8" aria-labelledby="contact-form-heading">
+              <header className="flex items-center gap-3 mb-6">
+                <MessageCircle className="h-8 w-8 text-primary-600" aria-hidden="true" />
+                <h2 id="contact-form-heading" className="text-3xl font-bold text-gray-900">Send us a message</h2>
+              </header>
+
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
@@ -158,23 +158,23 @@ export default function ContactPage() {
                 >
                   {loading ? (
                     <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      <span className="block animate-spin rounded-full h-5 w-5 border-b-2 border-white" aria-hidden="true"></span>
                       Sending...
                     </>
                   ) : (
                     <>
-                      <Send className="h-5 w-5" />
+                      <Send className="h-5 w-5" aria-hidden="true" />
                       Send Message
                     </>
                   )}
                 </button>
               </form>
-            </div>
+            </section>
 
             {/* FAQ Section */}
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-6">Frequently Asked Questions</h2>
-              <div className="space-y-6">
+            <section aria-labelledby="faq-heading">
+              <h2 id="faq-heading" className="text-3xl font-bold text-gray-900 mb-6">Frequently Asked Questions</h2>
+              <ul className="space-y-6">
                 <FAQItem
                   question="How long does verification take?"
                   answer="Breeder verification typically takes 2-3 business days. We review all submitted documents carefully to ensure the safety and security of our community."
@@ -191,8 +191,8 @@ export default function ContactPage() {
                   question="How do I report suspicious activity?"
                   answer="You can report any concerns directly through the platform or by emailing our support team. We take all reports seriously and investigate promptly."
                 />
-              </div>
-            </div>
+              </ul>
+            </section>
           </div>
         </div>
       </section>     
@@ -212,22 +212,22 @@ function ContactCard({
   description: string;
 }) {
   return (
-    <div className="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl transition-all text-center">
-      <div className="bg-primary-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+    <li className="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl transition-all text-center">
+      <div className="bg-primary-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" aria-hidden="true">
         {icon}
       </div>
       <h3 className="text-xl font-bold text-gray-900 mb-2">{title}</h3>
       <p className="text-primary-600 font-semibold mb-1">{content}</p>
       <p className="text-gray-500 text-sm">{description}</p>
-    </div>
+    </li>
   );
 }
 
 function FAQItem({ question, answer }: { question: string; answer: string }) {
   return (
-    <div className="bg-white p-6 rounded-xl shadow-md">
+    <li className="bg-white p-6 rounded-xl shadow-md">
       <h3 className="font-bold text-gray-900 mb-2">{question}</h3>
       <p className="text-gray-600">{answer}</p>
-    </div>
+    </li>
   );
 }

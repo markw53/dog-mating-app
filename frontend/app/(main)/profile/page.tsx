@@ -185,13 +185,13 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Hero Section */}
       <Section variant="primary" className="py-12 md:py-16">
-        <div className="flex items-center justify-between">
+        <header className="flex items-center justify-between">
           <div className="text-center flex-1">
-            <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-4">
+            <p className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-4">
               <span className="text-white font-semibold text-sm">
                 👤 Your Profile
               </span>
-            </div>
+            </p>
             <h1 className="text-3xl md:text-4xl font-bold mb-3">
               Account Settings
             </h1>
@@ -205,9 +205,9 @@ export default function ProfilePage() {
             className="text-white/80 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-colors disabled:opacity-50"
             title="Refresh profile"
           >
-            <RefreshCw className={`h-5 w-5 ${refreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-5 w-5 ${refreshing ? 'animate-spin' : ''}`} aria-hidden="true" />
           </button>
-        </div>
+        </header>
       </Section>
 
       {/* Main Content */}
@@ -215,7 +215,7 @@ export default function ProfilePage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Profile Card - Sidebar */}
-            <div className="lg:col-span-1">
+            <aside className="lg:col-span-1">
               <ProfileSidebar
                 user={user}
                 uploadingAvatar={uploadingAvatar}
@@ -223,7 +223,7 @@ export default function ProfilePage() {
                 onAvatarChange={handleAvatarChange}
                 fileInputRef={fileInputRef}
               />
-            </div>
+            </aside>
 
             {/* Edit Form - Main Content */}
             <div className="lg:col-span-2 space-y-6">
@@ -256,9 +256,9 @@ export default function ProfilePage() {
 
 function LoadingScreen({ message }: { message: string }) {
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100" role="status">
       <div className="text-center">
-        <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" />
+        <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" aria-hidden="true" />
         <p className="text-gray-600 font-medium">{message}</p>
       </div>
     </div>
@@ -300,7 +300,7 @@ function ProfileSidebar({
               />
             </div>
           ) : (
-            <div className="w-32 h-32 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center mx-auto border-4 border-white shadow-xl group-hover:scale-105 transition-transform">
+            <div className="w-32 h-32 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center mx-auto border-4 border-white shadow-xl group-hover:scale-105 transition-transform" aria-hidden="true">
               <UserIcon className="h-16 w-16 text-primary-600" />
             </div>
           )}
@@ -311,9 +311,9 @@ function ProfileSidebar({
             title="Change profile picture"
           >
             {uploadingAvatar ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
             ) : (
-              <Camera className="h-5 w-5" />
+              <Camera className="h-5 w-5" aria-hidden="true" />
             )}
           </button>
         </div>
@@ -334,14 +334,14 @@ function ProfileSidebar({
 
       {/* Verified Badge */}
       {user.verified && (
-        <div className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-bold shadow-md mb-6">
-          <Check className="h-4 w-4 mr-2" />
+        <p className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-bold shadow-md mb-6">
+          <Check className="h-4 w-4 mr-2" aria-hidden="true" />
           Verified User
-        </div>
+        </p>
       )}
 
       {/* Quick Info */}
-      <div className="pt-6 border-t space-y-4">
+      <ul className="pt-6 border-t space-y-4">
         {user.phone && (
           <InfoItem
             icon={<Phone className="h-5 w-5 text-blue-600" />}
@@ -356,29 +356,29 @@ function ProfileSidebar({
             value={`${displayCity}${displayCity && displayCounty ? ', ' : ''}${displayCounty || ''}`}
           />
         )}
-        <div className="flex items-center text-gray-700 p-3 bg-gray-50 rounded-lg">
-          <div className="bg-purple-100 p-2 rounded-lg mr-3">
+        <li className="flex items-center text-gray-700 p-3 bg-gray-50 rounded-lg">
+          <span className="block bg-purple-100 p-2 rounded-lg mr-3" aria-hidden="true">
             <Calendar className="h-5 w-5 text-purple-600" />
-          </div>
-          <div className="text-left">
-            <p className="text-xs text-gray-500">Member since</p>
-            <span className="text-sm font-medium">
+          </span>
+          <dl className="text-left">
+            <dt className="text-xs text-gray-500">Member since</dt>
+            <dd className="text-sm font-medium">
               {user.createdAt ? formatDate(user.createdAt) : 'N/A'}
-            </span>
-          </div>
-        </div>
-      </div>
+            </dd>
+          </dl>
+        </li>
+      </ul>
 
       {/* Role Badge */}
       <div className="mt-6 pt-6 border-t">
-        <div className="flex items-center justify-center">
-          <div className="bg-primary-100 p-2 rounded-lg mr-2">
+        <p className="flex items-center justify-center">
+          <span className="block bg-primary-100 p-2 rounded-lg mr-2" aria-hidden="true">
             <Shield className="h-5 w-5 text-primary-600" />
-          </div>
+          </span>
           <span className="text-sm font-semibold text-gray-700 capitalize">
             {user.role.toLowerCase()} Account
           </span>
-        </div>
+        </p>
       </div>
     </Card>
   );
@@ -394,10 +394,10 @@ function InfoItem({
   value: string;
 }) {
   return (
-    <div className="flex items-center text-gray-700 p-3 bg-gray-50 rounded-lg">
-      <div className={`${iconBg} p-2 rounded-lg mr-3`}>{icon}</div>
+    <li className="flex items-center text-gray-700 p-3 bg-gray-50 rounded-lg">
+      <span className={`block ${iconBg} p-2 rounded-lg mr-3`} aria-hidden="true">{icon}</span>
       <span className="text-sm font-medium">{value}</span>
-    </div>
+    </li>
   );
 }
 
@@ -419,10 +419,10 @@ function PersonalInfoCard({
   onSubmit: (e: React.FormEvent) => void;
 }) {
   return (
-    <Card>
-      <div className="flex items-center justify-between mb-6">
+    <Card as="section">
+      <header className="flex items-center justify-between mb-6">
         <div className="flex items-center">
-          <div className="bg-blue-100 p-3 rounded-xl mr-4">
+          <div className="bg-blue-100 p-3 rounded-xl mr-4" aria-hidden="true">
             <UserIcon className="h-6 w-6 text-blue-600" />
           </div>
           <div>
@@ -434,11 +434,11 @@ function PersonalInfoCard({
         </div>
         {!editing && (
           <button onClick={onEdit} className="btn-primary flex items-center">
-            <Edit className="h-4 w-4 mr-2" />
+            <Edit className="h-4 w-4 mr-2" aria-hidden="true" />
             Edit Profile
           </button>
         )}
-      </div>
+      </header>
 
       <form onSubmit={onSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -459,14 +459,15 @@ function PersonalInfoCard({
           />
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="profile-email" className="block text-sm font-semibold text-gray-700 mb-2">
               Email Address
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none" aria-hidden="true">
                 <Mail className="h-5 w-5 text-gray-400" />
               </div>
               <input
+                id="profile-email"
                 type="email"
                 name="email"
                 value={formData.email}
@@ -475,20 +476,21 @@ function PersonalInfoCard({
               />
             </div>
             <p className="text-xs text-gray-500 mt-2 flex items-center">
-              <Shield className="h-3 w-3 mr-1" />
+              <Shield className="h-3 w-3 mr-1" aria-hidden="true" />
               Email cannot be changed for security reasons
             </p>
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="profile-phone" className="block text-sm font-semibold text-gray-700 mb-2">
               Phone Number
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none" aria-hidden="true">
                 <Phone className="h-5 w-5 text-gray-400" />
               </div>
               <input
+                id="profile-phone"
                 type="tel"
                 name="phone"
                 value={formData.phone}
@@ -510,12 +512,12 @@ function PersonalInfoCard({
             >
               {loading ? (
                 <>
-                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" aria-hidden="true" />
                   Saving...
                 </>
               ) : (
                 <>
-                  <Save className="h-5 w-5 mr-2" />
+                  <Save className="h-5 w-5 mr-2" aria-hidden="true" />
                   Save Changes
                 </>
               )}
@@ -525,7 +527,7 @@ function PersonalInfoCard({
               onClick={onCancel}
               className="flex-1 btn-secondary flex items-center justify-center py-3"
             >
-              <X className="h-5 w-5 mr-2" />
+              <X className="h-5 w-5 mr-2" aria-hidden="true" />
               Cancel
             </button>
           </div>
@@ -545,9 +547,9 @@ function AddressCard({
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }) {
   return (
-    <Card>
-      <div className="flex items-center mb-6">
-        <div className="bg-green-100 p-3 rounded-xl mr-4">
+    <Card as="section">
+      <header className="flex items-center mb-6">
+        <div className="bg-green-100 p-3 rounded-xl mr-4" aria-hidden="true">
           <MapPin className="h-6 w-6 text-green-600" />
         </div>
         <div>
@@ -556,7 +558,7 @@ function AddressCard({
           </h2>
           <p className="text-sm text-gray-600">Your location details</p>
         </div>
-      </div>
+      </header>
 
       <div className="space-y-6">
         <FormField
@@ -597,10 +599,11 @@ function AddressCard({
           />
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="profile-country" className="block text-sm font-semibold text-gray-700 mb-2">
               Country
             </label>
             <input
+              id="profile-country"
               type="text"
               value="United Kingdom"
               disabled
@@ -632,10 +635,11 @@ function FormField({
 }) {
   return (
     <div>
-      <label className="block text-sm font-semibold text-gray-700 mb-2">
+      <label htmlFor={`profile-${name}`} className="block text-sm font-semibold text-gray-700 mb-2">
         {label}
       </label>
       <input
+        id={`profile-${name}`}
         type={type}
         name={name}
         value={value}

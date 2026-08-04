@@ -201,9 +201,9 @@ export default function AddDogPage() {
 
   if (authLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100" role="status">
         <div className="text-center">
-          <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" />
+          <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" aria-hidden="true" />
           <p className="text-gray-600 font-medium">Checking authentication...</p>
         </div>
       </div>
@@ -212,9 +212,9 @@ export default function AddDogPage() {
 
   if (!isAuthorized) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100" role="status">
         <div className="text-center">
-          <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" />
+          <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" aria-hidden="true" />
           <p className="text-gray-600 font-medium">Redirecting to login...</p>
         </div>
       </div>
@@ -231,24 +231,24 @@ export default function AddDogPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Hero Section */}
       <Section variant="primary" className="py-12 md:py-16">
-        <div className="text-center">
-          <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-4">
+        <header className="text-center">
+          <p className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-4">
             <span className="text-white font-semibold text-sm">📝 New Listing</span>
-          </div>
+          </p>
           <h1 className="text-3xl md:text-4xl font-bold mb-3">Add Your Dog</h1>
           <p className="text-lg text-primary-100 max-w-2xl mx-auto">
             Create a detailed profile to connect with potential breeding partners
           </p>
-        </div>
+        </header>
       </Section>
 
       {/* Progress Steps */}
       <section className="py-8 -mt-10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <Card className="bg-white">
-            <div className="flex justify-between items-center">
+            <ol className="flex justify-between items-center">
               {steps.map((step, index) => (
-                <div key={step.number} className="flex items-center flex-1">
+                <li key={step.number} className="flex items-center flex-1">
                   <div className="flex flex-col items-center flex-1">
                     <div
                       className={`w-12 h-12 rounded-full flex items-center justify-center font-bold mb-2 transition-all ${
@@ -256,6 +256,7 @@ export default function AddDogPage() {
                           ? 'bg-gradient-to-br from-primary-600 to-primary-700 text-white shadow-lg scale-110'
                           : 'bg-gray-200 text-gray-600'
                       }`}
+                      aria-hidden="true"
                     >
                       {currentStep > step.number ? (
                         <Check className="h-6 w-6" />
@@ -276,11 +277,12 @@ export default function AddDogPage() {
                       className={`h-1 flex-1 mx-2 rounded ${
                         currentStep > step.number ? 'bg-primary-600' : 'bg-gray-200'
                       }`}
+                      aria-hidden="true"
                     ></div>
                   )}
-                </div>
+                </li>
               ))}
-            </div>
+            </ol>
           </Card>
         </div>
       </section>
@@ -290,9 +292,9 @@ export default function AddDogPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Images Section */}
-            <Card>
-              <div className="flex items-center mb-6">
-                <div className="bg-blue-100 p-3 rounded-xl mr-4">
+            <Card as="section">
+              <header className="flex items-center mb-6">
+                <div className="bg-blue-100 p-3 rounded-xl mr-4" aria-hidden="true">
                   <ImageIcon className="h-6 w-6 text-blue-600" />
                 </div>
                 <div>
@@ -301,11 +303,11 @@ export default function AddDogPage() {
                     Upload up to 10 images (first image will be the main photo)
                   </p>
                 </div>
-              </div>
+              </header>
 
               <label className="block w-full cursor-pointer">
                 <div className="border-3 border-dashed border-gray-300 rounded-2xl p-12 text-center hover:border-primary-500 hover:bg-primary-50 transition-all group">
-                  <div className="bg-primary-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                  <div className="bg-primary-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform" aria-hidden="true">
                     <Upload className="h-10 w-10 text-primary-600" />
                   </div>
                   <p className="text-lg font-semibold text-gray-900 mb-1">
@@ -331,9 +333,9 @@ export default function AddDogPage() {
                       {previews.length} image{previews.length > 1 ? 's' : ''} uploaded
                     </p>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <ul className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {previews.map((preview, index) => (
-                      <div key={index} className="relative group">
+                      <li key={index} className="relative group">
                         <div className="aspect-square rounded-xl overflow-hidden border-2 border-gray-200 group-hover:border-primary-400 transition-all">
                           <Image
                             src={preview}
@@ -348,33 +350,34 @@ export default function AddDogPage() {
                           type="button"
                           onClick={() => removeImage(index)}
                           title="Remove image"
+                          aria-label={`Remove image ${index + 1}`}
                           className="absolute -top-2 -right-2 bg-red-600 text-white p-2 rounded-full hover:bg-red-700 shadow-lg transform hover:scale-110 transition-all"
                         >
-                          <X className="h-4 w-4" />
+                          <X className="h-4 w-4" aria-hidden="true" />
                         </button>
                         {index === 0 && (
-                          <div className="absolute bottom-2 left-2 bg-gradient-to-r from-primary-600 to-primary-700 text-white text-xs px-3 py-1 rounded-full font-bold shadow-lg">
+                          <p className="absolute bottom-2 left-2 bg-gradient-to-r from-primary-600 to-primary-700 text-white text-xs px-3 py-1 rounded-full font-bold shadow-lg">
                             Main Photo
-                          </div>
+                          </p>
                         )}
-                      </div>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 </div>
               )}
             </Card>
 
             {/* Basic Information */}
-            <Card>
-              <div className="flex items-center mb-6">
-                <div className="bg-purple-100 p-3 rounded-xl mr-4">
+            <Card as="section">
+              <header className="flex items-center mb-6">
+                <div className="bg-purple-100 p-3 rounded-xl mr-4" aria-hidden="true">
                   <DogIcon className="h-6 w-6 text-purple-600" />
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">Basic Information</h2>
                   <p className="text-sm text-gray-600">Tell us about your dog</p>
                 </div>
-              </div>
+              </header>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -484,16 +487,16 @@ export default function AddDogPage() {
             </Card>
 
             {/* Health Information */}
-            <Card>
-              <div className="flex items-center mb-6">
-                <div className="bg-green-100 p-3 rounded-xl mr-4">
+            <Card as="section">
+              <header className="flex items-center mb-6">
+                <div className="bg-green-100 p-3 rounded-xl mr-4" aria-hidden="true">
                   <Shield className="h-6 w-6 text-green-600" />
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">Health Information</h2>
                   <p className="text-sm text-gray-600">Medical history and veterinary details</p>
                 </div>
-              </div>
+              </header>
 
               <div className="space-y-6">
                 <div className="flex items-center space-x-6">
@@ -571,9 +574,9 @@ export default function AddDogPage() {
             </Card>
 
             {/* Pedigree Information */}
-            <Card>
-              <div className="flex items-center mb-6">
-                <div className="bg-indigo-100 p-3 rounded-xl mr-4">
+            <Card as="section">
+              <header className="flex items-center mb-6">
+                <div className="bg-indigo-100 p-3 rounded-xl mr-4" aria-hidden="true">
                   <Shield className="h-6 w-6 text-indigo-600" />
                 </div>
                 <div>
@@ -582,7 +585,7 @@ export default function AddDogPage() {
                   </h2>
                   <p className="text-sm text-gray-600">Registration and lineage details</p>
                 </div>
-              </div>
+              </header>
 
               <div className="space-y-6">
                 <label className="flex items-center cursor-pointer group">
@@ -663,9 +666,9 @@ export default function AddDogPage() {
             </Card>
 
             {/* Breeding Information */}
-            <Card>
-              <div className="flex items-center mb-6">
-                <div className="bg-pink-100 p-3 rounded-xl mr-4">
+            <Card as="section">
+              <header className="flex items-center mb-6">
+                <div className="bg-pink-100 p-3 rounded-xl mr-4" aria-hidden="true">
                   <Heart className="h-6 w-6 text-pink-600" />
                 </div>
                 <div>
@@ -674,7 +677,7 @@ export default function AddDogPage() {
                   </h2>
                   <p className="text-sm text-gray-600">Availability and breeding details</p>
                 </div>
-              </div>
+              </header>
 
               <div className="space-y-6">
                 <div className="bg-gradient-to-r from-primary-50 to-primary-100 p-4 rounded-xl border border-primary-200">
@@ -769,8 +772,8 @@ export default function AddDogPage() {
             </Card>
 
             {/* Location */}
-            <Card>
-              <div className="flex items-center mb-6">
+            <Card as="section">
+              <header className="flex items-center mb-6">
                 <div className="bg-orange-100 p-3 rounded-xl mr-4">
                   <MapPin className="h-6 w-6 text-orange-600" />
                 </div>
@@ -778,7 +781,7 @@ export default function AddDogPage() {
                   <h2 className="text-2xl font-bold text-gray-900">Location</h2>
                   <p className="text-sm text-gray-600">Where is your dog located?</p>
                 </div>
-              </div>
+              </header>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">

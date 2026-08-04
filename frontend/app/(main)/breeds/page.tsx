@@ -138,7 +138,7 @@ function BreedsPageInner() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Hero Section */}
       <Section variant="primary" className="py-16 md:py-20">
-        <div className="text-center">
+        <header className="text-center">
           <span className="inline-block bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-semibold mb-4">
             📖 Royal Kennel Club Breed Guide
           </span>
@@ -151,7 +151,7 @@ function BreedsPageInner() {
 
           {/* Search bar in hero */}
           <BreedSearch />
-        </div>
+        </header>
       </Section>
 
       {/* Main Content */}
@@ -172,7 +172,7 @@ function BreedsPageInner() {
                 onClick={() => setShowFilters(!showFilters)}
                 className="w-full btn-primary flex items-center justify-center mb-4"
               >
-                <SlidersHorizontal className="h-5 w-5 mr-2" />
+                <SlidersHorizontal className="h-5 w-5 mr-2" aria-hidden="true" />
                 {showFilters ? 'Hide Filters' : 'Show Filters'}
               </button>
 
@@ -185,7 +185,7 @@ function BreedsPageInner() {
             </div>
 
             {/* Breeds Grid */}
-            <main className="lg:col-span-3">
+            <div className="lg:col-span-3">
               {/* Toolbar */}
               <div className="mb-6 flex justify-between items-center flex-wrap gap-4">
                 <div className="flex items-center gap-2">
@@ -196,7 +196,7 @@ function BreedsPageInner() {
                     breeds found
                   </p>
                   {isFiltering && (
-                    <Loader2 className="h-4 w-4 animate-spin text-primary-600" />
+                    <Loader2 className="h-4 w-4 animate-spin text-primary-600" aria-hidden="true" />
                   )}
                 </div>
 
@@ -220,8 +220,9 @@ function BreedsPageInner() {
                           : 'text-gray-500 hover:text-gray-700'
                       }`}
                       title="Grid view"
+                      aria-pressed={viewMode === 'grid'}
                     >
-                      <Grid3X3 className="h-4 w-4" />
+                      <Grid3X3 className="h-4 w-4" aria-hidden="true" />
                     </button>
                     <button
                       onClick={() => setViewMode('list')}
@@ -231,8 +232,9 @@ function BreedsPageInner() {
                           : 'text-gray-500 hover:text-gray-700'
                       }`}
                       title="List view"
+                      aria-pressed={viewMode === 'list'}
                     >
-                      <List className="h-4 w-4" />
+                      <List className="h-4 w-4" aria-hidden="true" />
                     </button>
                   </div>
 
@@ -244,6 +246,7 @@ function BreedsPageInner() {
                   >
                     <RefreshCw
                       className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`}
+                      aria-hidden="true"
                     />
                   </button>
                 </div>
@@ -253,7 +256,7 @@ function BreedsPageInner() {
               {error && (
                 <Card hover={false} className="text-center py-12 mb-6">
                   <div className="max-w-md mx-auto">
-                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4" aria-hidden="true">
                       <span className="text-2xl">⚠️</span>
                     </div>
                     <h3 className="text-xl font-bold text-gray-900 mb-2">
@@ -263,7 +266,7 @@ function BreedsPageInner() {
                       There was an error fetching breed data. Please try again.
                     </p>
                     <button onClick={fetchBreeds} className="btn-primary">
-                      <RefreshCw className="h-4 w-4 mr-2" />
+                      <RefreshCw className="h-4 w-4 mr-2" aria-hidden="true" />
                       Try Again
                     </button>
                   </div>
@@ -272,9 +275,9 @@ function BreedsPageInner() {
 
               {/* Loading State */}
               {loading && !error && (
-                <div className="flex justify-center items-center py-20">
+                <div className="flex justify-center items-center py-20" role="status">
                   <div className="text-center">
-                    <Loader2 className="h-12 w-12 animate-spin text-primary-600 mx-auto mb-4" />
+                    <Loader2 className="h-12 w-12 animate-spin text-primary-600 mx-auto mb-4" aria-hidden="true" />
                     <p className="text-gray-600">Loading breeds...</p>
                   </div>
                 </div>
@@ -284,7 +287,7 @@ function BreedsPageInner() {
               {!loading && !error && breeds.length === 0 && (
                 <Card hover={false} className="text-center py-16">
                   <div className="max-w-md mx-auto">
-                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4" aria-hidden="true">
                       <BookOpen className="h-10 w-10 text-gray-400" />
                     </div>
                     <h3 className="text-xl font-bold text-gray-900 mb-2">
@@ -303,7 +306,7 @@ function BreedsPageInner() {
               {/* Breeds Grid */}
               {!loading && !error && breeds.length > 0 && (
                 <>
-                  <div
+                  <ul
                     className={
                       viewMode === 'grid'
                         ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'
@@ -311,13 +314,15 @@ function BreedsPageInner() {
                     }
                   >
                     {breeds.map((breed) => (
-                      <BreedCard key={breed.id} breed={breed} />
+                      <li key={breed.id}>
+                        <BreedCard breed={breed} />
+                      </li>
                     ))}
-                  </div>
+                  </ul>
 
                   {/* Pagination */}
                   {totalPages > 1 && (
-                    <div className="mt-10 flex justify-center items-center gap-2">
+                    <nav className="mt-10 flex justify-center items-center gap-2" aria-label="Breed pagination">
                       <button
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
                         disabled={page === 1}
@@ -345,6 +350,8 @@ function BreedsPageInner() {
                               <button
                                 key={pageNum}
                                 onClick={() => setPage(pageNum)}
+                                aria-label={`Page ${pageNum}`}
+                                aria-current={page === pageNum ? 'page' : undefined}
                                 className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${
                                   page === pageNum
                                     ? 'bg-primary-600 text-white'
@@ -367,13 +374,13 @@ function BreedsPageInner() {
                       >
                         Next
                       </button>
-                    </div>
+                    </nav>
                   )}
                 </>
               )}
 
               {/* Disclaimer */}
-              <div className="mt-10 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+              <aside className="mt-10 p-4 bg-amber-50 border border-amber-200 rounded-xl">
                 <p className="text-sm text-amber-800">
                   <strong>⚠️ Disclaimer:</strong> Breed information displayed on
                   this page is sourced from The Royal Kennel Club website and is
@@ -390,8 +397,8 @@ function BreedsPageInner() {
                   </a>
                   .
                 </p>
-              </div>
-            </main>
+              </aside>
+            </div>
           </div>
         </div>
       </section>

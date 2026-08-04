@@ -139,7 +139,7 @@ function BrowsePageInner() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Hero Section */}
       <Section variant="primary" className="py-16 md:py-20">
-        <div className="text-center">
+        <header className="text-center">
           <span className="inline-block bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-semibold mb-4">
             🔍 Discover Your Perfect Match
           </span>
@@ -149,7 +149,7 @@ function BrowsePageInner() {
           <p className="text-xl md:text-2xl text-primary-100 max-w-3xl mx-auto">
             Find verified dogs available for breeding from trusted owners
           </p>
-        </div>
+        </header>
       </Section>
 
       {/* Main Content */}
@@ -170,7 +170,7 @@ function BrowsePageInner() {
                 onClick={() => setShowFilters(!showFilters)}
                 className="w-full btn-primary flex items-center justify-center mb-4"
               >
-                <SlidersHorizontal className="h-5 w-5 mr-2" />
+                <SlidersHorizontal className="h-5 w-5 mr-2" aria-hidden="true" />
                 {showFilters ? 'Hide Filters' : 'Show Filters'}
               </button>
 
@@ -183,7 +183,7 @@ function BrowsePageInner() {
             </div>
 
             {/* Dogs Grid */}
-            <main className="lg:col-span-3">
+            <div className="lg:col-span-3">
               <div className="mb-6 flex justify-between items-center flex-wrap gap-4">
                 <div className="flex items-center gap-2">
                   <p className="text-gray-600">
@@ -194,7 +194,7 @@ function BrowsePageInner() {
                   </p>
                   {/* Show subtle loading indicator when filtering */}
                   {isFiltering && (
-                    <Loader2 className="h-4 w-4 animate-spin text-primary-600" />
+                    <Loader2 className="h-4 w-4 animate-spin text-primary-600" aria-hidden="true" />
                   )}
                 </div>
                 <div className="flex items-center gap-4">
@@ -215,6 +215,7 @@ function BrowsePageInner() {
                   >
                     <RefreshCw
                       className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`}
+                      aria-hidden="true"
                     />
                   </button>
                 </div>
@@ -224,7 +225,7 @@ function BrowsePageInner() {
               {error && (
                 <Card hover={false} className="text-center py-12 mb-6">
                   <div className="max-w-md mx-auto">
-                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4" aria-hidden="true">
                       <span className="text-2xl">⚠️</span>
                     </div>
                     <h3 className="text-xl font-bold text-gray-900 mb-2">
@@ -234,7 +235,7 @@ function BrowsePageInner() {
                       There was an error fetching the dogs. Please try again.
                     </p>
                     <button onClick={refetch} className="btn-primary">
-                      <RefreshCw className="h-4 w-4 mr-2" />
+                      <RefreshCw className="h-4 w-4 mr-2" aria-hidden="true" />
                       Try Again
                     </button>
                   </div>
@@ -243,9 +244,9 @@ function BrowsePageInner() {
 
               {/* Loading State */}
               {loading && !error && (
-                <div className="flex justify-center items-center py-20">
+                <div className="flex justify-center items-center py-20" role="status">
                   <div className="text-center">
-                    <Loader2 className="h-12 w-12 animate-spin text-primary-600 mx-auto mb-4" />
+                    <Loader2 className="h-12 w-12 animate-spin text-primary-600 mx-auto mb-4" aria-hidden="true" />
                     <p className="text-gray-600">Loading dogs...</p>
                   </div>
                 </div>
@@ -255,7 +256,7 @@ function BrowsePageInner() {
               {!loading && !error && dogs.length === 0 && (
                 <Card hover={false} className="text-center py-16">
                   <div className="max-w-md mx-auto">
-                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4" aria-hidden="true">
                       <SlidersHorizontal className="h-10 w-10 text-gray-400" />
                     </div>
                     <h3 className="text-xl font-bold text-gray-900 mb-2">
@@ -273,13 +274,15 @@ function BrowsePageInner() {
 
               {/* Dogs Grid */}
               {!loading && !error && dogs.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <ul className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                   {dogs.map((dog) => (
-                    <DogCard key={dog.id || dog._id} dog={dog} />
+                    <li key={dog.id || dog._id}>
+                      <DogCard dog={dog} />
+                    </li>
                   ))}
-                </div>
+                </ul>
               )}
-            </main>
+            </div>
           </div>
         </div>
       </section>

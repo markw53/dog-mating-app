@@ -26,9 +26,10 @@ export default function PendingDogsList({
   }
 
   return (
-    <div className="space-y-4">
+    <ul className="space-y-4">
       {dogs.map((dog) => (
-        <div key={dog._id || dog.id} className="card">
+        <li key={dog._id || dog.id}>
+          <article className="card">
           <div className="flex flex-col md:flex-row gap-6">
             <div className="w-full md:w-48 h-48 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
               <Image
@@ -42,7 +43,7 @@ export default function PendingDogsList({
             </div>
 
             <div className="flex-1">
-              <div className="flex justify-between items-start mb-4">
+              <header className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="text-xl font-bold text-gray-900">{dog.name}</h3>
                   <p className="text-gray-600">{dog.breed}</p>
@@ -53,56 +54,57 @@ export default function PendingDogsList({
                 <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-semibold">
                   Pending
                 </span>
-              </div>
+              </header>
 
               <p className="text-gray-700 mb-4 line-clamp-2">{dog.description}</p>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
+              <dl className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
                 <div>
-                  <span className="text-gray-600">Gender:</span>
-                  <span className="font-semibold ml-2 capitalize">{dog.gender}</span>
+                  <dt className="inline text-gray-600">Gender:</dt>
+                  <dd className="inline font-semibold ml-2 capitalize">{dog.gender}</dd>
                 </div>
                 <div>
-                  <span className="text-gray-600">Age:</span>
-                  <span className="font-semibold ml-2">{dog.age} years</span>
+                  <dt className="inline text-gray-600">Age:</dt>
+                  <dd className="inline font-semibold ml-2">{dog.age} years</dd>
                 </div>
                 <div>
-                  <span className="text-gray-600">Weight:</span>
-                  <span className="font-semibold ml-2">{dog.weight} lbs</span>
+                  <dt className="inline text-gray-600">Weight:</dt>
+                  <dd className="inline font-semibold ml-2">{dog.weight} lbs</dd>
                 </div>
                 <div>
-                  <span className="text-gray-600">Location:</span>
-                  <span className="font-semibold ml-2">{dog.location?.city ?? '—'}</span>
+                  <dt className="inline text-gray-600">Location:</dt>
+                  <dd className="inline font-semibold ml-2">{dog.location?.city ?? '—'}</dd>
                 </div>
-              </div>
+              </dl>
 
               <div className="flex flex-wrap gap-3">
                 <button
                   onClick={() => onApprove(dog._id || dog.id)}
                   className="btn-primary flex items-center"
                 >
-                  <CheckCircle className="h-4 w-4 mr-2" />
+                  <CheckCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                   Approve
                 </button>
                 <button
                   onClick={() => onReject(dog._id || dog.id)}
                   className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center"
                 >
-                  <XCircle className="h-4 w-4 mr-2" />
+                  <XCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                   Reject
                 </button>
                 <Link
                   href={`/dogs/${dog._id || dog.id}`}
                   className="btn-secondary flex items-center"
                 >
-                  <Eye className="h-4 w-4 mr-2" />
+                  <Eye className="h-4 w-4 mr-2" aria-hidden="true" />
                   View Details
                 </Link>
               </div>
             </div>
           </div>
-        </div>
+          </article>
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }

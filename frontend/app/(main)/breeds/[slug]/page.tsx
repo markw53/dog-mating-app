@@ -74,9 +74,9 @@ export default function BreedDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center" role="status">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary-600 mx-auto mb-4" />
+          <Loader2 className="h-12 w-12 animate-spin text-primary-600 mx-auto mb-4" aria-hidden="true" />
           <p className="text-gray-600">Loading breed information...</p>
         </div>
       </div>
@@ -87,7 +87,7 @@ export default function BreedDetailPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Card hover={false} className="text-center py-16 px-8 max-w-md mx-auto">
-          <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4" aria-hidden="true">
             <span className="text-4xl">🐕</span>
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -97,7 +97,7 @@ export default function BreedDetailPage() {
             We couldn&apos;t find information for this breed.
           </p>
           <Link href="/breeds" className="btn-primary inline-flex items-center">
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
             Back to Breeds
           </Link>
         </Card>
@@ -120,22 +120,22 @@ export default function BreedDetailPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Hero / Header */}
-      <div className="relative bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 text-white">
-        <div className="absolute inset-0 opacity-10">
+      <header className="relative bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 text-white">
+        <div className="absolute inset-0 opacity-10" aria-hidden="true">
           <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="pt-6">
+          <nav className="pt-6" aria-label="Breadcrumb">
             <Link
               href="/breeds"
               className="inline-flex items-center text-primary-100 hover:text-white transition-colors text-sm font-medium"
             >
-              <ArrowLeft className="h-4 w-4 mr-1" />
+              <ArrowLeft className="h-4 w-4 mr-1" aria-hidden="true" />
               Back to Breeds
             </Link>
-          </div>
+          </nav>
 
           <div className="py-12 md:py-16 flex flex-col md:flex-row items-center gap-8">
             {/* Breed image */}
@@ -155,6 +155,7 @@ export default function BreedDetailPage() {
               <div
                 className="w-full h-full bg-primary-500 flex items-center justify-center"
                 style={{ display: breed.imageUrl ? 'none' : 'flex' }}
+                aria-hidden="true"
               >
                 <span className="text-7xl">🐕</span>
               </div>
@@ -162,23 +163,23 @@ export default function BreedDetailPage() {
 
             {/* Breed title info */}
             <div className="text-center md:text-left">
-              <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-3">
-                <span
+              <ul className="flex flex-wrap gap-2 justify-center md:justify-start mb-3">
+                <li
                   className={`px-3 py-1 rounded-full text-sm font-semibold ${typeColor}`}
                 >
                   {breed.type}
-                </span>
+                </li>
                 {breed.kennelClubCategory && (
-                  <span className="bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-medium">
+                  <li className="bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-medium">
                     KC Group: {breed.kennelClubCategory}
-                  </span>
+                  </li>
                 )}
                 {breed.size && (
-                  <span className="bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-medium">
+                  <li className="bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-medium">
                     {breed.size}
-                  </span>
+                  </li>
                 )}
-              </div>
+              </ul>
 
               <h1 className="text-4xl md:text-5xl font-bold mb-3">
                 {breed.name}
@@ -197,14 +198,14 @@ export default function BreedDetailPage() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 mt-4 text-sm bg-white/20 hover:bg-white/30 backdrop-blur-sm px-4 py-2 rounded-lg transition-colors"
                 >
-                  <ExternalLink className="h-4 w-4" />
+                  <ExternalLink className="h-4 w-4" aria-hidden="true" />
                   View on Royal Kennel Club
                 </a>
               )}
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -212,38 +213,36 @@ export default function BreedDetailPage() {
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-8">
             {/* Quick Stats */}
-            <Card hover={false} className="p-6">
+            <Card as="section" hover={false} className="p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <Ruler className="h-5 w-5 text-primary-600" />
+                <Ruler className="h-5 w-5 text-primary-600" aria-hidden="true" />
                 Breed Overview
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {infoItems.map((item) => (
                   <div
                     key={item.label}
-                    className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl"
+                    className="grid grid-cols-[auto_1fr] items-center gap-x-3 p-3 bg-gray-50 rounded-xl"
                   >
-                    <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0 row-span-2" aria-hidden="true">
                       <item.icon className="h-5 w-5 text-primary-600" />
                     </div>
-                    <div>
-                      <p className="text-sm text-gray-500 font-medium">
-                        {item.label}
-                      </p>
-                      <p className="text-gray-900 font-semibold">
-                        {item.value}
-                      </p>
-                    </div>
+                    <dt className="text-sm text-gray-500 font-medium">
+                      {item.label}
+                    </dt>
+                    <dd className="text-gray-900 font-semibold">
+                      {item.value}
+                    </dd>
                   </div>
                 ))}
-              </div>
+              </dl>
             </Card>
 
             {/* Temperament */}
             {breed.temperament && (
-              <Card hover={false} className="p-6">
+              <Card as="section" hover={false} className="p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <Heart className="h-5 w-5 text-primary-600" />
+                  <Heart className="h-5 w-5 text-primary-600" aria-hidden="true" />
                   Temperament
                 </h2>
                 <p className="text-gray-700 leading-relaxed">
@@ -255,9 +254,9 @@ export default function BreedDetailPage() {
             {/* Health */}
             {breed.healthProblems &&
               breed.healthProblems !== 'Varies by breed - consult veterinarian' && (
-                <Card hover={false} className="p-6">
+                <Card as="section" hover={false} className="p-6">
                   <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5 text-amber-500" />
+                    <AlertTriangle className="h-5 w-5 text-amber-500" aria-hidden="true" />
                     Health Information
                   </h2>
                   <p className="text-gray-700 leading-relaxed">
@@ -268,10 +267,10 @@ export default function BreedDetailPage() {
 
             {/* Available Dogs */}
             {breed.dogs && breed.dogs.length > 0 && (
-              <Card hover={false} className="p-6">
-                <div className="flex items-center justify-between mb-6">
+              <Card as="section" hover={false} className="p-6">
+                <header className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                    <Dog className="h-5 w-5 text-primary-600" />
+                    <Dog className="h-5 w-5 text-primary-600" aria-hidden="true" />
                     Available {breed.name}s on DogMate
                   </h2>
                   <Link
@@ -280,66 +279,68 @@ export default function BreedDetailPage() {
                   >
                     View All →
                   </Link>
-                </div>
+                </header>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {breed.dogs.map((dog) => (
-                    <Link
-                      key={dog.id}
-                      href={`/dogs/${dog.id}`}
-                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors border border-gray-100"
-                    >
-                      <div className="w-14 h-14 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-                        {dog.mainImage ? (
-                          <img
-                            src={dog.mainImage}
-                            alt={dog.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                              if (fallback) fallback.style.display = 'flex';
-                            }}
-                          />
-                        ) : null}
-                        <div
-                          className="w-full h-full flex items-center justify-center text-2xl"
-                          style={{ display: dog.mainImage ? 'none' : 'flex' }}
-                        >
-                          🐕
-                        </div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-900 truncate">
-                          {dog.name}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {dog.gender} · {dog.age} years · {dog.city},{' '}
-                          {dog.county}
-                        </p>
-                      </div>
-                      {dog.available && (
-                        <span className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0">
-                          Available
+                    <li key={dog.id}>
+                      <Link
+                        href={`/dogs/${dog.id}`}
+                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors border border-gray-100"
+                      >
+                        <span className="block w-14 h-14 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                          {dog.mainImage ? (
+                            <img
+                              src={dog.mainImage}
+                              alt=""
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                if (fallback) fallback.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <span
+                            className="w-full h-full flex items-center justify-center text-2xl"
+                            style={{ display: dog.mainImage ? 'none' : 'flex' }}
+                            aria-hidden="true"
+                          >
+                            🐕
+                          </span>
                         </span>
-                      )}
-                    </Link>
+                        <span className="flex-1 min-w-0">
+                          <span className="block font-semibold text-gray-900 truncate">
+                            {dog.name}
+                          </span>
+                          <span className="block text-sm text-gray-500">
+                            {dog.gender} · {dog.age} years · {dog.city},{' '}
+                            {dog.county}
+                          </span>
+                        </span>
+                        {dog.available && (
+                          <span className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0">
+                            Available
+                          </span>
+                        )}
+                      </Link>
+                    </li>
                   ))}
-                </div>
+                </ul>
               </Card>
             )}
           </div>
 
           {/* Right Column - Sidebar */}
-          <div className="space-y-6">
-            <Card hover={false} className="p-6">
+          <aside className="space-y-6">
+            <Card as="section" hover={false} className="p-6">
               <h3 className="font-bold text-gray-900 mb-4">Quick Actions</h3>
               <div className="space-y-3">
                 <Link
                   href={`/browse?breed=${encodeURIComponent(breed.name)}`}
                   className="w-full btn-primary flex items-center justify-center gap-2"
                 >
-                  <Dog className="h-4 w-4" />
+                  <Dog className="h-4 w-4" aria-hidden="true" />
                   Find {breed.name}s
                 </Link>
 
@@ -350,14 +351,14 @@ export default function BreedDetailPage() {
                     rel="noopener noreferrer"
                     className="w-full btn-secondary flex items-center justify-center gap-2"
                   >
-                    <ExternalLink className="h-4 w-4" />
+                    <ExternalLink className="h-4 w-4" aria-hidden="true" />
                     KC Breed Standard
                   </a>
                 )}
               </div>
             </Card>
 
-            <Card hover={false} className="p-6">
+            <Card as="section" hover={false} className="p-6">
               <h3 className="font-bold text-gray-900 mb-4">At a Glance</h3>
               <dl className="space-y-3">
                 <div className="flex justify-between">
@@ -424,7 +425,7 @@ export default function BreedDetailPage() {
                 .
               </p>
             </div>
-          </div>
+          </aside>
         </div>
       </div>
     </div>

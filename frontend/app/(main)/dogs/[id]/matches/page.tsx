@@ -208,7 +208,7 @@ export default function MatchesPage() {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50">
         <Card className="text-center py-12 px-8 max-w-md">
-          <Heart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <Heart className="h-16 w-16 text-gray-300 mx-auto mb-4" aria-hidden="true" />
           <h2 className="text-xl font-bold text-gray-900 mb-2">
             Not Available for Breeding
           </h2>
@@ -230,7 +230,7 @@ export default function MatchesPage() {
         <MatchesHeader dog={dog} dogId={dogId} onRefresh={refetchAll} />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Card className="text-center py-12">
-            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" aria-hidden="true" />
             <h3 className="text-xl font-bold text-gray-900 mb-2">
               Failed to Load Matches
             </h3>
@@ -238,7 +238,7 @@ export default function MatchesPage() {
               There was an error loading potential matches. Please try again.
             </p>
             <button onClick={refetchMatches} className="btn-primary">
-              <RefreshCw className="h-4 w-4 mr-2" />
+              <RefreshCw className="h-4 w-4 mr-2" aria-hidden="true" />
               Try Again
             </button>
           </Card>
@@ -255,11 +255,12 @@ export default function MatchesPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
         {statsLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8" role="status" aria-label="Loading match statistics">
             {[...Array(4)].map((_, i) => (
               <div
                 key={i}
                 className="bg-white rounded-lg shadow-md p-6 animate-pulse"
+                aria-hidden="true"
               >
                 <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
                 <div className="h-8 bg-gray-200 rounded w-1/3"></div>
@@ -298,15 +299,16 @@ export default function MatchesPage() {
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-md p-4 mb-6 space-y-4">
           {/* Minimum Score Filter */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <label className="font-medium text-gray-700 whitespace-nowrap">
+          <fieldset className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <legend className="font-medium text-gray-700 whitespace-nowrap">
               Minimum Match Score:
-            </label>
+            </legend>
             <div className="flex gap-2 flex-wrap items-center">
               {[0, 30, 50, 70].map((score) => (
                 <button
                   key={score}
                   onClick={() => setMinScore(score)}
+                  aria-pressed={minScore === score}
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     minScore === score
                       ? 'bg-primary-600 text-white'
@@ -317,20 +319,21 @@ export default function MatchesPage() {
                 </button>
               ))}
               {isFilteringScore && (
-                <Loader2 className="h-5 w-5 animate-spin text-primary-600 ml-2" />
+                <Loader2 className="h-5 w-5 animate-spin text-primary-600 ml-2" aria-hidden="true" />
               )}
             </div>
-          </div>
+          </fieldset>
 
           {/* Search Filter */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <label className="font-medium text-gray-700 whitespace-nowrap">
+            <label htmlFor="match-search" className="font-medium text-gray-700 whitespace-nowrap">
               Search Matches:
             </label>
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <div className="relative flex-1 max-w-md" role="search">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" aria-hidden="true" />
               <input
-                type="text"
+                id="match-search"
+                type="search"
                 placeholder="Search by name, breed, location..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -338,14 +341,15 @@ export default function MatchesPage() {
               />
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
                 {isSearching && (
-                  <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                  <Loader2 className="h-4 w-4 animate-spin text-gray-400" aria-hidden="true" />
                 )}
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery('')}
+                    aria-label="Clear search"
                     className="p-1 hover:bg-gray-100 rounded-full transition-colors"
                   >
-                    <X className="h-4 w-4 text-gray-400" />
+                    <X className="h-4 w-4 text-gray-400" aria-hidden="true" />
                   </button>
                 )}
               </div>
@@ -355,9 +359,9 @@ export default function MatchesPage() {
 
         {/* Loading matches */}
         {matchesLoading ? (
-          <div className="flex justify-center items-center py-20">
+          <div className="flex justify-center items-center py-20" role="status">
             <div className="text-center">
-              <Loader2 className="h-12 w-12 animate-spin text-primary-600 mx-auto mb-4" />
+              <Loader2 className="h-12 w-12 animate-spin text-primary-600 mx-auto mb-4" aria-hidden="true" />
               <p className="text-gray-600">Finding perfect matches...</p>
             </div>
           </div>
@@ -374,7 +378,7 @@ export default function MatchesPage() {
             {/* Matches Grid */}
             {filteredMatches.length === 0 ? (
               <Card hover={false} className="text-center py-12">
-                <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" aria-hidden="true" />
                 <h3 className="text-xl font-bold text-gray-900 mb-2">
                   No matches found
                 </h3>
@@ -404,21 +408,20 @@ export default function MatchesPage() {
               </Card>
             ) : (
               <>
-                <div className="flex items-center justify-between mb-6">
+                <header className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold text-gray-900">
                     {filteredMatches.length}{' '}
                     {filteredMatches.length === 1 ? 'Match' : 'Matches'} Found
                   </h2>
-                </div>
+                </header>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredMatches.map((match) => (
-                    <MatchCard
-                      key={match.dog.id || match.dog._id}
-                      match={match}
-                    />
+                    <li key={match.dog.id || match.dog._id}>
+                      <MatchCard match={match} />
+                    </li>
                   ))}
-                </div>
+                </ul>
               </>
             )}
           </>
@@ -432,9 +435,9 @@ export default function MatchesPage() {
 
 function LoadingScreen({ message }: { message: string }) {
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-50">
+    <div className="flex justify-center items-center min-h-screen bg-gray-50" role="status">
       <div className="text-center">
-        <Loader2 className="h-12 w-12 animate-spin text-primary-600 mx-auto mb-4" />
+        <Loader2 className="h-12 w-12 animate-spin text-primary-600 mx-auto mb-4" aria-hidden="true" />
         <p className="text-gray-600">{message}</p>
       </div>
     </div>
@@ -457,13 +460,13 @@ function ErrorScreen({
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-50 px-4">
       <Card className="text-center py-12 px-8 max-w-md">
-        <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+        <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" aria-hidden="true" />
         <h2 className="text-xl font-bold text-gray-900 mb-2">{title}</h2>
         <p className="text-gray-600 mb-6">{message}</p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           {onRetry && (
             <button onClick={onRetry} className="btn-primary">
-              <RefreshCw className="h-4 w-4 mr-2" />
+              <RefreshCw className="h-4 w-4 mr-2" aria-hidden="true" />
               Try Again
             </button>
           )}
@@ -487,7 +490,7 @@ function MatchesHeader({
 }) {
     
   return (
-    <div className="bg-gradient-to-r from-primary-600 to-primary-700 text-white py-12">
+    <header className="bg-gradient-to-r from-primary-600 to-primary-700 text-white py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between mb-4">
           <Link
@@ -501,7 +504,7 @@ function MatchesHeader({
             className="text-white/80 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-colors"
             title="Refresh matches"
           >
-            <RefreshCw className="h-5 w-5" />
+            <RefreshCw className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 
@@ -510,13 +513,13 @@ function MatchesHeader({
             {dog.mainImage || dog.images?.[0] ? (
               <Image
                 src={getImageUrl(dog.mainImage || dog.images?.[0] || '')}
-                alt={dog.name}
+                alt=""
                 fill
                 className="object-cover"
                 unoptimized
               />
             ) : (
-              <div className="w-full h-full bg-white/20 flex items-center justify-center">
+              <div className="w-full h-full bg-white/20 flex items-center justify-center" aria-hidden="true">
                 <Heart className="w-8 h-8" />
               </div>
             )}
@@ -533,7 +536,7 @@ function MatchesHeader({
           </div>
         </div>
       </div>
-    </div>
+    </header>
   );
 }
 
@@ -551,11 +554,11 @@ function StatCard({
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <p className="text-sm text-gray-600 mb-1">{label}</p>
-          <p className="text-3xl font-bold text-gray-900">{value}</p>
-        </div>
-        <div className={`${color} p-3 rounded-lg text-white`}>{icon}</div>
+        <dl className="flex-1">
+          <dt className="text-sm text-gray-600 mb-1">{label}</dt>
+          <dd className="text-3xl font-bold text-gray-900">{value}</dd>
+        </dl>
+        <div className={`${color} p-3 rounded-lg text-white`} aria-hidden="true">{icon}</div>
       </div>
     </div>
   );

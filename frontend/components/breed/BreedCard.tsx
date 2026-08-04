@@ -58,7 +58,7 @@ export default function BreedCard({ breed }: BreedCardProps) {
 
   return (
     <Link href={`/breeds/${breed.slug}`}>
-      <Card className="group cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 h-full flex flex-col">
+      <Card as="article" className="group cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 h-full flex flex-col">
         {/* Image */}
         <div className="relative h-52 overflow-hidden bg-gray-100">
           {breed.imageUrl ? (
@@ -78,31 +78,32 @@ export default function BreedCard({ breed }: BreedCardProps) {
           <div
             className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100"
             style={{ display: breed.imageUrl ? 'none' : 'flex' }}
+            aria-hidden="true"
           >
             <span className="text-6xl">🐕</span>
           </div>
 
           {/* Single row of badges at bottom of image - no overlap possible */}
           <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/50 to-transparent">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span
+            <ul className="flex items-center gap-1.5 flex-wrap">
+              <li
                 className={`px-2 py-0.5 rounded-full text-xs font-semibold ${typeColor}`}
               >
                 {breed.type}
-              </span>
+              </li>
               {sizeLabel && (
-                <span
+                <li
                   className={`px-2 py-0.5 rounded-full text-xs font-semibold ${sizeColor}`}
                 >
                   {sizeLabel}
-                </span>
+                </li>
               )}
               {showKcBadge && (
-                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-white/90 text-gray-700">
+                <li className="px-2 py-0.5 rounded-full text-xs font-medium bg-white/90 text-gray-700">
                   KC: {breed.kennelClubCategory}
-                </span>
+                </li>
               )}
-            </div>
+            </ul>
           </div>
         </div>
 
@@ -113,44 +114,50 @@ export default function BreedCard({ breed }: BreedCardProps) {
           </h3>
 
           {/* Quick stats grid */}
-          <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-4 flex-1">
+          <dl className="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-4 flex-1">
             {breed.longevity && (
               <div className="flex items-center gap-1.5">
-                <Clock className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
-                <span className="truncate">{breed.longevity}</span>
+                <Clock className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" aria-hidden="true" />
+                <dt className="sr-only">Lifespan</dt>
+                <dd className="truncate">{breed.longevity}</dd>
               </div>
             )}
             {breed.height && (
               <div className="flex items-center gap-1.5">
-                <Ruler className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
-                <span className="truncate">{breed.height}</span>
+                <Ruler className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" aria-hidden="true" />
+                <dt className="sr-only">Height</dt>
+                <dd className="truncate">{breed.height}</dd>
               </div>
             )}
             {breed.weight && (
               <div className="flex items-center gap-1.5">
-                <Weight className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
-                <span className="truncate">{breed.weight}</span>
+                <Weight className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" aria-hidden="true" />
+                <dt className="sr-only">Weight</dt>
+                <dd className="truncate">{breed.weight}</dd>
               </div>
             )}
             {breed.exerciseNeeds && (
               <div className="flex items-center gap-1.5">
-                <Activity className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
-                <span className="truncate">{breed.exerciseNeeds}</span>
+                <Activity className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" aria-hidden="true" />
+                <dt className="sr-only">Exercise needs</dt>
+                <dd className="truncate">{breed.exerciseNeeds}</dd>
               </div>
             )}
             {breed.grooming && (
               <div className="flex items-center gap-1.5">
-                <Scissors className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
-                <span className="truncate">{breed.grooming}</span>
+                <Scissors className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" aria-hidden="true" />
+                <dt className="sr-only">Grooming</dt>
+                <dd className="truncate">{breed.grooming}</dd>
               </div>
             )}
             {breed.goodWithChildren && (
               <div className="flex items-center gap-1.5">
-                <Baby className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
-                <span className="truncate">{breed.goodWithChildren}</span>
+                <Baby className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" aria-hidden="true" />
+                <dt className="sr-only">Good with children</dt>
+                <dd className="truncate">{breed.goodWithChildren}</dd>
               </div>
             )}
-          </div>
+          </dl>
 
           {/* Temperament snippet */}
           {breed.temperament && (
@@ -160,14 +167,14 @@ export default function BreedCard({ breed }: BreedCardProps) {
           )}
 
           {/* Footer */}
-          <div className="pt-3 border-t border-gray-100 flex items-center justify-between mt-auto">
+          <footer className="pt-3 border-t border-gray-100 flex items-center justify-between mt-auto">
             <span className="text-primary-600 text-sm font-semibold group-hover:underline">
               View Details →
             </span>
             {breed.officialLink && (
-              <ExternalLink className="h-4 w-4 text-gray-400" />
+              <ExternalLink className="h-4 w-4 text-gray-400" aria-hidden="true" />
             )}
-          </div>
+          </footer>
         </div>
       </Card>
     </Link>

@@ -107,9 +107,9 @@ function RegisterPageInner() {
   // Don't render the form if already authenticated
   if (isAuthenticated) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-primary-50 via-white to-primary-50">
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-primary-50 via-white to-primary-50" role="status">
         <div className="text-center">
-          <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" />
+          <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" aria-hidden="true" />
           <p className="text-gray-600 font-medium">Redirecting...</p>
         </div>
       </div>
@@ -118,22 +118,22 @@ function RegisterPageInner() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-primary-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-2xl">
+      <header className="sm:mx-auto sm:w-full sm:max-w-2xl">
         {/* Logo */}
-        <Link href="/" className="flex justify-center group">
-          <div className="bg-gradient-to-br from-primary-600 to-primary-700 p-4 rounded-2xl shadow-xl group-hover:scale-110 transition-transform">
-            <Dog className="h-10 w-10 text-white" />
-          </div>
+        <Link href="/" className="flex justify-center group" aria-label="DogMate home">
+          <span className="block bg-gradient-to-br from-primary-600 to-primary-700 p-4 rounded-2xl shadow-xl group-hover:scale-110 transition-transform">
+            <Dog className="h-10 w-10 text-white" aria-hidden="true" />
+          </span>
         </Link>
 
         {/* Header */}
-        <h2 className="mt-8 text-center text-4xl font-bold text-gray-900">
+        <h1 className="mt-8 text-center text-4xl font-bold text-gray-900">
           Create Your Account
-        </h2>
+        </h1>
         <p className="mt-3 text-center text-lg text-gray-600">
           Join thousands of responsible dog owners
         </p>
-      </div>
+      </header>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-2xl">
         <Card className="py-8 px-4 sm:px-10">
@@ -145,7 +145,7 @@ function RegisterPageInner() {
                   First Name
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none" aria-hidden="true">
                     <User className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
@@ -166,7 +166,7 @@ function RegisterPageInner() {
                   Last Name
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none" aria-hidden="true">
                     <User className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
@@ -189,7 +189,7 @@ function RegisterPageInner() {
                 Email Address
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none" aria-hidden="true">
                   <Mail className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
@@ -212,7 +212,7 @@ function RegisterPageInner() {
                 Phone Number <span className="text-gray-400 font-normal">(Optional)</span>
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none" aria-hidden="true">
                   <Phone className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
@@ -234,7 +234,7 @@ function RegisterPageInner() {
                   City
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none" aria-hidden="true">
                     <MapPin className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
@@ -255,7 +255,7 @@ function RegisterPageInner() {
                   County
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none" aria-hidden="true">
                     <MapPin className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
@@ -278,7 +278,7 @@ function RegisterPageInner() {
                 Password
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none" aria-hidden="true">
                   <Lock className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
@@ -305,7 +305,15 @@ function RegisterPageInner() {
                       {getPasswordStrengthText()}
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="w-full bg-gray-200 rounded-full h-2"
+                    role="progressbar"
+                    aria-label="Password strength"
+                    aria-valuemin={0}
+                    aria-valuemax={4}
+                    aria-valuenow={passwordStrength}
+                    aria-valuetext={getPasswordStrengthText()}
+                  >
                     <div
                       className={`h-2 rounded-full transition-all ${getPasswordStrengthColor()}`}
                       style={{ width: `${(passwordStrength / 4) * 100}%` }}
@@ -321,7 +329,7 @@ function RegisterPageInner() {
                 Confirm Password
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none" aria-hidden="true">
                   <Lock className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
@@ -336,7 +344,7 @@ function RegisterPageInner() {
                   placeholder="••••••••"
                 />
                 {formData.confirmPassword && (
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center" aria-hidden="true">
                     {formData.password === formData.confirmPassword ? (
                       <CheckCircle className="h-5 w-5 text-green-500" />
                     ) : (
@@ -379,13 +387,13 @@ function RegisterPageInner() {
               >
                 {loading ? (
                   <>
-                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin" aria-hidden="true" />
                     Creating your account...
                   </>
                 ) : (
                   <>
                     Create Account
-                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
                   </>
                 )}
               </button>
@@ -395,7 +403,7 @@ function RegisterPageInner() {
           {/* Divider */}
           <div className="mt-6">
             <div className="relative">
-              <div className="absolute inset-0 flex items-center">
+              <div className="absolute inset-0 flex items-center" aria-hidden="true">
                 <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-sm">
@@ -421,40 +429,40 @@ function RegisterPageInner() {
             href="/" 
             className="font-semibold text-primary-600 hover:text-primary-700 transition-colors inline-flex items-center"
           >
-            <ArrowRight className="h-4 w-4 mr-1 rotate-180" />
+            <ArrowRight className="h-4 w-4 mr-1 rotate-180" aria-hidden="true" />
             Back to Home
           </Link>
         </p>
       </div>
 
       {/* Features Footer */}
-      <div className="mt-12 max-w-4xl mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-          <div className="flex flex-col items-center">
-            <div className="bg-primary-100 p-3 rounded-full mb-3">
+      <footer className="mt-12 max-w-4xl mx-auto px-4">
+        <ul className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+          <li className="flex flex-col items-center">
+            <span className="block bg-primary-100 p-3 rounded-full mb-3" aria-hidden="true">
               <CheckCircle className="h-6 w-6 text-primary-600" />
-            </div>
+            </span>
             <p className="text-sm font-semibold text-gray-900">100% Free</p>
             <p className="text-xs text-gray-600">No hidden charges</p>
-          </div>
-          <div className="flex flex-col items-center">
-            <div className="bg-green-100 p-3 rounded-full mb-3">
+          </li>
+          <li className="flex flex-col items-center">
+            <span className="block bg-green-100 p-3 rounded-full mb-3" aria-hidden="true">
               <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
-            </div>
+            </span>
             <p className="text-sm font-semibold text-gray-900">Secure & Private</p>
             <p className="text-xs text-gray-600">Your data is protected</p>
-          </div>
-          <div className="flex flex-col items-center">
-            <div className="bg-blue-100 p-3 rounded-full mb-3">
+          </li>
+          <li className="flex flex-col items-center">
+            <span className="block bg-blue-100 p-3 rounded-full mb-3" aria-hidden="true">
               <Dog className="h-6 w-6 text-blue-600" />
-            </div>
+            </span>
             <p className="text-sm font-semibold text-gray-900">Verified Community</p>
             <p className="text-xs text-gray-600">Trusted breeders only</p>
-          </div>
-        </div>
-      </div>
+          </li>
+        </ul>
+      </footer>
     </div>
   );
 }

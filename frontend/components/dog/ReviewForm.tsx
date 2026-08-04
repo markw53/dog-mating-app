@@ -39,10 +39,10 @@ export default function ReviewForm({ dogId, onSuccess, onCancel }: ReviewFormPro
 
   return (
     <form onSubmit={handleSubmit} className="border-t pt-4">
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+      <fieldset className="mb-4">
+        <legend className="block text-sm font-medium text-gray-700 mb-2">
           Rating
-        </label>
+        </legend>
         <div className="flex space-x-1">
           {Array.from({ length: 5 }).map((_, i) => (
             <button
@@ -50,6 +50,8 @@ export default function ReviewForm({ dogId, onSuccess, onCancel }: ReviewFormPro
               type="button"
               onClick={() => setRating(i + 1)}
               className="focus:outline-none"
+              aria-label={`${i + 1} star${i === 0 ? '' : 's'}`}
+              aria-pressed={i < rating}
             >
               <Star
                 className={`h-8 w-8 ${
@@ -61,13 +63,14 @@ export default function ReviewForm({ dogId, onSuccess, onCancel }: ReviewFormPro
             </button>
           ))}
         </div>
-      </div>
+      </fieldset>
 
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="review-comment" className="block text-sm font-medium text-gray-700 mb-1">
           Comment
         </label>
         <textarea
+          id="review-comment"
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           rows={4}

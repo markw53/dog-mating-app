@@ -41,22 +41,22 @@ function LoginPageInner() {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-primary-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+      <header className="sm:mx-auto sm:w-full sm:max-w-md">
         {/* Logo */}
-        <Link href="/" className="flex justify-center group">
-          <div className="bg-gradient-to-br from-primary-600 to-primary-700 p-4 rounded-2xl shadow-xl group-hover:scale-110 transition-transform">
-            <Dog className="h-10 w-10 text-white" />
-          </div>
+        <Link href="/" className="flex justify-center group" aria-label="DogMate home">
+          <span className="block bg-gradient-to-br from-primary-600 to-primary-700 p-4 rounded-2xl shadow-xl group-hover:scale-110 transition-transform">
+            <Dog className="h-10 w-10 text-white" aria-hidden="true" />
+          </span>
         </Link>
 
         {/* Header */}
-        <h2 className="mt-8 text-center text-4xl font-bold text-gray-900">
+        <h1 className="mt-8 text-center text-4xl font-bold text-gray-900">
           Welcome Back
-        </h2>
+        </h1>
         <p className="mt-3 text-center text-lg text-gray-600">
           Sign in to continue your journey
         </p>
-      </div>
+      </header>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <Card className="py-8 px-4 sm:px-10">
@@ -67,7 +67,7 @@ function LoginPageInner() {
                 Email Address
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none" aria-hidden="true">
                   <Mail className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
@@ -90,7 +90,7 @@ function LoginPageInner() {
                 Password
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none" aria-hidden="true">
                   <Lock className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
@@ -140,13 +140,13 @@ function LoginPageInner() {
               >
                 {loading ? (
                   <>
-                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin" aria-hidden="true" />
                     Signing in...
                   </>
                 ) : (
                   <>
                     Sign In
-                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
                   </>
                 )}
               </button>
@@ -156,7 +156,7 @@ function LoginPageInner() {
           {/* Divider */}
           <div className="mt-6">
             <div className="relative">
-              <div className="absolute inset-0 flex items-center">
+              <div className="absolute inset-0 flex items-center" aria-hidden="true">
                 <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-sm">
@@ -182,39 +182,39 @@ function LoginPageInner() {
             href="/" 
             className="font-semibold text-primary-600 hover:text-primary-700 transition-colors inline-flex items-center"
           >
-            <ArrowRight className="h-4 w-4 mr-1 rotate-180" />
+            <ArrowRight className="h-4 w-4 mr-1 rotate-180" aria-hidden="true" />
             Back to Home
           </Link>
         </p>
       </div>
 
       {/* Features Footer */}
-      <div className="mt-12 max-w-4xl mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-          <div className="flex flex-col items-center">
-            <div className="bg-primary-100 p-3 rounded-full mb-3">
+      <footer className="mt-12 max-w-4xl mx-auto px-4">
+        <ul className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+          <li className="flex flex-col items-center">
+            <span className="block bg-primary-100 p-3 rounded-full mb-3" aria-hidden="true">
               <Dog className="h-6 w-6 text-primary-600" />
-            </div>
+            </span>
             <p className="text-sm text-gray-600">10,000+ Active Users</p>
-          </div>
-          <div className="flex flex-col items-center">
-            <div className="bg-green-100 p-3 rounded-full mb-3">
+          </li>
+          <li className="flex flex-col items-center">
+            <span className="block bg-green-100 p-3 rounded-full mb-3" aria-hidden="true">
               <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-            </div>
+            </span>
             <p className="text-sm text-gray-600">Verified Breeders</p>
-          </div>
-          <div className="flex flex-col items-center">
-            <div className="bg-blue-100 p-3 rounded-full mb-3">
+          </li>
+          <li className="flex flex-col items-center">
+            <span className="block bg-blue-100 p-3 rounded-full mb-3" aria-hidden="true">
               <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
-            </div>
+            </span>
             <p className="text-sm text-gray-600">Secure & Private</p>
-          </div>
-        </div>
-      </div>
+          </li>
+        </ul>
+      </footer>
     </div>
   );
 }

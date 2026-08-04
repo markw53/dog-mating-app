@@ -37,7 +37,7 @@ export default function MatchCard({ match }: MatchCardProps) {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200">
+    <article className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200">
       {/* Image */}
       <div className="relative h-48 bg-gray-200">
         {imageUrl ? (
@@ -55,35 +55,31 @@ export default function MatchCard({ match }: MatchCardProps) {
         )}
 
         {/* Match Score Badge */}
-        <div className="absolute top-3 right-3">
-          <div
-            className={`px-4 py-2 rounded-full font-bold text-sm border-2 backdrop-blur-sm ${getScoreColor(
-              matchScore
-            )}`}
-          >
-            {matchScore}% Match
-          </div>
-        </div>
+        <p
+          className={`absolute top-3 right-3 px-4 py-2 rounded-full font-bold text-sm border-2 backdrop-blur-sm ${getScoreColor(
+            matchScore
+          )}`}
+        >
+          {matchScore}% Match
+        </p>
 
         {/* Distance Badge */}
         {distance !== undefined && (
-          <div className="absolute top-3 left-3">
-            <div className="bg-black/60 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1">
-              <MapPin className="w-3 h-3" />
-              {Math.round(distance)}km away
-            </div>
-          </div>
+          <p className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1">
+            <MapPin className="w-3 h-3" aria-hidden="true" />
+            {Math.round(distance)}km away
+          </p>
         )}
       </div>
 
       {/* Content */}
       <div className="p-5">
-        <div className="flex items-start justify-between mb-3">
+        <header className="flex items-start justify-between mb-3">
           <div>
             <h3 className="text-xl font-bold text-gray-900">{dog.name}</h3>
             <p className="text-gray-600">{dog.breed}</p>
           </div>
-          <div
+          <span
             className={`px-3 py-1 rounded-full text-xs font-bold ${
               dog.gender === 'male'
                 ? 'bg-blue-100 text-blue-800'
@@ -91,28 +87,28 @@ export default function MatchCard({ match }: MatchCardProps) {
             }`}
           >
             {dog.gender === 'male' ? '♂ Male' : '♀ Female'}
-          </div>
-        </div>
+          </span>
+        </header>
 
         {/* Match Score Label */}
-        <div className="flex items-center gap-2 mb-3">
-          <Award className={`w-5 h-5 ${matchScore >= 80 ? 'text-green-600' : 'text-blue-600'}`} />
+        <p className="flex items-center gap-2 mb-3">
+          <Award className={`w-5 h-5 ${matchScore >= 80 ? 'text-green-600' : 'text-blue-600'}`} aria-hidden="true" />
           <span className="font-semibold text-gray-900">{getScoreLabel(matchScore)}</span>
-        </div>
+        </p>
 
         {/* Match Reasons */}
-        <div className="space-y-2 mb-4">
+        <ul className="space-y-2 mb-4">
           {matchReasons.slice(0, 3).map((reason, index) => (
-            <div key={index} className="flex items-start gap-2 text-sm text-gray-700">
-              <TrendingUp className="w-4 h-4 text-primary-600 mt-0.5 flex-shrink-0" />
+            <li key={index} className="flex items-start gap-2 text-sm text-gray-700">
+              <TrendingUp className="w-4 h-4 text-primary-600 mt-0.5 flex-shrink-0" aria-hidden="true" />
               <span>{reason}</span>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
 
         {/* Owner Info */}
         {ownerInfo && (
-          <div className="border-t pt-3 mb-4">
+          <footer className="border-t pt-3 mb-4">
             <p className="text-sm text-gray-600">
               Owner: {ownerInfo.firstName} {ownerInfo.lastName}
             </p>
@@ -121,7 +117,7 @@ export default function MatchCard({ match }: MatchCardProps) {
                 {dog.location?.city || ownerInfo.city}
               </p>
             )}
-          </div>
+          </footer>
         )}
 
         {/* Actions */}
@@ -136,10 +132,10 @@ export default function MatchCard({ match }: MatchCardProps) {
             className="px-4 py-2.5 bg-pink-50 text-pink-600 rounded-lg hover:bg-pink-100 transition-colors border border-pink-200"
             title="Save match"
           >
-            <Heart className="w-4 h-4" />
+            <Heart className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
       </div>
-    </div>
+    </article>
   );
 }

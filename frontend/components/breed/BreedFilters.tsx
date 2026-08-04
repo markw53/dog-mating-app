@@ -71,10 +71,10 @@ export default function BreedFilters({
   const hasActiveFilters = filters.type || filters.size || filters.search;
 
   return (
-    <Card hover={false} className="p-6 sticky top-24">
-      <div className="flex items-center justify-between mb-6">
+    <Card as="aside" hover={false} className="p-6 sticky top-24">
+      <header className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-          <Filter className="h-5 w-5 text-primary-600" />
+          <Filter className="h-5 w-5 text-primary-600" aria-hidden="true" />
           <h3 className="font-bold text-gray-900">Filters</h3>
         </div>
         {hasActiveFilters && (
@@ -82,19 +82,20 @@ export default function BreedFilters({
             onClick={clearFilters}
             className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1"
           >
-            <X className="h-3.5 w-3.5" />
+            <X className="h-3.5 w-3.5" aria-hidden="true" />
             Clear
           </button>
         )}
-      </div>
+      </header>
 
       {/* Search */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="breed-filter-search" className="block text-sm font-medium text-gray-700 mb-2">
           Search Breeds
         </label>
         <input
-          type="text"
+          id="breed-filter-search"
+          type="search"
           placeholder="e.g. Labrador, Poodle..."
           value={filters.search}
           onChange={(e) => handleChange('search', e.target.value)}
@@ -103,97 +104,107 @@ export default function BreedFilters({
       </div>
 
       {/* Breed Type */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+      <fieldset className="mb-6">
+        <legend className="block text-sm font-medium text-gray-700 mb-2">
           Breed Group
-        </label>
-        <div className="space-y-2">
-          <button
-            onClick={() => handleChange('type', '')}
-            className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-              !filters.type
-                ? 'bg-primary-50 text-primary-700 font-semibold'
-                : 'text-gray-600 hover:bg-gray-50'
-            }`}
-          >
-            All Groups
-          </button>
-          {BREED_TYPES.map((type) => (
+        </legend>
+        <ul className="space-y-2">
+          <li>
             <button
-              key={type}
-              onClick={() =>
-                handleChange('type', filters.type === type ? '' : type)
-              }
-              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between ${
-                filters.type === type
+              onClick={() => handleChange('type', '')}
+              aria-pressed={!filters.type}
+              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                !filters.type
                   ? 'bg-primary-50 text-primary-700 font-semibold'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
-              <span>{type}</span>
-              {typeCounts[type] !== undefined && (
-                <span
-                  className={`text-xs px-2 py-0.5 rounded-full ${
-                    filters.type === type
-                      ? 'bg-primary-200 text-primary-800'
-                      : 'bg-gray-100 text-gray-500'
-                  }`}
-                >
-                  {typeCounts[type]}
-                </span>
-              )}
+              All Groups
             </button>
+          </li>
+          {BREED_TYPES.map((type) => (
+            <li key={type}>
+              <button
+                onClick={() =>
+                  handleChange('type', filters.type === type ? '' : type)
+                }
+                aria-pressed={filters.type === type}
+                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between ${
+                  filters.type === type
+                    ? 'bg-primary-50 text-primary-700 font-semibold'
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <span>{type}</span>
+                {typeCounts[type] !== undefined && (
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full ${
+                      filters.type === type
+                        ? 'bg-primary-200 text-primary-800'
+                        : 'bg-gray-100 text-gray-500'
+                    }`}
+                  >
+                    {typeCounts[type]}
+                  </span>
+                )}
+              </button>
+            </li>
           ))}
-        </div>
-      </div>
+        </ul>
+      </fieldset>
 
       {/* Size */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+      <fieldset className="mb-6">
+        <legend className="block text-sm font-medium text-gray-700 mb-2">
           Size
-        </label>
-        <div className="space-y-2">
-          <button
-            onClick={() => handleChange('size', '')}
-            className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-              !filters.size
-                ? 'bg-primary-50 text-primary-700 font-semibold'
-                : 'text-gray-600 hover:bg-gray-50'
-            }`}
-          >
-            All Sizes
-          </button>
-          {BREED_SIZES.map((size) => (
+        </legend>
+        <ul className="space-y-2">
+          <li>
             <button
-              key={size}
-              onClick={() =>
-                handleChange('size', filters.size === size ? '' : size)
-              }
-              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between ${
-                filters.size === size
+              onClick={() => handleChange('size', '')}
+              aria-pressed={!filters.size}
+              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                !filters.size
                   ? 'bg-primary-50 text-primary-700 font-semibold'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
-              <span>{size}</span>
-              {sizeCounts[size] !== undefined && (
-                <span
-                  className={`text-xs px-2 py-0.5 rounded-full ${
-                    filters.size === size
-                      ? 'bg-primary-200 text-primary-800'
-                      : 'bg-gray-100 text-gray-500'
-                  }`}
-                >
-                  {sizeCounts[size]}
-                </span>
-              )}
+              All Sizes
             </button>
+          </li>
+          {BREED_SIZES.map((size) => (
+            <li key={size}>
+              <button
+                onClick={() =>
+                  handleChange('size', filters.size === size ? '' : size)
+                }
+                aria-pressed={filters.size === size}
+                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between ${
+                  filters.size === size
+                    ? 'bg-primary-50 text-primary-700 font-semibold'
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <span>{size}</span>
+                {sizeCounts[size] !== undefined && (
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full ${
+                      filters.size === size
+                        ? 'bg-primary-200 text-primary-800'
+                        : 'bg-gray-100 text-gray-500'
+                    }`}
+                  >
+                    {sizeCounts[size]}
+                  </span>
+                )}
+              </button>
+            </li>
           ))}
-        </div>
-      </div>
+        </ul>
+      </fieldset>
 
       {/* Kennel Club disclaimer */}
-      <div className="mt-6 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+      <footer className="mt-6 p-3 bg-amber-50 border border-amber-200 rounded-lg">
         <p className="text-xs text-amber-800">
           <strong>Disclaimer:</strong> Breed information sourced from The Royal
           Kennel Club. Visit{' '}
@@ -207,7 +218,7 @@ export default function BreedFilters({
           </a>{' '}
           for official breed standards.
         </p>
-      </div>
+      </footer>
     </Card>
   );
 }

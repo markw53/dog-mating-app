@@ -145,7 +145,7 @@ export default function BreedSelector({
   return (
     <div className="space-y-3">
       {/* Label */}
-      <label className="block text-sm font-semibold text-gray-700">
+      <label htmlFor="breed-selector-input" className="block text-sm font-semibold text-gray-700">
         Breed {required && <span className="text-red-500">*</span>}
       </label>
 
@@ -154,42 +154,45 @@ export default function BreedSelector({
         {/* Selected breed display */}
         {selectedBreed && !isOpen ? (
           <div
-            className={`flex items-center justify-between border rounded-xl px-4 py-3 cursor-pointer transition-all ${
+            className={`flex items-center justify-between border rounded-xl transition-all ${
               error
                 ? 'border-red-300 bg-red-50'
                 : 'border-gray-300 bg-white hover:border-primary-400'
             }`}
-            onClick={() => {
-              setIsOpen(true);
-              setTimeout(() => inputRef.current?.focus(), 50);
-            }}
           >
-            <div className="flex items-center gap-3">
+            <button
+              type="button"
+              className="flex items-center gap-3 flex-1 min-w-0 px-4 py-3 text-left"
+              onClick={() => {
+                setIsOpen(true);
+                setTimeout(() => inputRef.current?.focus(), 50);
+              }}
+            >
               {/* Breed thumbnail */}
-              <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+              <span className="relative block w-10 h-10 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                 {selectedBreed.imageUrl ? (
                   <img
                     src={selectedBreed.imageUrl}
-                    alt={selectedBreed.name}
+                    alt=""
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-lg">
+                  <span className="w-full h-full flex items-center justify-center text-lg" aria-hidden="true">
                     🐕
-                  </div>
+                  </span>
                 )}
-              </div>
-              <div>
-                <p className="font-semibold text-gray-900">{selectedBreed.name}</p>
-                <p className="text-xs text-gray-500">
+              </span>
+              <span className="min-w-0">
+                <span className="block font-semibold text-gray-900">{selectedBreed.name}</span>
+                <span className="block text-xs text-gray-500">
                   {selectedBreed.type}
                   {selectedBreed.kennelClubCategory &&
                     ` · KC: ${selectedBreed.kennelClubCategory}`}
                   {selectedBreed.size && ` · ${selectedBreed.size}`}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
+                </span>
+              </span>
+            </button>
+            <div className="flex items-center gap-2 pr-4">
               <button
                 type="button"
                 onClick={(e) => {
@@ -198,8 +201,9 @@ export default function BreedSelector({
                 }}
                 className="text-gray-400 hover:text-primary-600 p-1 rounded-md hover:bg-primary-50 transition-colors"
                 title="Toggle breed info"
+                aria-expanded={showBreedInfo}
               >
-                <Info className="h-4 w-4" />
+                <Info className="h-4 w-4" aria-hidden="true" />
               </button>
               <button
                 type="button"
@@ -210,17 +214,18 @@ export default function BreedSelector({
                 className="text-gray-400 hover:text-red-600 p-1 rounded-md hover:bg-red-50 transition-colors"
                 title="Clear selection"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
-              <ChevronDown className="h-4 w-4 text-gray-400" />
+              <ChevronDown className="h-4 w-4 text-gray-400" aria-hidden="true" />
             </div>
           </div>
         ) : (
           /* Search input */
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" aria-hidden="true" />
             <input
               ref={inputRef}
+              id="breed-selector-input"
               type="text"
               placeholder="Search breeds... e.g. Labrador, Poodle"
               value={query}
@@ -295,60 +300,64 @@ export default function BreedSelector({
                 {/* Group header - only show if searching or multiple groups */}
                 {(query.trim() || Object.keys(groupedResults).length > 1) && (
                   <div className="px-4 py-1.5 bg-gray-50 border-b border-gray-100">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                       {group}
-                    </p>
+                    </h4>
                   </div>
                 )}
 
-                {breeds.map((breed) => (
-                  <button
-                    key={breed.id}
-                    type="button"
-                    onClick={() => handleSelect(breed)}
-                    className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-primary-50 transition-colors text-left border-b border-gray-50 last:border-0 ${
-                      selectedBreed?.id === breed.id ? 'bg-primary-50' : ''
-                    }`}
-                  >
-                    {/* Thumbnail */}
-                    <div className="relative w-9 h-9 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-                      {breed.imageUrl ? (
-                        <img
-                          src={breed.imageUrl}
-                          alt={breed.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-base">
-                          🐕
-                        </div>
-                      )}
-                    </div>
+                <ul>
+                  {breeds.map((breed) => (
+                    <li key={breed.id}>
+                      <button
+                        type="button"
+                        onClick={() => handleSelect(breed)}
+                        aria-pressed={selectedBreed?.id === breed.id}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-primary-50 transition-colors text-left border-b border-gray-50 last:border-0 ${
+                          selectedBreed?.id === breed.id ? 'bg-primary-50' : ''
+                        }`}
+                      >
+                        {/* Thumbnail */}
+                        <span className="relative block w-9 h-9 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                          {breed.imageUrl ? (
+                            <img
+                              src={breed.imageUrl}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="w-full h-full flex items-center justify-center text-base" aria-hidden="true">
+                              🐕
+                            </span>
+                          )}
+                        </span>
 
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 truncate">
-                        {breed.name}
-                      </p>
-                      <p className="text-xs text-gray-500 truncate">
-                        {breed.size && `${breed.size}`}
-                        {breed.longevity && ` · ${breed.longevity}`}
-                      </p>
-                    </div>
+                        {/* Info */}
+                        <span className="flex-1 min-w-0">
+                          <span className="block text-sm font-semibold text-gray-900 truncate">
+                            {breed.name}
+                          </span>
+                          <span className="block text-xs text-gray-500 truncate">
+                            {breed.size && `${breed.size}`}
+                            {breed.longevity && ` · ${breed.longevity}`}
+                          </span>
+                        </span>
 
-                    {/* KC badge */}
-                    {breed.kennelClubCategory && (
-                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full flex-shrink-0">
-                        {breed.kennelClubCategory}
-                      </span>
-                    )}
+                        {/* KC badge */}
+                        {breed.kennelClubCategory && (
+                          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full flex-shrink-0">
+                            {breed.kennelClubCategory}
+                          </span>
+                        )}
 
-                    {/* Check if selected */}
-                    {selectedBreed?.id === breed.id && (
-                      <span className="text-primary-600 flex-shrink-0">✓</span>
-                    )}
-                  </button>
-                ))}
+                        {/* Check if selected */}
+                        {selectedBreed?.id === breed.id && (
+                          <span className="text-primary-600 flex-shrink-0" aria-hidden="true">✓</span>
+                        )}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               </div>
             ))}
 
@@ -385,10 +394,10 @@ export default function BreedSelector({
 
       {/* Breed Info Panel */}
       {selectedBreed && showBreedInfo && (
-        <div className="bg-gradient-to-r from-primary-50 to-blue-50 border border-primary-200 rounded-xl p-4 space-y-4 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between">
+        <aside className="bg-gradient-to-r from-primary-50 to-blue-50 border border-primary-200 rounded-xl p-4 space-y-4 animate-in fade-in duration-200">
+          <header className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Info className="h-4 w-4 text-primary-600" />
+              <Info className="h-4 w-4 text-primary-600" aria-hidden="true" />
               <h4 className="font-bold text-gray-900 text-sm">
                 {selectedBreed.name} — Breed Info
               </h4>
@@ -401,7 +410,7 @@ export default function BreedSelector({
                   rel="noopener noreferrer"
                   className="text-xs text-primary-600 hover:text-primary-700 flex items-center gap-1"
                 >
-                  <ExternalLink className="h-3 w-3" />
+                  <ExternalLink className="h-3 w-3" aria-hidden="true" />
                   KC Page
                 </a>
               )}
@@ -417,87 +426,75 @@ export default function BreedSelector({
                 className="text-gray-400 hover:text-gray-600 p-0.5"
                 title="Close breed info"
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="h-3.5 w-3.5" aria-hidden="true" />
               </button>
             </div>
-          </div>
+          </header>
 
           {/* Quick stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <dl className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {selectedBreed.height && (
-              <div className="flex items-center gap-2 text-sm">
-                <Ruler className="h-3.5 w-3.5 text-gray-400" />
-                <div>
-                  <p className="text-xs text-gray-500">Height</p>
-                  <p className="font-medium text-gray-900 text-xs">
-                    {selectedBreed.height}
-                  </p>
-                </div>
+              <div className="grid grid-cols-[auto_1fr] items-center gap-x-2 text-sm">
+                <Ruler className="h-3.5 w-3.5 text-gray-400 row-span-2" aria-hidden="true" />
+                <dt className="text-xs text-gray-500">Height</dt>
+                <dd className="font-medium text-gray-900 text-xs">
+                  {selectedBreed.height}
+                </dd>
               </div>
             )}
             {selectedBreed.weight && (
-              <div className="flex items-center gap-2 text-sm">
-                <Weight className="h-3.5 w-3.5 text-gray-400" />
-                <div>
-                  <p className="text-xs text-gray-500">Weight</p>
-                  <p className="font-medium text-gray-900 text-xs">
-                    {selectedBreed.weight}
-                  </p>
-                </div>
+              <div className="grid grid-cols-[auto_1fr] items-center gap-x-2 text-sm">
+                <Weight className="h-3.5 w-3.5 text-gray-400 row-span-2" aria-hidden="true" />
+                <dt className="text-xs text-gray-500">Weight</dt>
+                <dd className="font-medium text-gray-900 text-xs">
+                  {selectedBreed.weight}
+                </dd>
               </div>
             )}
             {selectedBreed.longevity && (
-              <div className="flex items-center gap-2 text-sm">
-                <Clock className="h-3.5 w-3.5 text-gray-400" />
-                <div>
-                  <p className="text-xs text-gray-500">Lifespan</p>
-                  <p className="font-medium text-gray-900 text-xs">
-                    {selectedBreed.longevity}
-                  </p>
-                </div>
+              <div className="grid grid-cols-[auto_1fr] items-center gap-x-2 text-sm">
+                <Clock className="h-3.5 w-3.5 text-gray-400 row-span-2" aria-hidden="true" />
+                <dt className="text-xs text-gray-500">Lifespan</dt>
+                <dd className="font-medium text-gray-900 text-xs">
+                  {selectedBreed.longevity}
+                </dd>
               </div>
             )}
             {selectedBreed.exerciseNeeds && (
-              <div className="flex items-center gap-2 text-sm">
-                <Activity className="h-3.5 w-3.5 text-gray-400" />
-                <div>
-                  <p className="text-xs text-gray-500">Exercise</p>
-                  <p className="font-medium text-gray-900 text-xs">
-                    {selectedBreed.exerciseNeeds}
-                  </p>
-                </div>
+              <div className="grid grid-cols-[auto_1fr] items-center gap-x-2 text-sm">
+                <Activity className="h-3.5 w-3.5 text-gray-400 row-span-2" aria-hidden="true" />
+                <dt className="text-xs text-gray-500">Exercise</dt>
+                <dd className="font-medium text-gray-900 text-xs">
+                  {selectedBreed.exerciseNeeds}
+                </dd>
               </div>
             )}
             {selectedBreed.grooming && (
-              <div className="flex items-center gap-2 text-sm">
-                <Scissors className="h-3.5 w-3.5 text-gray-400" />
-                <div>
-                  <p className="text-xs text-gray-500">Grooming</p>
-                  <p className="font-medium text-gray-900 text-xs">
-                    {selectedBreed.grooming}
-                  </p>
-                </div>
+              <div className="grid grid-cols-[auto_1fr] items-center gap-x-2 text-sm">
+                <Scissors className="h-3.5 w-3.5 text-gray-400 row-span-2" aria-hidden="true" />
+                <dt className="text-xs text-gray-500">Grooming</dt>
+                <dd className="font-medium text-gray-900 text-xs">
+                  {selectedBreed.grooming}
+                </dd>
               </div>
             )}
             {selectedBreed.goodWithChildren && (
-              <div className="flex items-center gap-2 text-sm">
-                <Baby className="h-3.5 w-3.5 text-gray-400" />
-                <div>
-                  <p className="text-xs text-gray-500">Children</p>
-                  <p className="font-medium text-gray-900 text-xs">
-                    {selectedBreed.goodWithChildren}
-                  </p>
-                </div>
+              <div className="grid grid-cols-[auto_1fr] items-center gap-x-2 text-sm">
+                <Baby className="h-3.5 w-3.5 text-gray-400 row-span-2" aria-hidden="true" />
+                <dt className="text-xs text-gray-500">Children</dt>
+                <dd className="font-medium text-gray-900 text-xs">
+                  {selectedBreed.goodWithChildren}
+                </dd>
               </div>
             )}
-          </div>
+          </dl>
 
           {/* Temperament */}
           {selectedBreed.temperament && (
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Temperament</p>
-              <p className="text-xs text-gray-700">{selectedBreed.temperament}</p>
-            </div>
+            <dl>
+              <dt className="text-xs text-gray-500 mb-1">Temperament</dt>
+              <dd className="text-xs text-gray-700">{selectedBreed.temperament}</dd>
+            </dl>
           )}
 
           {/* Disclaimer */}
@@ -512,7 +509,7 @@ export default function BreedSelector({
               royalkennelclub.com
             </a>
           </p>
-        </div>
+        </aside>
       )}
     </div>
   );

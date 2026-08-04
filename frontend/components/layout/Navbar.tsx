@@ -12,7 +12,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLLIElement>(null);
 
   const handleLogout = () => {
     logout();
@@ -47,88 +47,102 @@ export default function Navbar() {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-4">
-            <Link
-              href="/browse"
-              className={`px-3 py-2 rounded-md text-sm font-medium ${
-                pathname === '/browse'
-                  ? 'text-primary-600 bg-primary-50'
-                  : 'text-gray-700 hover:text-primary-600'
-              }`}
-            >
-              Browse Dogs
-            </Link>
+          <ul className="hidden md:flex items-center space-x-4">
+            <li>
+              <Link
+                href="/browse"
+                className={`block px-3 py-2 rounded-md text-sm font-medium ${
+                  pathname === '/browse'
+                    ? 'text-primary-600 bg-primary-50'
+                    : 'text-gray-700 hover:text-primary-600'
+                }`}
+              >
+                Browse Dogs
+              </Link>
+            </li>
 
-            <Link
-              href="/breeds"
-              className={`px-3 py-2 rounded-md text-sm font-medium ${
-                pathname === '/breeds' || pathname.startsWith('/breeds/')
-                  ? 'text-primary-600 bg-primary-50'
-                  : 'text-gray-700 hover:text-primary-600'
-              }`}
-            >
-              Breed Guide
-            </Link>
+            <li>
+              <Link
+                href="/breeds"
+                className={`block px-3 py-2 rounded-md text-sm font-medium ${
+                  pathname === '/breeds' || pathname.startsWith('/breeds/')
+                    ? 'text-primary-600 bg-primary-50'
+                    : 'text-gray-700 hover:text-primary-600'
+                }`}
+              >
+                Breed Guide
+              </Link>
+            </li>
 
-            <Link
-              href="/map"
-              className={`px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-1 ${
-                pathname === '/map'
-                  ? 'text-primary-600 bg-primary-50'
-                  : 'text-gray-700 hover:text-primary-600'
-              }`}
-            >
-              <Map className="h-4 w-4" />
-              <span>Map</span>
-            </Link>
+            <li>
+              <Link
+                href="/map"
+                className={`px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-1 ${
+                  pathname === '/map'
+                    ? 'text-primary-600 bg-primary-50'
+                    : 'text-gray-700 hover:text-primary-600'
+                }`}
+              >
+                <Map className="h-4 w-4" />
+                <span>Map</span>
+              </Link>
+            </li>
 
             {isAuthenticated ? (
               <>
-                <Link
-                  href="/dashboard"
-                  className={`px-3 py-2 rounded-md text-sm font-medium ${
-                    pathname === '/dashboard'
-                      ? 'text-primary-600 bg-primary-50'
-                      : 'text-gray-700 hover:text-primary-600'
-                  }`}
-                >
-                  My Dogs
-                </Link>
-                <Link
-                  href="/messages"
-                  className={`px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-1 ${
-                    pathname === '/messages'
-                      ? 'text-primary-600 bg-primary-50'
-                      : 'text-gray-700 hover:text-primary-600'
-                  }`}
-                >
-                  <MessageSquare className="h-4 w-4" />
-                  <span>Messages</span>
-                </Link>
-                {/* Admin link - check for ADMIN role */}
-                {user?.role === 'ADMIN' && (
+                <li>
                   <Link
-                    href="/admin"
-                    className={`px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-1 ${
-                      pathname === '/admin'
+                    href="/dashboard"
+                    className={`block px-3 py-2 rounded-md text-sm font-medium ${
+                      pathname === '/dashboard'
                         ? 'text-primary-600 bg-primary-50'
                         : 'text-gray-700 hover:text-primary-600'
                     }`}
                   >
-                    <ShieldCheck className="h-4 w-4" />
-                    <span>Admin</span>
+                    My Dogs
                   </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/messages"
+                    className={`px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-1 ${
+                      pathname === '/messages'
+                        ? 'text-primary-600 bg-primary-50'
+                        : 'text-gray-700 hover:text-primary-600'
+                    }`}
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    <span>Messages</span>
+                  </Link>
+                </li>
+                {/* Admin link - check for ADMIN role */}
+                {user?.role === 'ADMIN' && (
+                  <li>
+                    <Link
+                      href="/admin"
+                      className={`px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-1 ${
+                        pathname === '/admin'
+                          ? 'text-primary-600 bg-primary-50'
+                          : 'text-gray-700 hover:text-primary-600'
+                      }`}
+                    >
+                      <ShieldCheck className="h-4 w-4" />
+                      <span>Admin</span>
+                    </Link>
+                  </li>
                 )}
-                <Link
-                  href="/dashboard/add-dog"
-                  className="btn-primary flex items-center space-x-1"
-                >
-                  <PlusCircle className="h-4 w-4" />
-                  <span>Add Dog</span>
-                </Link>
-                
+                <li>
+                  <Link
+                    href="/dashboard/add-dog"
+                    className="btn-primary flex items-center space-x-1"
+                  >
+                    <PlusCircle className="h-4 w-4" />
+                    <span>Add Dog</span>
+                  </Link>
+                </li>
+
                 {/* User Dropdown */}
-                <div className="relative" ref={dropdownRef}>
+                <li className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setDropdownOpen(!dropdownOpen)}
                     className="flex items-center space-x-2 text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md"
@@ -141,49 +155,59 @@ export default function Navbar() {
                   </button>
                   
                   {dropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 border border-gray-200">
-                      <Link
-                        href="/profile"
-                        onClick={() => setDropdownOpen(false)}
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        Profile
-                      </Link>
-                      {/* Admin link in dropdown - check for ADMIN role */}
-                      {user?.role === 'ADMIN' && (
+                    <ul className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 border border-gray-200">
+                      <li>
                         <Link
-                          href="/admin"
+                          href="/profile"
                           onClick={() => setDropdownOpen(false)}
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         >
-                          Admin Panel
+                          Profile
                         </Link>
+                      </li>
+                      {/* Admin link in dropdown - check for ADMIN role */}
+                      {user?.role === 'ADMIN' && (
+                        <li>
+                          <Link
+                            href="/admin"
+                            onClick={() => setDropdownOpen(false)}
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            Admin Panel
+                          </Link>
+                        </li>
                       )}
-                      <button
-                        onClick={() => {
-                          setDropdownOpen(false);
-                          handleLogout();
-                        }}
-                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center space-x-2"
-                      >
-                        <LogOut className="h-4 w-4" />
-                        <span>Logout</span>
-                      </button>
-                    </div>
+                      <li>
+                        <button
+                          onClick={() => {
+                            setDropdownOpen(false);
+                            handleLogout();
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center space-x-2"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          <span>Logout</span>
+                        </button>
+                      </li>
+                    </ul>
                   )}
-                </div>
+                </li>
               </>
             ) : (
               <>
-                <Link href="/login" className="btn-secondary">
-                  Login
-                </Link>
-                <Link href="/register" className="btn-primary">
-                  Sign Up
-                </Link>
+                <li>
+                  <Link href="/login" className="btn-secondary">
+                    Login
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/register" className="btn-primary">
+                    Sign Up
+                  </Link>
+                </li>
               </>
             )}
-          </div>
+          </ul>
 
           {/* Mobile menu button */}
           <div className="md:hidden flex items-center">
@@ -204,92 +228,112 @@ export default function Navbar() {
     {/* Mobile Navigation */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-white border-t">
-          <div className="px-2 pt-2 pb-3 space-y-1">
-            <Link
-              href="/browse"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-50"
-            >
-              Browse Dogs
-            </Link>
+          <ul className="px-2 pt-2 pb-3 space-y-1">
+            <li>
+              <Link
+                href="/browse"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-50"
+              >
+                Browse Dogs
+              </Link>
+            </li>
 
-            <Link
-              href="/breeds"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-50"
-            >
-              Breed Guide
-            </Link>
+            <li>
+              <Link
+                href="/breeds"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-50"
+              >
+                Breed Guide
+              </Link>
+            </li>
 
-            <Link
-              href="/map"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-50"
-            >
-              <Map className="h-4 w-4" />
-              Map View
-            </Link>
+            <li>
+              <Link
+                href="/map"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-50"
+              >
+                <Map className="h-4 w-4" />
+                Map View
+              </Link>
+            </li>
             {isAuthenticated ? (
               <>
-                <Link
-                  href="/dashboard"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-50"
-                >
-                  My Dogs
-                </Link>
-                <Link
-                  href="/messages"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-50"
-                >
-                  Messages
-                </Link>
-                <Link
-                  href="/profile"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-50"
-                >
-                  Profile
-                </Link>
-                {user?.role === 'ADMIN' && (
+                <li>
                   <Link
-                    href="/admin"
+                    href="/dashboard"
                     onClick={() => setMobileMenuOpen(false)}
                     className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-50"
                   >
-                    Admin Panel
+                    My Dogs
                   </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/messages"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-50"
+                  >
+                    Messages
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/profile"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-50"
+                  >
+                    Profile
+                  </Link>
+                </li>
+                {user?.role === 'ADMIN' && (
+                  <li>
+                    <Link
+                      href="/admin"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-50"
+                    >
+                      Admin Panel
+                    </Link>
+                  </li>
                 )}
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    handleLogout();
-                  }}
-                  className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-gray-50"
-                >
-                  Logout
-                </button>
+                <li>
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      handleLogout();
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-gray-50"
+                  >
+                    Logout
+                  </button>
+                </li>
               </>
             ) : (
               <>
-                <Link
-                  href="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-50"
-                >
-                  Login
-                </Link>
-                <Link
-                  href="/register"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block px-3 py-2 rounded-md text-base font-medium text-primary-600 hover:bg-gray-50"
-                >
-                  Sign Up
-                </Link>
+                <li>
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-50"
+                  >
+                    Login
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/register"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-md text-base font-medium text-primary-600 hover:bg-gray-50"
+                  >
+                    Sign Up
+                  </Link>
+                </li>
               </>
             )}
-          </div>
+          </ul>
         </div>
       )}
     </nav>

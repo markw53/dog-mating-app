@@ -12,7 +12,7 @@ export function SectionHeader({
   centered = true 
 }: SectionHeaderProps) {
   return (
-    <div className={`mb-16 ${centered ? 'text-center' : ''}`}>
+    <header className={`mb-16 ${centered ? 'text-center' : ''}`}>
       {badge && (
         <span className="text-primary-600 font-semibold text-sm uppercase tracking-wider">
           {badge}
@@ -24,6 +24,6 @@ export function SectionHeader({
           {subtitle}
         </p>
       )}
-    </div>
+    </header>
   );
 }

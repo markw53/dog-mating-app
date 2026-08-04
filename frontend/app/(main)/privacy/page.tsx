@@ -14,7 +14,7 @@ export default function PrivacyPage() {
       <section className="bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center gap-4 mb-6">
-            <Shield className="h-12 w-12" />
+            <Shield className="h-12 w-12" aria-hidden="true" />
             <h1 className="text-4xl md:text-6xl font-bold">Privacy Policy</h1>
           </div>
           <p className="text-xl text-primary-100 max-w-3xl mx-auto text-center">
@@ -26,7 +26,7 @@ export default function PrivacyPage() {
       {/* Content */}
       <section className="py-20 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="prose prose-lg max-w-none">
+          <article className="prose prose-lg max-w-none">
             <Section title="1. Introduction">
               <p>
                 Welcome to DogMate (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;). We are committed to protecting your personal information 
@@ -154,7 +154,7 @@ export default function PrivacyPage() {
                 <li>Address: 12 Heather Park, Devon, United Kingdom</li>
               </ul>
             </Section>
-          </div>
+          </article>
         </div>
       </section>
     </div>
@@ -163,11 +163,11 @@ export default function PrivacyPage() {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="mb-12">
+    <section className="mb-12">
       <h2 className="text-2xl font-bold text-gray-900 mb-4">{title}</h2>
       <div className="text-gray-600 space-y-4">
         {children}
       </div>
-    </div>
+    </section>
   );
 }

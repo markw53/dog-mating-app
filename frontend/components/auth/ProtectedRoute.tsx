@@ -31,8 +31,9 @@ export default function ProtectedRoute({ children, requireAdmin = false }: Prote
 
   if (!isAuthenticated || (requireAdmin && user?.role !== 'ADMIN')) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Loader2 className="h-12 w-12 animate-spin text-primary-600" />
+      <div className="flex justify-center items-center min-h-screen" role="status">
+        <Loader2 className="h-12 w-12 animate-spin text-primary-600" aria-hidden="true" />
+        <span className="sr-only">Loading</span>
       </div>
     );
   }

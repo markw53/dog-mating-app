@@ -177,9 +177,9 @@ export default function AdminPage() {
 
   if (authLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-50">
+      <div className="flex justify-center items-center min-h-screen bg-gray-50" role="status">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary-600 mx-auto mb-4" />
+          <Loader2 className="h-12 w-12 animate-spin text-primary-600 mx-auto mb-4" aria-hidden="true" />
           <p className="text-gray-600">Verifying admin access...</p>
         </div>
       </div>
@@ -190,7 +190,7 @@ export default function AdminPage() {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50">
         <div className="text-center">
-          <ShieldAlert className="h-16 w-16 text-red-500 mx-auto mb-4" />
+          <ShieldAlert className="h-16 w-16 text-red-500 mx-auto mb-4" aria-hidden="true" />
           <h2 className="text-xl font-bold text-gray-900 mb-2">Access Denied</h2>
           <p className="text-gray-600">You don&apos;t have permission to access this page.</p>
           <p className="text-sm text-gray-500 mt-2">Redirecting...</p>
@@ -201,9 +201,9 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-50">
+      <div className="flex justify-center items-center min-h-screen bg-gray-50" role="status">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary-600 mx-auto mb-4" />
+          <Loader2 className="h-12 w-12 animate-spin text-primary-600 mx-auto mb-4" aria-hidden="true" />
           <p className="text-gray-600">Loading admin dashboard...</p>
         </div>
       </div>
@@ -213,13 +213,13 @@ export default function AdminPage() {
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
+        <header className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
           <p className="text-gray-600 mt-1">Manage users and dog listings</p>
           <p className="text-sm text-gray-500 mt-1">
             Logged in as: {user?.email} (Role: {user?.role})
           </p>
-        </div>
+        </header>
 
         <AdminStatsCards stats={stats} />
 
@@ -233,13 +233,18 @@ export default function AdminPage() {
         {/* Search Bar - Contextual based on active tab */}
         {activeTab !== 'stats' && (
           <div className="mb-6">
-            <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <div className="relative max-w-md" role="search">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" aria-hidden="true" />
               <input
-                type="text"
+                type="search"
+                aria-label={
+                  activeTab === 'pending'
+                    ? 'Search pending dogs'
+                    : 'Search users'
+                }
                 placeholder={
-                  activeTab === 'pending' 
-                    ? 'Search pending dogs by name, breed, owner...' 
+                  activeTab === 'pending'
+                    ? 'Search pending dogs by name, breed, owner...'
                     : 'Search users by name, email, role...'
                 }
                 value={activeTab === 'pending' ? dogSearch : userSearch}
@@ -254,9 +259,9 @@ export default function AdminPage() {
               />
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
                 {/* Loading indicator while debouncing */}
-                {((activeTab === 'pending' && isSearchingDogs) || 
+                {((activeTab === 'pending' && isSearchingDogs) ||
                   (activeTab === 'users' && isSearchingUsers)) && (
-                  <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                  <Loader2 className="h-4 w-4 animate-spin text-gray-400" aria-hidden="true" />
                 )}
                 {/* Clear button */}
                 {((activeTab === 'pending' && dogSearch) || 
@@ -272,7 +277,7 @@ export default function AdminPage() {
                     className="p-1 hover:bg-gray-100 rounded-full transition-colors"
                     title="Clear search"
                   >
-                    <X className="h-4 w-4 text-gray-400" />
+                    <X className="h-4 w-4 text-gray-400" aria-hidden="true" />
                   </button>
                 )}
               </div>

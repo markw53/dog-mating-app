@@ -72,16 +72,17 @@ export default function DogFilters({ filters, onFilterChange }: FiltersProps) {
   };
 
   return (
-    <div className="card sticky top-4">
-      <h3 className="text-lg font-semibold mb-4">Filters</h3>
+    <aside className="card sticky top-4" aria-labelledby="dog-filters-heading">
+      <h3 id="dog-filters-heading" className="text-lg font-semibold mb-4">Filters</h3>
 
       <div className="space-y-4">
         {/* Breed */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="filter-breed" className="block text-sm font-medium text-gray-700 mb-1">
             Breed
           </label>
           <select
+            id="filter-breed"
             value={localFilters.breed}
             onChange={(e) => handleChange('breed', e.target.value)}
             className="input-field"
@@ -97,10 +98,11 @@ export default function DogFilters({ filters, onFilterChange }: FiltersProps) {
 
         {/* Gender */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="filter-gender" className="block text-sm font-medium text-gray-700 mb-1">
             Gender
           </label>
           <select
+            id="filter-gender"
             value={localFilters.gender}
             onChange={(e) => handleChange('gender', e.target.value)}
             className="input-field"
@@ -112,14 +114,15 @@ export default function DogFilters({ filters, onFilterChange }: FiltersProps) {
         </div>
 
         {/* Age Range */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+        <fieldset>
+          <legend className="block text-sm font-medium text-gray-700 mb-1">
             Age Range (years)
-          </label>
+          </legend>
           <div className="grid grid-cols-2 gap-2">
             <input
               type="number"
               placeholder="Min"
+              aria-label="Minimum age in years"
               value={localFilters.minAge}
               onChange={(e) => handleChange('minAge', e.target.value)}
               className="input-field"
@@ -128,20 +131,22 @@ export default function DogFilters({ filters, onFilterChange }: FiltersProps) {
             <input
               type="number"
               placeholder="Max"
+              aria-label="Maximum age in years"
               value={localFilters.maxAge}
               onChange={(e) => handleChange('maxAge', e.target.value)}
               className="input-field"
               min="0"
             />
           </div>
-        </div>
+        </fieldset>
 
         {/* Location */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="filter-city" className="block text-sm font-medium text-gray-700 mb-1">
             City
           </label>
           <input
+            id="filter-city"
             type="text"
             placeholder="Enter city"
             value={localFilters.city}
@@ -151,10 +156,11 @@ export default function DogFilters({ filters, onFilterChange }: FiltersProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="filter-county" className="block text-sm font-medium text-gray-700 mb-1">
             State
           </label>
           <input
+            id="filter-county"
             type="text"
             placeholder="Enter County"
             value={localFilters.county}
@@ -184,6 +190,6 @@ export default function DogFilters({ filters, onFilterChange }: FiltersProps) {
           </button>
         </div>
       </div>
-    </div>
+    </aside>
   );
 }

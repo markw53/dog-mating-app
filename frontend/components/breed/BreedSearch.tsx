@@ -76,11 +76,12 @@ export default function BreedSearch() {
   )
 
   return (
-    <div ref={wrapperRef} className="relative w-full max-w-xl mx-auto">
+    <div ref={wrapperRef} role="search" className="relative w-full max-w-xl mx-auto">
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" aria-hidden="true" />
         <input
-          type="text"
+          type="search"
+          aria-label="Search breeds"
           placeholder="Search breeds... e.g. Labrador, Poodle, Terrier"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -110,50 +111,53 @@ export default function BreedSearch() {
       {isOpen && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-80 overflow-y-auto z-50">
           {results.length === 0 && !loading && (
-            <div className="p-4 text-center text-gray-500 text-sm">
+            <p className="p-4 text-center text-gray-500 text-sm">
               No breeds found for &ldquo;{query}&rdquo;
-            </div>
+            </p>
           )}
 
-          {results.map((breed) => (
-            <button
-              key={breed.id}
-              onClick={() => handleSelect(breed.slug)}
-              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left border-b border-gray-50 last:border-0"
-            >
-              {/* Breed thumbnail */}
-              <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-                {breed.imageUrl ? (
-                  <Image
-                    src={breed.imageUrl}
-                    alt={breed.name}
-                    fill
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-lg">
-                    🐕
-                  </div>
-                )}
-              </div>
+          <ul>
+            {results.map((breed) => (
+              <li key={breed.id}>
+                <button
+                  onClick={() => handleSelect(breed.slug)}
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left border-b border-gray-50 last:border-0"
+                >
+                  {/* Breed thumbnail */}
+                  <span className="relative block w-10 h-10 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                    {breed.imageUrl ? (
+                      <Image
+                        src={breed.imageUrl}
+                        alt=""
+                        fill
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="w-full h-full flex items-center justify-center text-lg" aria-hidden="true">
+                        🐕
+                      </span>
+                    )}
+                  </span>
 
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">
-                  {breed.name}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {breed.type}
-                  {breed.size && ` · ${breed.size}`}
-                </p>
-              </div>
+                  <span className="flex-1 min-w-0">
+                    <span className="block text-sm font-semibold text-gray-900 truncate">
+                      {breed.name}
+                    </span>
+                    <span className="block text-xs text-gray-500">
+                      {breed.type}
+                      {breed.size && ` · ${breed.size}`}
+                    </span>
+                  </span>
 
-              {breed.kennelClubCategory && (
-                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full flex-shrink-0">
-                  {breed.kennelClubCategory}
-                </span>
-              )}
-            </button>
-          ))}
+                  {breed.kennelClubCategory && (
+                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full flex-shrink-0">
+                      {breed.kennelClubCategory}
+                    </span>
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>

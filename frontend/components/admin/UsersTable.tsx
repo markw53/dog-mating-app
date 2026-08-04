@@ -47,24 +47,22 @@ export default function UsersTable({ users }: UsersTableProps) {
                       unoptimized
                     />
                   ) : (
-                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center" aria-hidden="true">
                       <Users className="h-5 w-5 text-gray-400" />
                     </div>
                   )}
-                  <div className="ml-4">
-                    <div className="text-sm font-medium text-gray-900">
-                      {user.firstName} {user.lastName}
-                    </div>
-                  </div>
+                  <p className="ml-4 text-sm font-medium text-gray-900">
+                    {user.firstName} {user.lastName}
+                  </p>
                 </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-900">{user.email}</div>
+                <p className="text-sm text-gray-900">{user.email}</p>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-900">
+                <p className="text-sm text-gray-900">
                   {user.location?.city}, {user.location?.state}
-                </div>
+                </p>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <span

@@ -79,9 +79,9 @@ export default function DashboardPage() {
   // Show loading while checking auth
   if (authLoading || !isAuthorized) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100" role="status">
         <div className="text-center">
-          <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" />
+          <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" aria-hidden="true" />
           <p className="text-gray-600 font-medium">
             Checking authentication...
           </p>
@@ -93,9 +93,9 @@ export default function DashboardPage() {
   // Show loading while fetching dogs
   if (dogsLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100" role="status">
         <div className="text-center">
-          <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" />
+          <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" aria-hidden="true" />
           <p className="text-gray-600 font-medium">Loading your dashboard...</p>
         </div>
       </div>
@@ -107,7 +107,7 @@ export default function DashboardPage() {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <Card className="text-center py-12 px-8 max-w-md">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4" aria-hidden="true">
             <AlertCircle className="h-8 w-8 text-red-600" />
           </div>
           <h3 className="text-xl font-bold text-gray-900 mb-2">
@@ -117,7 +117,7 @@ export default function DashboardPage() {
             There was an error loading your dogs. Please try again.
           </p>
           <button onClick={refetch} className="btn-primary">
-            <RefreshCw className="h-4 w-4 mr-2" />
+            <RefreshCw className="h-4 w-4 mr-2" aria-hidden="true" />
             Try Again
           </button>
         </Card>
@@ -129,7 +129,7 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Hero Section */}
       <Section variant="primary" className="py-12 md:py-16">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold mb-2">
               Welcome back, {user?.firstName}! 👋
@@ -148,17 +148,18 @@ export default function DashboardPage() {
             >
               <RefreshCw
                 className={`h-5 w-5 ${dogsLoading ? 'animate-spin' : ''}`}
+                aria-hidden="true"
               />
             </button>
             <Link
               href="/dashboard/add-dog"
               className="group bg-white text-primary-700 px-6 py-3 rounded-xl font-bold hover:bg-primary-50 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 inline-flex items-center justify-center"
             >
-              <PlusCircle className="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform" />
+              <PlusCircle className="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform" aria-hidden="true" />
               Add New Dog
             </Link>
           </div>
-        </div>
+        </header>
       </Section>
 
       {/* Stats Section */}
@@ -203,7 +204,7 @@ export default function DashboardPage() {
           {dogs.length === 0 ? (
             <Card className="text-center py-16">
               <div className="max-w-md mx-auto">
-                <div className="w-24 h-24 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center mx-auto mb-6">
+                <div className="w-24 h-24 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center mx-auto mb-6" aria-hidden="true">
                   <DogIcon className="h-12 w-12 text-primary-600" />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">
@@ -217,28 +218,26 @@ export default function DashboardPage() {
                   href="/dashboard/add-dog"
                   className="btn-primary inline-flex items-center text-lg px-8 py-4"
                 >
-                  <PlusCircle className="h-5 w-5 mr-2" />
+                  <PlusCircle className="h-5 w-5 mr-2" aria-hidden="true" />
                   Add Your First Dog
                 </Link>
               </div>
             </Card>
           ) : (
             <>
-              <div className="flex items-center justify-between mb-6">
+              <header className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">
                   Your Dogs ({dogs.length})
                 </h2>
-              </div>
+              </header>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {dogs.map((dog) => (
-                  <DogCard
-                    key={dog._id || dog.id}
-                    dog={dog}
-                    onDelete={handleDelete}
-                  />
+                  <li key={dog._id || dog.id}>
+                    <DogCard dog={dog} onDelete={handleDelete} />
+                  </li>
                 ))}
-              </div>
+              </ul>
             </>
           )}
         </div>
@@ -264,11 +263,11 @@ function StatCard({
   return (
     <Card className="relative overflow-hidden group hover:scale-105 transition-transform">
       <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <p className="text-sm font-medium text-gray-600 mb-1">{label}</p>
-          <p className="text-3xl font-bold text-gray-900">{value}</p>
-        </div>
-        <div className={`${bgColor} p-4 rounded-2xl`}>
+        <dl className="flex-1">
+          <dt className="text-sm font-medium text-gray-600 mb-1">{label}</dt>
+          <dd className="text-3xl font-bold text-gray-900">{value}</dd>
+        </dl>
+        <div className={`${bgColor} p-4 rounded-2xl`} aria-hidden="true">
           <div
             className={`bg-gradient-to-br ${color} text-white p-3 rounded-xl shadow-lg`}
           >
@@ -278,6 +277,7 @@ function StatCard({
       </div>
       <div
         className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${color} transform scale-x-0 group-hover:scale-x-100 transition-transform`}
+        aria-hidden="true"
       ></div>
     </Card>
   );
@@ -305,16 +305,16 @@ function DogCard({
   const getStatusIcon = () => {
     switch (dog.status) {
       case 'active':
-        return <CheckCircle className="h-3 w-3 mr-1" />;
+        return <CheckCircle className="h-3 w-3 mr-1" aria-hidden="true" />;
       case 'pending':
-        return <Clock className="h-3 w-3 mr-1" />;
+        return <Clock className="h-3 w-3 mr-1" aria-hidden="true" />;
       default:
-        return <AlertCircle className="h-3 w-3 mr-1" />;
+        return <AlertCircle className="h-3 w-3 mr-1" aria-hidden="true" />;
     }
   };
 
   return (
-    <Card className="group overflow-hidden">
+    <Card as="article" className="group overflow-hidden">
       <div className="relative bg-gray-200 rounded-xl overflow-hidden mb-4 h-48">
         <Image
           src={
@@ -327,34 +327,32 @@ function DogCard({
           unoptimized
         />
 
-        <div className="absolute top-3 right-3">
-          <span
-            className={`px-3 py-1 rounded-full text-xs font-bold border-2 backdrop-blur-sm ${getStatusStyles()} flex items-center`}
-          >
-            {getStatusIcon()}
-            {dog.status.toUpperCase()}
-          </span>
-        </div>
+        <p
+          className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold border-2 backdrop-blur-sm ${getStatusStyles()} flex items-center`}
+        >
+          {getStatusIcon()}
+          {dog.status.toUpperCase()}
+        </p>
 
-        <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-medium flex items-center">
-          <Eye className="h-3 w-3 mr-1" />
+        <p className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-medium flex items-center">
+          <Eye className="h-3 w-3 mr-1" aria-hidden="true" />
           {dog.views || 0} views
-        </div>
+        </p>
       </div>
 
       <div className="space-y-3">
-        <div>
+        <header>
           <h3 className="text-xl font-bold text-gray-900 group-hover:text-primary-600 transition-colors">
             {dog.name}
           </h3>
           <p className="text-gray-600">{dog.breed}</p>
-        </div>
+        </header>
 
         {dog.breeding?.available && (
-          <div className="flex items-center text-sm text-green-600 font-medium">
-            <CheckCircle className="h-4 w-4 mr-1" />
+          <p className="flex items-center text-sm text-green-600 font-medium">
+            <CheckCircle className="h-4 w-4 mr-1" aria-hidden="true" />
             Available for breeding
-          </div>
+          </p>
         )}
 
         <div className="flex gap-2 pt-3 border-t border-gray-200">
@@ -362,14 +360,14 @@ function DogCard({
             href={`/dogs/${dog._id || dog.id}`}
             className="flex-1 btn-secondary text-center text-sm py-2 flex items-center justify-center"
           >
-            <Eye className="h-4 w-4 mr-1" />
+            <Eye className="h-4 w-4 mr-1" aria-hidden="true" />
             View
           </Link>
           <Link
             href={`/dogs/${dog._id || dog.id}/edit`}
             className="flex-1 btn-primary text-center text-sm py-2 flex items-center justify-center"
           >
-            <Edit className="h-4 w-4 mr-1" />
+            <Edit className="h-4 w-4 mr-1" aria-hidden="true" />
             Edit
           </Link>
           <button
@@ -377,7 +375,7 @@ function DogCard({
             className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all transform hover:scale-105 shadow-sm hover:shadow-md"
             title="Delete dog"
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
       </div>

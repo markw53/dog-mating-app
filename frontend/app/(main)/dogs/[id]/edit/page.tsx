@@ -298,9 +298,9 @@ export default function EditDogPage() {
 
   if (authLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100" role="status">
         <div className="text-center">
-          <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" />
+          <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" aria-hidden="true" />
           <p className="text-gray-600 font-medium">Checking authentication...</p>
         </div>
       </div>
@@ -309,9 +309,9 @@ export default function EditDogPage() {
 
   if (!isAuthorized) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100" role="status">
         <div className="text-center">
-          <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" />
+          <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" aria-hidden="true" />
           <p className="text-gray-600 font-medium">Redirecting to login...</p>
         </div>
       </div>
@@ -320,9 +320,9 @@ export default function EditDogPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100" role="status">
         <div className="text-center">
-          <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" />
+          <Loader2 className="h-16 w-16 animate-spin text-primary-600 mx-auto mb-4" aria-hidden="true" />
           <p className="text-gray-600 font-medium">Loading dog details...</p>
         </div>
       </div>
@@ -332,17 +332,17 @@ export default function EditDogPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Hero Section */}
       <Section variant="primary" className="py-12 md:py-16">
-        <div className="text-center">
-          <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-4">
+        <header className="text-center">
+          <p className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-4">
             <span className="text-white font-semibold text-sm">✏️ Edit Listing</span>
-          </div>
+          </p>
           <h1 className="text-3xl md:text-4xl font-bold mb-3">
             Update {formData.name || 'Dog'}&apos;s Profile
           </h1>
           <p className="text-lg text-primary-100 max-w-2xl mx-auto">
             Make changes to your dog&apos;s profile
           </p>
-        </div>
+        </header>
       </Section>
 
       {/* Main Form */}
@@ -350,20 +350,20 @@ export default function EditDogPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Images Section */}
-            <Card>
-              <div className="flex items-center mb-6">
-                <div className="bg-blue-100 p-3 rounded-xl mr-4">
+            <Card as="section">
+              <header className="flex items-center mb-6">
+                <div className="bg-blue-100 p-3 rounded-xl mr-4" aria-hidden="true">
                   <ImageIcon className="h-6 w-6 text-blue-600" />
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">Photos</h2>
                   <p className="text-sm text-gray-600">Manage your dog&apos;s images (max 10 total)</p>
                 </div>
-              </div>
+              </header>
               
               <label className="block w-full cursor-pointer mb-6">
                 <div className="border-3 border-dashed border-gray-300 rounded-2xl p-12 text-center hover:border-primary-500 hover:bg-primary-50 transition-all group">
-                  <div className="bg-primary-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                  <div className="bg-primary-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform" aria-hidden="true">
                     <Upload className="h-10 w-10 text-primary-600" />
                   </div>
                   <p className="text-lg font-semibold text-gray-900 mb-1">
@@ -394,10 +394,10 @@ export default function EditDogPage() {
                       </p>
                     )}
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <ul className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {/* Existing Images */}
                     {existingImages.map((image, index) => (
-                      <div key={`existing-${index}`} className="relative group">
+                      <li key={`existing-${index}`} className="relative group">
                         <div className="aspect-square rounded-xl overflow-hidden border-2 border-gray-200 group-hover:border-primary-400 transition-all">
                           <Image
                             src={getImageUrl(image)}
@@ -413,20 +413,21 @@ export default function EditDogPage() {
                           onClick={() => removeExistingImage(index)}
                           className="absolute -top-2 -right-2 bg-red-600 text-white p-2 rounded-full hover:bg-red-700 shadow-lg transform hover:scale-110 transition-all"
                           title="Remove image"
+                          aria-label={`Remove existing image ${index + 1}`}
                         >
-                          <X className="h-4 w-4" />
+                          <X className="h-4 w-4" aria-hidden="true" />
                         </button>
                         {index === 0 && (
-                          <div className="absolute bottom-2 left-2 bg-gradient-to-r from-primary-600 to-primary-700 text-white text-xs px-3 py-1 rounded-full font-bold shadow-lg">
+                          <p className="absolute bottom-2 left-2 bg-gradient-to-r from-primary-600 to-primary-700 text-white text-xs px-3 py-1 rounded-full font-bold shadow-lg">
                             Main Photo
-                          </div>
+                          </p>
                         )}
-                      </div>
+                      </li>
                     ))}
 
                     {/* New Images */}
                     {previews.map((preview, index) => (
-                      <div key={`new-${index}`} className="relative group">
+                      <li key={`new-${index}`} className="relative group">
                         <div className="aspect-square rounded-xl overflow-hidden border-2 border-blue-200 group-hover:border-blue-400 transition-all">
                           <Image
                             src={preview}
@@ -442,30 +443,31 @@ export default function EditDogPage() {
                           onClick={() => removeNewImage(index)}
                           className="absolute -top-2 -right-2 bg-red-600 text-white p-2 rounded-full hover:bg-red-700 shadow-lg transform hover:scale-110 transition-all"
                           title="Remove image"
+                          aria-label={`Remove new image ${index + 1}`}
                         >
-                          <X className="h-4 w-4" />
+                          <X className="h-4 w-4" aria-hidden="true" />
                         </button>
-                        <div className="absolute bottom-2 left-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-xs px-3 py-1 rounded-full font-bold shadow-lg">
+                        <p className="absolute bottom-2 left-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-xs px-3 py-1 rounded-full font-bold shadow-lg">
                           New
-                        </div>
-                      </div>
+                        </p>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 </div>
               )}
             </Card>
 
             {/* Basic Information */}
-            <Card>
-              <div className="flex items-center mb-6">
-                <div className="bg-purple-100 p-3 rounded-xl mr-4">
+            <Card as="section">
+              <header className="flex items-center mb-6">
+                <div className="bg-purple-100 p-3 rounded-xl mr-4" aria-hidden="true">
                   <DogIcon className="h-6 w-6 text-purple-600" />
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">Basic Information</h2>
                   <p className="text-sm text-gray-600">Essential details about your dog</p>
                 </div>
-              </div>
+              </header>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -573,16 +575,16 @@ export default function EditDogPage() {
             </Card>
 
             {/* Health Information */}
-            <Card>
-              <div className="flex items-center mb-6">
-                <div className="bg-green-100 p-3 rounded-xl mr-4">
+            <Card as="section">
+              <header className="flex items-center mb-6">
+                <div className="bg-green-100 p-3 rounded-xl mr-4" aria-hidden="true">
                   <Shield className="h-6 w-6 text-green-600" />
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">Health Information</h2>
                   <p className="text-sm text-gray-600">Medical history and veterinary details</p>
                 </div>
-              </div>
+              </header>
               
               <div className="space-y-6">
                 <div className="flex items-center space-x-6">
@@ -660,16 +662,16 @@ export default function EditDogPage() {
             </Card>
 
             {/* Pedigree Information */}
-            <Card>
-              <div className="flex items-center mb-6">
-                <div className="bg-indigo-100 p-3 rounded-xl mr-4">
+            <Card as="section">
+              <header className="flex items-center mb-6">
+                <div className="bg-indigo-100 p-3 rounded-xl mr-4" aria-hidden="true">
                   <Shield className="h-6 w-6 text-indigo-600" />
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">Pedigree Information</h2>
                   <p className="text-sm text-gray-600">Registration and lineage details</p>
                 </div>
-              </div>
+              </header>
               
               <div className="space-y-6">
                 <label className="flex items-center cursor-pointer group">
@@ -750,16 +752,16 @@ export default function EditDogPage() {
             </Card>
 
             {/* Breeding Information */}
-            <Card>
-              <div className="flex items-center mb-6">
-                <div className="bg-pink-100 p-3 rounded-xl mr-4">
+            <Card as="section">
+              <header className="flex items-center mb-6">
+                <div className="bg-pink-100 p-3 rounded-xl mr-4" aria-hidden="true">
                   <Heart className="h-6 w-6 text-pink-600" />
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">Breeding Information</h2>
                   <p className="text-sm text-gray-600">Availability and breeding details</p>
                 </div>
-              </div>
+              </header>
               
               <div className="space-y-6">
                 <div className="bg-gradient-to-r from-primary-50 to-primary-100 p-4 rounded-xl border border-primary-200">
@@ -851,8 +853,8 @@ export default function EditDogPage() {
             </Card>
 
             {/* Location */}
-            <Card>
-              <div className="flex items-center mb-6">
+            <Card as="section">
+              <header className="flex items-center mb-6">
                 <div className="bg-orange-100 p-3 rounded-xl mr-4">
                   <MapPin className="h-6 w-6 text-orange-600" />
                 </div>
@@ -860,7 +862,7 @@ export default function EditDogPage() {
                   <h2 className="text-2xl font-bold text-gray-900">Location</h2>
                   <p className="text-sm text-gray-600">Where is your dog located?</p>
                 </div>
-              </div>
+              </header>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
@@ -932,7 +934,7 @@ export default function EditDogPage() {
               >
                 {submitting ? (
                   <>
-                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin" aria-hidden="true" />
                     Updating...
                   </>
                 ) : (

@@ -33,7 +33,7 @@ export default function EnableNotificationsBanner() {
   };
 
   return (
-    <div className="flex items-center gap-3 bg-primary-50 border border-primary-200 rounded-xl px-4 py-3 mb-4">
+    <aside className="flex items-center gap-3 bg-primary-50 border border-primary-200 rounded-xl px-4 py-3 mb-4">
       <Bell className="h-5 w-5 text-primary-600 flex-shrink-0" />
       <p className="flex-1 text-sm text-primary-900">
         Get notified when you receive new messages, even when DogMate is closed.
@@ -52,6 +52,6 @@ export default function EnableNotificationsBanner() {
       >
         <X className="h-4 w-4" />
       </button>
-    </div>
+    </aside>
   );
 }

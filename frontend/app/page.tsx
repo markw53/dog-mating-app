@@ -11,18 +11,18 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 text-white py-24 md:py-32 overflow-hidden">
         {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0 opacity-10" aria-hidden="true">
           <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
         </div>
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center">
-            <div className="inline-block mb-4">
+          <header className="text-center">
+            <p className="inline-block mb-4">
               <span className="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-semibold">
                 🐕 Trusted by 10,000+ Dog Owners
               </span>
-            </div>
+            </p>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
               Find the Perfect Match <br />
               <span className="text-primary-200">for Your Dog</span>
@@ -35,9 +35,9 @@ export default function Home() {
                 href="/browse"
                 className="group bg-white text-primary-700 px-8 py-4 rounded-xl font-bold text-lg hover:bg-primary-50 transition-all shadow-xl hover:shadow-2xl transform hover:-translate-y-1 inline-flex items-center justify-center"
               >
-                <Search className="mr-2 h-5 w-5" />
+                <Search className="mr-2 h-5 w-5" aria-hidden="true" />
                 Browse Dogs
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
               </Link>
               <Link
                 href="/register"
@@ -46,14 +46,14 @@ export default function Home() {
                 Get Started Free
               </Link>
             </div>
-          </div>
+          </header>
         </div>
       </section>
 
       {/* Features Section */}
       <section className="py-20 md:py-28 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
+          <header className="text-center mb-16">
             <span className="text-primary-600 font-semibold text-sm uppercase tracking-wider">Features</span>
             <h2 className="section-title mt-2">
               Why Choose DogMate?
@@ -61,9 +61,9 @@ export default function Home() {
             <p className="section-subtitle mt-4">
               The trusted platform for responsible dog breeding with industry-leading features
             </p>
-          </div>
+          </header>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <FeatureCard
               icon={<Shield className="h-12 w-12 text-primary-600" />}
               title="Verified Breeders"
@@ -100,14 +100,14 @@ export default function Home() {
               description="From popular to rare breeds, find the perfect match for your dog"
               color="bg-indigo-50"
             />
-          </div>
+          </ul>
         </div>
       </section>
 
       {/* How It Works Section */}
       <section className="py-20 md:py-28 bg-gradient-to-br from-gray-50 to-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
+          <header className="text-center mb-16">
             <span className="text-primary-600 font-semibold text-sm uppercase tracking-wider">Process</span>
             <h2 className="section-title mt-2">
               How It Works
@@ -115,9 +115,9 @@ export default function Home() {
             <p className="section-subtitle mt-4">
               Get started in three simple steps
             </p>
-          </div>
+          </header>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+          <ol className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
             <StepCard
               number="1"
               title="Create Your Profile"
@@ -133,26 +133,26 @@ export default function Home() {
               title="Arrange Meeting"
               description="Message owners, arrange meetings, and find the perfect match"
             />
-          </div>
+          </ol>
         </div>
       </section>
 
       {/* Stats Section */}
       <section className="py-16 bg-white border-y border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          <dl className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <StatCard number="10,000+" label="Active Users" />
             <StatCard number="5,000+" label="Dogs Listed" />
             <StatCard number="2,500+" label="Successful Matches" />
             <StatCard number="50+" label="Dog Breeds" />
-          </div>
+          </dl>
         </div>
       </section>
 
       {/* CTA Section */}
       <section className="relative bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 text-white py-20 md:py-28 overflow-hidden">
         {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0 opacity-10" aria-hidden="true">
           <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
         </div>
@@ -169,7 +169,7 @@ export default function Home() {
             className="group bg-white text-primary-700 px-10 py-5 rounded-xl font-bold text-lg hover:bg-primary-50 transition-all shadow-2xl hover:shadow-3xl transform hover:-translate-y-1 inline-flex items-center"
           >
             Get Started for Free
-            <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+            <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
           </Link>
           <p className="mt-6 text-primary-200 text-sm">
             No credit card required • 100% Free to browse
@@ -194,42 +194,51 @@ function FeatureCard({
   color: string;
 }) {
   return (
-    <div className="group bg-white p-8 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-primary-200 transform hover:-translate-y-2">
-      <div className={`${color} w-16 h-16 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
+    <li className="group bg-white p-8 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-primary-200 transform hover:-translate-y-2">
+      <div
+        className={`${color} w-16 h-16 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}
+        aria-hidden="true"
+      >
         {icon}
       </div>
       <h3 className="text-xl font-bold text-gray-900 mb-3">{title}</h3>
       <p className="text-gray-600 leading-relaxed">{description}</p>
-    </div>
+    </li>
   );
 }
 
 function StepCard({ number, title, description }: { number: string; title: string; description: string }) {
   return (
-    <div className="relative text-center group">
+    <li className="relative text-center group">
       {/* Connector Line */}
       {number !== "3" && (
-        <div className="hidden md:block absolute top-8 left-1/2 w-full h-0.5 bg-gradient-to-r from-primary-300 to-primary-200 z-0"></div>
+        <div
+          className="hidden md:block absolute top-8 left-1/2 w-full h-0.5 bg-gradient-to-r from-primary-300 to-primary-200 z-0"
+          aria-hidden="true"
+        ></div>
       )}
-      
+
       <div className="relative z-10">
-        <div className="bg-gradient-to-br from-primary-600 to-primary-700 text-white w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-bold mx-auto mb-6 shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all">
+        <div
+          className="bg-gradient-to-br from-primary-600 to-primary-700 text-white w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-bold mx-auto mb-6 shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all"
+          aria-hidden="true"
+        >
           {number}
         </div>
         <h3 className="text-2xl font-bold text-gray-900 mb-3">{title}</h3>
         <p className="text-gray-600 leading-relaxed max-w-sm mx-auto">{description}</p>
       </div>
-    </div>
+    </li>
   );
 }
 
 function StatCard({ number, label }: { number: string; label: string }) {
   return (
-    <div className="group">
-      <div className="text-4xl md:text-5xl font-bold text-primary-600 mb-2 group-hover:scale-110 transition-transform">
+    <div className="group flex flex-col-reverse">
+      <dt className="text-gray-600 font-medium">{label}</dt>
+      <dd className="text-4xl md:text-5xl font-bold text-primary-600 mb-2 group-hover:scale-110 transition-transform">
         {number}
-      </div>
-      <div className="text-gray-600 font-medium">{label}</div>
+      </dd>
     </div>
   );
 }

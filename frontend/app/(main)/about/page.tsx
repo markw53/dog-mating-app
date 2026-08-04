@@ -14,12 +14,12 @@ export default function AboutPage() {
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
+          <header className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">About DogMate</h1>
             <p className="text-xl text-primary-100 max-w-3xl mx-auto">
               Connecting responsible dog owners and breeders for ethical, healthy breeding practices
             </p>
-          </div>
+          </header>
         </div>
       </section>
 
@@ -44,7 +44,7 @@ export default function AboutPage() {
                 and improving canine health.
               </p>
             </div>
-            <div className="relative h-96 rounded-2xl overflow-hidden shadow-2xl">
+            <div className="relative h-96 rounded-2xl overflow-hidden shadow-2xl" aria-hidden="true">
               <div className="absolute inset-0 bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center">
                 <Dog className="w-32 h-32 text-white opacity-50" />
               </div>
@@ -56,15 +56,15 @@ export default function AboutPage() {
       {/* Values Section */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
+          <header className="text-center mb-16">
             <span className="text-primary-600 font-semibold text-sm uppercase tracking-wider">Our Values</span>
             <h2 className="text-4xl font-bold text-gray-900 mt-4 mb-6">What We Stand For</h2>
             <p className="text-gray-600 text-lg max-w-3xl mx-auto">
               These core principles guide everything we do at DogMate
             </p>
-          </div>
+          </header>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <ul className="grid md:grid-cols-3 gap-8">
             <ValueCard
               icon={<Heart className="h-12 w-12 text-primary-600" />}
               title="Animal Welfare First"
@@ -95,18 +95,18 @@ export default function AboutPage() {
               title="Breed Preservation"
               description="Supporting the preservation and improvement of dog breeds through responsible breeding."
             />
-          </div>
+          </ul>
         </div>
       </section>
 
       {/* Story Section */}
       <section className="py-20 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
+          <header className="text-center mb-12">
             <span className="text-primary-600 font-semibold text-sm uppercase tracking-wider">Our Story</span>
             <h2 className="text-4xl font-bold text-gray-900 mt-4 mb-6">How DogMate Began</h2>
-          </div>
-          
+          </header>
+
           <div className="prose prose-lg max-w-none text-gray-600">
             <p className="text-lg leading-relaxed mb-6">
               DogMate was founded in 2024 by a team of dog enthusiasts, veterinarians, and technology 
@@ -159,12 +159,12 @@ function ValueCard({
   description: string;
 }) {
   return (
-    <div className="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100">
-      <div className="bg-primary-50 w-16 h-16 rounded-xl flex items-center justify-center mb-6">
+    <li className="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100">
+      <div className="bg-primary-50 w-16 h-16 rounded-xl flex items-center justify-center mb-6" aria-hidden="true">
         {icon}
       </div>
       <h3 className="text-xl font-bold text-gray-900 mb-3">{title}</h3>
       <p className="text-gray-600 leading-relaxed">{description}</p>
-    </div>
+    </li>
   );
 }
