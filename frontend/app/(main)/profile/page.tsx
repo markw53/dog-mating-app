@@ -278,7 +278,7 @@ function ProfileSidebar({
   onAvatarChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
 }) {
-  const avatarUrl = user.avatar ? getImageUrl(user.avatar) : null;
+  const avatarUrl = user.avatar ? getImageUrl(user.avatar, { width: 256 }) : null;
   const displayCity = user.city || user.location?.city;
   const displayCounty = user.county || user.location?.state;
   const hasLocation = displayCity || displayCounty;

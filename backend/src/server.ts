@@ -2,8 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
+import compression from 'compression';
 import http from 'http';
+import { apiLimiter } from './middleware/rateLimits';
 import { connectDB } from './config/database';
 import { errorHandler } from './middleware/errorHandler';
 import { initSocket } from './socket';
@@ -40,32 +41,18 @@ app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true,
 }));
+app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Strict rate limit for auth endpoints (brute-force protection)
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20,
-  message: { success: false, message: 'Too many requests, please try again later' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-// General API rate limit
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 300,
-  message: { success: false, message: 'Too many requests, please try again later' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
 
 app.get('/', (_req, res) => {
   res.json({ message: 'Backend is running!' });
 });
 
-app.use('/api/auth', authLimiter, authRoutes);
+// The strict brute-force limiter is applied per-route inside authRoutes
+// (login/register/password reset only); routine routes like /auth/me share
+// the general limit
+app.use('/api/auth', apiLimiter, authRoutes);
 app.use('/api/dogs', apiLimiter, dogRoutes);
 app.use('/api/messages', apiLimiter, messageRoutes);
 app.use('/api/reviews', apiLimiter, reviewRoutes);

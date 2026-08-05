@@ -1,11 +1,12 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import prisma from '../config/database';
 import { AuthRequest } from '../middleware/auth';
 import logger from '../utils/logger';
 import { uploadToCloudinary } from '../utils/cloudinary';
-import { notifyAdmin } from '../utils/notify';
+import { notifyAdmin, sendEmail } from '../utils/notify';
 
 const USER_SELECT = {
   id: true,
@@ -113,6 +114,118 @@ export const register = async (req: Request, res: Response) => {
   } catch (error) {
     logger.error({ err: error }, 'Registration error');
     res.status(500).json({ success: false, message: 'Server error during registration' });
+  }
+};
+
+const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+const hashResetToken = (token: string) =>
+  crypto.createHash('sha256').update(token).digest('hex');
+
+export const forgotPassword = async (req: Request, res: Response) => {
+  // Always the same response whether or not the email exists — anything else
+  // lets attackers probe which addresses are registered
+  const genericResponse = {
+    success: true,
+    message: 'If that email is registered, a reset link has been sent',
+  };
+
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: String(email).toLowerCase() },
+      select: { id: true, email: true, firstName: true },
+    });
+
+    if (!user) {
+      return res.json(genericResponse);
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+
+    // One live token per user: issuing a new link invalidates older ones
+    await prisma.$transaction([
+      prisma.passwordResetToken.deleteMany({ where: { userId: user.id } }),
+      prisma.passwordResetToken.create({
+        data: {
+          tokenHash: hashResetToken(token),
+          userId: user.id,
+          expiresAt: new Date(Date.now() + RESET_TOKEN_TTL_MS),
+        },
+      }),
+    ]);
+
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
+    const sent = await sendEmail(
+      user.email,
+      'Reset your password',
+      `Hi ${user.firstName},\n\n` +
+        `Someone requested a password reset for your DogMate account. ` +
+        `If this was you, open the link below within 1 hour:\n\n${resetUrl}\n\n` +
+        `If you didn't request this, you can safely ignore this email.`,
+    );
+
+    if (!sent) {
+      // No SMTP configured (local dev): surface the link in debug logs only
+      logger.debug({ resetUrl }, 'SMTP not configured — password reset link');
+    }
+
+    logger.info({ userId: user.id }, 'Password reset requested');
+    res.json(genericResponse);
+  } catch (error) {
+    logger.error({ err: error }, 'Forgot password error');
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({ success: false, message: 'Reset token is required' });
+    }
+
+    if (!password || password.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 8 characters',
+      });
+    }
+
+    const resetToken = await prisma.passwordResetToken.findUnique({
+      where: { tokenHash: hashResetToken(token) },
+    });
+
+    if (!resetToken || resetToken.usedAt || resetToken.expiresAt < new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: 'This reset link is invalid or has expired. Please request a new one.',
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: resetToken.userId },
+        data: { password: hashedPassword },
+      }),
+      prisma.passwordResetToken.update({
+        where: { id: resetToken.id },
+        data: { usedAt: new Date() },
+      }),
+    ]);
+
+    logger.info({ userId: resetToken.userId }, 'Password reset completed');
+    res.json({ success: true, message: 'Password updated — you can now log in' });
+  } catch (error) {
+    logger.error({ err: error }, 'Reset password error');
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 

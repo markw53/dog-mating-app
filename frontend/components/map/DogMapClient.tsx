@@ -191,9 +191,9 @@ export default function DogMapClient({ dogs }: DogMapProps) {
 function DogPopupContent({ dog }: { dog: Dog }) {
   const dogId = dog.id || dog._id;
   const imageUrl = dog.mainImage
-    ? getImageUrl(dog.mainImage)
+    ? getImageUrl(dog.mainImage, { width: 500 })
     : dog.images?.[0]
-    ? getImageUrl(dog.images[0])
+    ? getImageUrl(dog.images[0], { width: 500 })
     : null;
 
   const isMale = dog.gender?.toUpperCase() === 'MALE';

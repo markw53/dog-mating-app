@@ -8,7 +8,11 @@ import ServiceWorkerRegister from '@/components/pwa/ServiceWorkerRegister';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'DogMate - Find the Perfect Match',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
+  title: {
+    default: 'DogMate - Find the Perfect Match',
+    template: '%s | DogMate',
+  },
   description: 'Connect with verified dog breeders for responsible breeding',
   appleWebApp: {
     capable: true,

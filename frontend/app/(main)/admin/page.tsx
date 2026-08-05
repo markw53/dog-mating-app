@@ -156,8 +156,14 @@ export default function AdminPage() {
   };
 
   const handleRejectDog = async (id: string) => {
+    const reason = window.prompt(
+      'Reason for rejection (shown to the owner so they can fix and resubmit):',
+    );
+    // Cancel aborts; empty string rejects without a reason
+    if (reason === null) return;
+
     try {
-      await adminApi.rejectDog(id);
+      await adminApi.rejectDog(id, reason.trim() || undefined);
       toast.success('Dog rejected');
       await fetchPendingDogs();
       await fetchStats();

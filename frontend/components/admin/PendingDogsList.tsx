@@ -33,7 +33,7 @@ export default function PendingDogsList({
           <div className="flex flex-col md:flex-row gap-6">
             <div className="w-full md:w-48 h-48 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
               <Image
-                src={getImageUrl(dog.mainImage || dog.images?.[0] || '') || '/placeholder-dog.jpg'}
+                src={getImageUrl(dog.mainImage || dog.images?.[0] || '', { width: 400 })}
                 alt={dog.name}
                 width={200}
                 height={200}

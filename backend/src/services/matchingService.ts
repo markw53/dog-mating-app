@@ -20,8 +20,8 @@ interface MatchScore {
   distance?: number
 }
 
-// Helper function to calculate distance
-function calculateDistance(
+// Helper function to calculate distance (haversine, km)
+export function calculateDistance(
   lat1: number,
   lon1: number,
   lat2: number,

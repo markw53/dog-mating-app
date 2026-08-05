@@ -11,7 +11,7 @@ import logger from './logger';
 // With neither configured this is a no-op.
 
 const transporter =
-  process.env.SMTP_HOST && process.env.ADMIN_EMAIL
+  process.env.SMTP_HOST
     ? nodemailer.createTransport({
         host: process.env.SMTP_HOST,
         port: parseInt(process.env.SMTP_PORT || '587', 10),
@@ -21,6 +21,25 @@ const transporter =
           : undefined,
       })
     : null;
+
+// Transactional email to a specific user (password resets etc.). Returns
+// false when SMTP isn't configured or sending fails, so callers can decide
+// how to degrade.
+export async function sendEmail(to: string, subject: string, body: string): Promise<boolean> {
+  if (!transporter) return false;
+  try {
+    await transporter.sendMail({
+      from: process.env.NOTIFY_FROM || process.env.SMTP_USER,
+      to,
+      subject: `[DogMate] ${subject}`,
+      text: body,
+    });
+    return true;
+  } catch (err) {
+    logger.warn({ err }, 'Transactional email failed');
+    return false;
+  }
+}
 
 export function notifyAdmin(subject: string, body: string): void {
   void (async () => {
@@ -33,7 +52,7 @@ export function notifyAdmin(subject: string, body: string): void {
         );
       }
 
-      if (transporter) {
+      if (transporter && process.env.ADMIN_EMAIL) {
         await transporter.sendMail({
           from: process.env.NOTIFY_FROM || process.env.SMTP_USER,
           to: process.env.ADMIN_EMAIL,

@@ -39,7 +39,7 @@ export default function UsersTable({ users }: UsersTableProps) {
                 <div className="flex items-center">
                   {user.avatar ? (
                     <Image
-                      src={getImageUrl(user.avatar)}
+                      src={getImageUrl(user.avatar, { width: 80 })}
                       alt={user.firstName}
                       width={40}
                       height={40}

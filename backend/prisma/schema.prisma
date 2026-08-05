@@ -32,6 +32,7 @@ model User {
   conversations Conversation[]
   pushSubscriptions PushSubscription[]
   devicePushTokens  DevicePushToken[]
+  passwordResetTokens PasswordResetToken[]
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -87,18 +88,24 @@ model Dog {
   longitude   Float?
   
   status    Status   @default(PENDING)
+  // Set when an admin rejects the listing, shown to the owner so they can fix
+  // and resubmit; cleared on approval
+  rejectionReason String? @db.Text
   views     Int      @default(0)
   favorites Int      @default(0)
-  
+
   owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId   String
-  
+
   reviews   Review[]
   conversations Conversation[]
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([status, createdAt])
+  @@index([ownerId])
+  @@index([breed])
   @@map("dogs")
 }
 
@@ -161,6 +168,8 @@ model Message {
   
   createdAt      DateTime     @default(now())
 
+  @@index([conversationId, createdAt])
+  @@index([receiverId, read])
   @@map("messages")
 }
 
@@ -178,6 +187,7 @@ model Review {
   createdAt DateTime @default(now())
 
   @@unique([dogId, reviewerId])
+  @@index([dogId])
   @@map("reviews")
 }
 
@@ -191,6 +201,7 @@ model DevicePushToken {
 
   createdAt DateTime @default(now())
 
+  @@index([userId])
   @@map("device_push_tokens")
 }
 
@@ -205,7 +216,25 @@ model PushSubscription {
 
   createdAt DateTime @default(now())
 
+  @@index([userId])
   @@map("push_subscriptions")
+}
+
+// Single-use, expiring tokens for the password reset flow. Only the SHA-256
+// hash is stored — a database leak must not expose usable reset links.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("password_reset_tokens")
 }
 
 enum Role {

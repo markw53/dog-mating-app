@@ -12,8 +12,8 @@ export const adminApi = {
     return response.data;
   },
 
-  rejectDog: async (id: string): Promise<{ success: boolean; dog: Dog }> => {
-    const response = await apiClient.put(`/admin/dogs/${id}/reject`);
+  rejectDog: async (id: string, reason?: string): Promise<{ success: boolean; dog: Dog }> => {
+    const response = await apiClient.put(`/admin/dogs/${id}/reject`, { reason });
     return response.data;
   },
 

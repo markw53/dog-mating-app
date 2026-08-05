@@ -5,6 +5,21 @@ import { AxiosError } from 'axios';
 interface UseFetchOptions<T> {
   onSuccess?: (data: T) => void;
   onError?: (error: AxiosError) => void;
+  // Opt-in stale-while-revalidate: when set, the last response for this key
+  // is shown instantly on revisit (no spinner) while a fresh fetch runs in
+  // the background. Key must uniquely identify the request (include filters).
+  cacheKey?: string;
+}
+
+// Module-level, per-tab response cache for stale-while-revalidate. Never
+// persisted — it exists to make back-navigation instant, not to serve
+// offline data.
+const responseCache = new Map<string, unknown>();
+
+// Called on logout so one user's cached responses can never flash for the
+// next user on a shared machine
+export function clearFetchCache(): void {
+  responseCache.clear();
 }
 
 export function useFetch<T>(
@@ -37,10 +52,21 @@ export function useFetch<T>(
   }, []);
 
   const fetchData = useCallback(async () => {
+    const cacheKey = optionsRef.current?.cacheKey;
+    const cached = cacheKey ? responseCache.get(cacheKey) : undefined;
+
     try {
-      setLoading(true);
+      if (cached !== undefined) {
+        // Serve stale immediately, revalidate silently in the background
+        setData(cached as T);
+        setLoading(false);
+      } else {
+        setLoading(true);
+      }
       setError(null);
+
       const result = await fetchFnRef.current();
+      if (cacheKey) responseCache.set(cacheKey, result);
       if (!mountedRef.current) return;
       setData(result);
       optionsRef.current?.onSuccess?.(result);

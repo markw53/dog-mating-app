@@ -14,7 +14,7 @@ export default function ReviewCard({ review }: ReviewCardProps) {
       <div className="flex items-start space-x-3">
         {review.reviewer.avatar ? (
           <Image
-            src={getImageUrl(review.reviewer.avatar)}
+            src={getImageUrl(review.reviewer.avatar, { width: 80 })}
             alt={review.reviewer.firstName}
             width={40}
             height={40}

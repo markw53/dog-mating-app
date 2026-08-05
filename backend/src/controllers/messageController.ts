@@ -234,14 +234,40 @@ export const createConversation = async (req: AuthRequest, res: Response) => {
     });
 
     if (initialMessage) {
-      await prisma.message.create({
+      const message = await prisma.message.create({
         data: {
           content: initialMessage,
           conversationId: conversation.id,
           senderId: req.user!.id,
           receiverId: participantId,
         },
+        include: {
+          sender: {
+            select: {
+              id: true, firstName: true, lastName: true,
+              avatar: true, verified: true, city: true, county: true,
+            },
+          },
+          receiver: {
+            select: {
+              id: true, firstName: true, lastName: true,
+              avatar: true, verified: true, city: true, county: true,
+            },
+          },
+        },
       });
+
+      // The first message must notify like any other — without this the
+      // recipient only discovers the conversation by opening the app
+      emitToUser(participantId, 'newMessage', message);
+      if (!isUserConnected(participantId)) {
+        pushToUser(participantId, {
+          title: `New message from ${message.sender.firstName}`,
+          body: initialMessage.slice(0, 120),
+          url: `/messages?conversation=${conversation.id}`,
+          data: { conversationId: conversation.id },
+        });
+      }
     }
 
     res.json({ success: true, conversation });

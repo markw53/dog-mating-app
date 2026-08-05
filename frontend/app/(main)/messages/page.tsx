@@ -70,6 +70,7 @@ function MessagesPageInner() {
     () => messagesApi.getConversations(),
     [isAuthorized],
     {
+      cacheKey: 'conversations',
       onSuccess: (data) => {
         // Auto-select conversation from URL or first one
         const conversationId = searchParams.get('conversation');
@@ -483,7 +484,7 @@ function ConversationItem({
           <span className="relative block flex-shrink-0">
             {otherUser.avatar ? (
               <Image
-                src={getImageUrl(otherUser.avatar)}
+                src={getImageUrl(otherUser.avatar, { width: 112 })}
                 alt=""
                 width={48}
                 height={48}
@@ -552,7 +553,7 @@ function ChatHeader({
         <div className="flex items-center space-x-4">
           {otherUser.avatar ? (
             <Image
-              src={getImageUrl(otherUser.avatar)}
+              src={getImageUrl(otherUser.avatar, { width: 112 })}
               alt=""
               width={56}
               height={56}

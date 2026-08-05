@@ -68,6 +68,7 @@ export default function MatchesPage() {
     () => dogsApi.getById(dogId),
     [dogId, isAuthorized],
     {
+      cacheKey: `dog:${dogId}`,
       onError: () => {
         toast.error('Failed to load dog profile');
       },
@@ -87,6 +88,7 @@ export default function MatchesPage() {
     () => matchingApi.findMatches(dogId, { limit: 20, minScore: debouncedMinScore }),
     [dogId, debouncedMinScore, isAvailableForBreeding],
     {
+      cacheKey: `matches:${dogId}:${debouncedMinScore}`,
       onError: () => {
         toast.error('Failed to load matches');
       },
@@ -103,6 +105,7 @@ export default function MatchesPage() {
     () => matchingApi.getStats(dogId),
     [dogId, isAvailableForBreeding],
     {
+      cacheKey: `match-stats:${dogId}`,
       onError: () => {
         console.error('Failed to load match stats');
       },
@@ -512,7 +515,7 @@ function MatchesHeader({
           <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg flex-shrink-0">
             {dog.mainImage || dog.images?.[0] ? (
               <Image
-                src={getImageUrl(dog.mainImage || dog.images?.[0] || '')}
+                src={getImageUrl(dog.mainImage || dog.images?.[0] || '', { width: 200 })}
                 alt=""
                 fill
                 className="object-cover"

@@ -41,6 +41,7 @@ export default function DashboardPage() {
     () => dogsApi.getMyDogs(),
     [isAuthorized], // Refetch when authorization changes
     {
+      cacheKey: 'my-dogs',
       onError: () => {
         toast.error('Failed to load your dogs');
       },
@@ -68,11 +69,11 @@ export default function DashboardPage() {
     }
   };
 
-  // Calculate stats
+  // Calculate stats (API returns Prisma enum casing — 'ACTIVE'/'PENDING')
   const stats = {
     total: dogs.length,
-    active: dogs.filter((d) => d.status === 'active').length,
-    pending: dogs.filter((d) => d.status === 'pending').length,
+    active: dogs.filter((d) => d.status?.toLowerCase() === 'active').length,
+    pending: dogs.filter((d) => d.status?.toLowerCase() === 'pending').length,
     totalViews: dogs.reduce((sum, d) => sum + (d.views || 0), 0),
   };
 
@@ -291,8 +292,11 @@ function DogCard({
   dog: Dog;
   onDelete: (id: string) => void;
 }) {
+  // API returns Prisma enum casing ('ACTIVE') — normalise once for styling
+  const status = dog.status?.toLowerCase();
+
   const getStatusStyles = () => {
-    switch (dog.status) {
+    switch (status) {
       case 'active':
         return 'bg-green-100 text-green-800 border-green-200';
       case 'pending':
@@ -303,7 +307,7 @@ function DogCard({
   };
 
   const getStatusIcon = () => {
-    switch (dog.status) {
+    switch (status) {
       case 'active':
         return <CheckCircle className="h-3 w-3 mr-1" aria-hidden="true" />;
       case 'pending':
@@ -313,12 +317,14 @@ function DogCard({
     }
   };
 
+  const isRejected = status === 'inactive' || status === 'rejected';
+
   return (
     <Card as="article" className="group overflow-hidden">
       <div className="relative bg-gray-200 rounded-xl overflow-hidden mb-4 h-48">
         <Image
           src={
-            getImageUrl(dog.mainImage || dog.images?.[0] || '') ||
+            getImageUrl(dog.mainImage || dog.images?.[0] || '', { width: 600 }) ||
             '/placeholder-dog.jpg'
           }
           alt={dog.name}
@@ -353,6 +359,21 @@ function DogCard({
             <CheckCircle className="h-4 w-4 mr-1" aria-hidden="true" />
             Available for breeding
           </p>
+        )}
+
+        {isRejected && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm">
+            <p className="font-semibold text-red-800 flex items-center">
+              <AlertCircle className="h-4 w-4 mr-1 flex-shrink-0" aria-hidden="true" />
+              Listing not approved
+            </p>
+            {dog.rejectionReason && (
+              <p className="text-red-700 mt-1">{dog.rejectionReason}</p>
+            )}
+            <p className="text-red-600 mt-1">
+              Edit the listing to resubmit it for review.
+            </p>
+          </div>
         )}
 
         <div className="flex gap-2 pt-3 border-t border-gray-200">

@@ -40,7 +40,7 @@ function PlaceholderImage({ name }: { name: string }) {
 export default function DogCard({ dog }: DogCardProps) {
   const [imageError, setImageError] = useState(false);
   const imageUrl = dog.mainImage || dog.images?.[0];
-  const fullImageUrl = imageUrl ? getImageUrl(imageUrl) : null;
+  const fullImageUrl = imageUrl ? getImageUrl(imageUrl, { width: 600 }) : null;
 
 
   return (

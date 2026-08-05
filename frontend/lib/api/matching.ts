@@ -42,10 +42,6 @@ export const matchingApi = {
   ): Promise<MatchResponse> => {
     try {
       const url = `/matching/${dogId}/matches`;
-      const baseURL = apiClient.defaults.baseURL;
-      const fullURL = `${baseURL}${url}`;
-      
-      
       const response = await apiClient.get<MatchResponse>(url, { params });
       
       return response.data;

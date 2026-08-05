@@ -41,6 +41,8 @@ export interface Dog {
   mainImage?: string;
   images?: string[];
   status: 'pending' | 'active' | 'rejected' | 'inactive';
+  // Set by admins when a listing is rejected; cleared on approval/resubmit
+  rejectionReason?: string | null;
   views?: number;
   favorites?: number;
   ownerId?: string;

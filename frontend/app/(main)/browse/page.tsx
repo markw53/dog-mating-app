@@ -91,6 +91,7 @@ function BrowsePageInner() {
     () => dogsApi.getAll(apiFilters),
     [apiFilters],
     {
+      cacheKey: `browse:${JSON.stringify(apiFilters)}`,
       onError: () => {
         toast.error('Failed to load dogs. Please try again.');
       },

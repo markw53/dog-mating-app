@@ -19,7 +19,7 @@ function getOwnerInfo(owner: Dog['owner'] | string | undefined): Dog['owner'] | 
 
 export default function MatchCard({ match }: MatchCardProps) {
   const { dog, matchScore, matchReasons, distance } = match;
-  const imageUrl = getImageUrl(dog.mainImage || dog.images?.[0] || '');
+  const imageUrl = getImageUrl(dog.mainImage || dog.images?.[0] || '', { width: 600 });
   const ownerInfo = getOwnerInfo(dog.owner);
 
   const getScoreColor = (score: number) => {

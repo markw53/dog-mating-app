@@ -85,6 +85,19 @@ export const authApi = {
     return authApi.getCurrentUser();
   },
 
+  forgotPassword: async (email: string): Promise<{ success: boolean; message: string }> => {
+    const response = await apiClient.post('/auth/forgot-password', { email });
+    return response.data;
+  },
+
+  resetPassword: async (
+    token: string,
+    password: string,
+  ): Promise<{ success: boolean; message: string }> => {
+    const response = await apiClient.post('/auth/reset-password', { token, password });
+    return response.data;
+  },
+
   updateProfile: async (data: UpdateProfileData): Promise<{ success: boolean; user: User }> => {
     try {
       const response = await apiClient.put<{ success: boolean; user: User }>(

@@ -132,10 +132,30 @@ export const getAllDogs = async (req: AuthRequest, res: Response) => {
 
     if (available === 'true') where.available = true;
 
+    // Card-shaped select: browse grids and the map only render summary info,
+    // so long text fields (description, medical history, vet/pedigree
+    // details) stay out of the list payload — the detail endpoint has them
     const [dogs, total] = await Promise.all([
       prisma.dog.findMany({
         where,
-        include: {
+        select: {
+          id: true,
+          name: true,
+          breed: true,
+          gender: true,
+          dateOfBirth: true,
+          age: true,
+          weight: true,
+          images: true,
+          mainImage: true,
+          available: true,
+          studFee: true,
+          status: true,
+          city: true,
+          county: true,
+          latitude: true,
+          longitude: true,
+          createdAt: true,
           owner: {
             select: {
               id: true,
@@ -250,10 +270,10 @@ export const getDogById = async (req: AuthRequest, res: Response) => {
     }
 
     if (!isOwnerOrAdmin) {
-      await prisma.dog.update({
-        where: { id },
-        data: { views: { increment: 1 } },
-      });
+      // Fire-and-forget: view counting must not delay the response
+      prisma.dog
+        .update({ where: { id }, data: { views: { increment: 1 } } })
+        .catch((err) => logger.warn({ err, dogId: id }, 'View count update failed'));
     }
 
     res.json({ success: true, dog });
@@ -364,6 +384,11 @@ export const updateDog = async (req: AuthRequest, res: Response) => {
     // pending listings and bypass moderation
     if (status && req.user!.role === 'ADMIN' && Object.values(Status).includes(status as Status)) {
       updateData.status = status as Status;
+    } else if (dog.status === Status.INACTIVE && req.user!.role !== 'ADMIN') {
+      // A rejected listing edited by its owner goes back into the review
+      // queue — without this, rejection would be a dead end
+      updateData.status = Status.PENDING;
+      updateData.rejectionReason = null;
     }
 
     const updatedDog = await prisma.dog.update({
