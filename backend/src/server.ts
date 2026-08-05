@@ -18,6 +18,7 @@ import adminRoutes from './routes/adminRoutes';
 import matchingRoutes from './routes/matchingRoutes';
 import breedRoutes from './routes/breedRoutes';
 import pushRoutes from './routes/pushRoutes';
+import favoriteRoutes from './routes/favoriteRoutes';
 
 dotenv.config();
 
@@ -60,6 +61,7 @@ app.use('/api/admin', apiLimiter, adminRoutes);
 app.use('/api/matching', apiLimiter, matchingRoutes);
 app.use('/api/breeds', apiLimiter, breedRoutes);
 app.use('/api/push', apiLimiter, pushRoutes);
+app.use('/api/favorites', apiLimiter, favoriteRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ success: false, message: 'Route not found' });

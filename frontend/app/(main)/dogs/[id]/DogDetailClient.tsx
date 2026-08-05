@@ -21,6 +21,7 @@ import toast from 'react-hot-toast';
 import ReviewCard from '@/components/dog/ReviewCard';
 import ReviewForm from '@/components/dog/ReviewForm';
 import DogImagePlaceholder from '@/components/ui/DogImagePlaceholder';
+import FavoriteButton from '@/components/dog/FavoriteButton';
 import Link from 'next/link';
 
 // Helper function to safely get owner info
@@ -612,6 +613,7 @@ export default function DogDetailClient() {
                         <MessageCircle className="h-5 w-5 mr-2" aria-hidden="true" />
                         Contact Owner
                       </button>
+                      <FavoriteButton dogId={dogId} variant="button" />
                       <button
                         onClick={handleShare}
                         className="w-full btn-secondary flex items-center justify-center py-3"

@@ -1,7 +1,7 @@
 import express from 'express';
 import {
   getConversations, getMessages, sendMessage,
-  createConversation, markAsRead,
+  createConversation, markAsRead, getUnreadCount,
 } from '../controllers/messageController';
 import { protect } from '../middleware/auth';
 import { validateMessage, handleValidation } from '../middleware/validate';
@@ -10,6 +10,7 @@ const router = express.Router();
 
 router.use(protect);
 
+router.get('/unread-count', getUnreadCount);
 router.get('/conversations', getConversations);
 router.post('/conversations', createConversation);
 router.get('/conversations/:conversationId/messages', getMessages);

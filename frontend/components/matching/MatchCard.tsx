@@ -4,8 +4,9 @@ import { Match } from '@/lib/api/matching';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getImageUrl } from '@/lib/api/client';
-import { MapPin, Heart, Award, TrendingUp } from 'lucide-react';
+import { MapPin, Award, TrendingUp } from 'lucide-react';
 import { Dog } from '@/types';
+import FavoriteButton from '@/components/dog/FavoriteButton';
 
 interface MatchCardProps {
   match: Match;
@@ -128,12 +129,10 @@ export default function MatchCard({ match }: MatchCardProps) {
           >
             View Profile
           </Link>
-          <button
-            className="px-4 py-2.5 bg-pink-50 text-pink-600 rounded-lg hover:bg-pink-100 transition-colors border border-pink-200"
-            title="Save match"
-          >
-            <Heart className="w-4 h-4" aria-hidden="true" />
-          </button>
+          <FavoriteButton
+            dogId={dog.id || dog._id || ''}
+            className="!bg-pink-50 border border-pink-200 hover:!bg-pink-100 !shadow-none !rounded-lg px-4 py-2.5"
+          />
         </div>
       </div>
     </article>

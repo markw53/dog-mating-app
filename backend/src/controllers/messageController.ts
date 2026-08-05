@@ -277,6 +277,21 @@ export const createConversation = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// Total unread messages for the badge. Backed by the (receiverId, read)
+// index, so it's an index-only count even at scale.
+export const getUnreadCount = async (req: AuthRequest, res: Response) => {
+  try {
+    const count = await prisma.message.count({
+      where: { receiverId: req.user!.id, read: false },
+    });
+
+    res.json({ success: true, count });
+  } catch (error) {
+    logger.error({ err: error }, 'Get unread count error');
+    res.status(500).json({ success: false, message: 'Failed to fetch unread count' });
+  }
+};
+
 export const markAsRead = async (req: AuthRequest, res: Response) => {
   try {
     const conversationId = req.params.conversationId as string;

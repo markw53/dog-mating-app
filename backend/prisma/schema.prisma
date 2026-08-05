@@ -33,6 +33,7 @@ model User {
   pushSubscriptions PushSubscription[]
   devicePushTokens  DevicePushToken[]
   passwordResetTokens PasswordResetToken[]
+  favoriteDogs        Favorite[]
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -99,6 +100,7 @@ model Dog {
 
   reviews   Review[]
   conversations Conversation[]
+  favoritedBy Favorite[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -218,6 +220,25 @@ model PushSubscription {
 
   @@index([userId])
   @@map("push_subscriptions")
+}
+
+// A user's saved dogs. The join table is the source of truth; Dog.favorites
+// is a denormalised counter kept in sync on toggle so cards can show counts
+// without a join.
+model Favorite {
+  id String @id @default(cuid())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  dog   Dog    @relation(fields: [dogId], references: [id], onDelete: Cascade)
+  dogId String
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, dogId])
+  @@index([dogId])
+  @@map("favorites")
 }
 
 // Single-use, expiring tokens for the password reset flow. Only the SHA-256

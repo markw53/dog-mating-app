@@ -8,7 +8,7 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: '*',
       allow: '/',
       // Authenticated/private areas — nothing indexable behind these
-      disallow: ['/admin', '/dashboard', '/messages', '/profile', '/unauthorized'],
+      disallow: ['/admin', '/dashboard', '/messages', '/profile', '/favorites', '/unauthorized'],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
   };

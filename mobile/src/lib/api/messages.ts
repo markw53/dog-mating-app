@@ -42,4 +42,11 @@ export const messagesApi = {
     );
     return data;
   },
+
+  getUnreadCount: async () => {
+    const { data } = await apiClient.get<{ success: boolean; count: number }>(
+      '/messages/unread-count',
+    );
+    return data;
+  },
 };

@@ -4,6 +4,7 @@ import { persist } from 'zustand/middleware';
 import { User } from '@/types';
 import { authApi } from '@/lib/api/auth';
 import { clearFetchCache } from '@/lib/hooks/useFetch';
+import { useFavoritesStore } from '@/lib/store/favoritesStore';
 import { RegisterData } from '@/types/auth';
 
 interface AuthState {
@@ -84,6 +85,7 @@ export const useAuthStore = create<AuthState>()(
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         clearFetchCache();
+        useFavoritesStore.getState().clear();
         set({
           user: null,
           token: null,

@@ -6,6 +6,7 @@ import { Dog } from '@/types';
 import { MapPin } from 'lucide-react';
 import { formatAge, formatWeight } from '@/lib/utils/formatters';
 import { getImageUrl } from '@/lib/api/client';
+import FavoriteButton from './FavoriteButton';
 import { useState } from 'react';
 
 interface DogCardProps {
@@ -63,6 +64,10 @@ export default function DogCard({ dog }: DogCardProps) {
           ) : (
             <PlaceholderImage name={dog.name} />
           )}
+          <FavoriteButton
+            dogId={dog.id || dog._id || ''}
+            className="absolute top-2 right-2"
+          />
         </div>
 
         <div className="space-y-2">

@@ -3,8 +3,21 @@
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/store/authStore';
 import { useRouter, usePathname } from 'next/navigation';
-import { Dog, LogOut, MessageSquare, User, PlusCircle, Menu, X, ChevronDown, ShieldCheck, Map } from 'lucide-react';
+import { Dog, LogOut, MessageSquare, User, PlusCircle, Menu, X, ChevronDown, ShieldCheck, Map, Heart } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
+import { useUnreadMessages } from '@/lib/hooks/useUnreadMessages';
+
+function UnreadBadge({ count }: { count: number }) {
+  if (count === 0) return null;
+  return (
+    <span
+      className="ml-1 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-red-500 text-white text-xs font-bold"
+      aria-label={`${count} unread message${count === 1 ? '' : 's'}`}
+    >
+      {count > 99 ? '99+' : count}
+    </span>
+  );
+}
 
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuthStore();
@@ -13,6 +26,7 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLLIElement>(null);
+  const unreadCount = useUnreadMessages();
 
   const handleLogout = () => {
     logout();
@@ -113,6 +127,7 @@ export default function Navbar() {
                   >
                     <MessageSquare className="h-4 w-4" />
                     <span>Messages</span>
+                    <UnreadBadge count={unreadCount} />
                   </Link>
                 </li>
                 {/* Admin link - check for ADMIN role */}
@@ -163,6 +178,16 @@ export default function Navbar() {
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         >
                           Profile
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          href="/favorites"
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          <Heart className="h-4 w-4 text-pink-500" aria-hidden="true" />
+                          Saved Dogs
                         </Link>
                       </li>
                       {/* Admin link in dropdown - check for ADMIN role */}
@@ -274,9 +299,19 @@ export default function Navbar() {
                   <Link
                     href="/messages"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-50"
+                    className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-50"
                   >
                     Messages
+                    <UnreadBadge count={unreadCount} />
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/favorites"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-50"
+                  >
+                    Saved Dogs
                   </Link>
                 </li>
                 <li>

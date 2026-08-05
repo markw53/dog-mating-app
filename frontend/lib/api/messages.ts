@@ -78,11 +78,20 @@ export const messagesApi = {
       const response = await apiClient.put<{ success: boolean }>(
         `/messages/conversations/${conversationId}/read`
       );
+      // Let the navbar badge know it should refresh
+      window.dispatchEvent(new Event('dogmate:unread-refresh'));
       return response.data;
     } catch (err) {
       const error = err as AxiosError<ApiErrorResponse>;
       console.error('Mark as read error:', error.response?.data);
       throw error;
     }
+  },
+
+  getUnreadCount: async (): Promise<{ success: boolean; count: number }> => {
+    const response = await apiClient.get<{ success: boolean; count: number }>(
+      '/messages/unread-count'
+    );
+    return response.data;
   },
 };
